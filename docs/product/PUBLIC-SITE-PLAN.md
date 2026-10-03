@@ -10,7 +10,7 @@
 
 - A landing page and the supporting pages (About, the scientific background, and more).
 - A separate page where **anyone, without an account, can watch something demonstrative of what
-  the public detectors capture** — live data of stations marked public, possibly limited in some
+  the devices of public stations capture** — live data of stations marked public, possibly limited in some
   way.
 - Exact coordinates are stored; what visitors see is the **public display precision chosen by each
   station owner** (exact, approximate, city, country, or hidden).
@@ -19,8 +19,8 @@
 
 - **Hosting ≈ 360 MB/day:** pages are static exports with lean JavaScript; charts use uPlot
   (≈ 50 KB) and Plotly is never loaded on public pages; long cache lifetimes; images optimized.
-- **Realtime Database ≈ 100 simultaneous connections:** anonymous visitors never hold a persistent
-  connection. The live mechanism is decided in M1 (ADR-005, Proposed).
+- **Realtime Database ≈ 100 simultaneous connections:** *(Proposed, ADR-005 §6)* anonymous visitors
+  do not hold a persistent connection. The live mechanism is decided after the M1 measurement.
 - **Firestore ≈ 50k reads/day:** public pages read pre-aggregated documents (e.g. one network
   summary per visit), never collections.
 - **App Check** protects every public read.
@@ -45,7 +45,7 @@
   first load.
 
 ### 2. Live (`/live`) — the public demonstration page
-- **Purpose:** let anyone watch what public detectors capture right now.
+- **Purpose:** let anyone watch what the devices of public stations capture right now.
 - **Content:** a list or picker of public streams; a live chart of recent events and the rate;
   plain-language explanations of what is shown (charged-particle / MIP-type events, never "muons"
   for single-SiPM devices); clearly marked "demonstration" limits if any (e.g. the last ~10 minutes).
@@ -53,7 +53,7 @@
   the visitor's browser asks briefly for "anything new since …" every few seconds while the page is
   visible and stops when hidden; the exact mechanism (short REST requests vs Firestore) is chosen
   from the M1 measurement.
-- **Free tier:** no persistent connection per visitor; incremental requests only.
+- **Free tier:** *(Proposed)* no persistent connection per visitor; incremental requests only.
 
 ### 3. Network map (`/network`)
 - **Purpose:** show the reach of the network.

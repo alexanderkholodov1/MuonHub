@@ -9,7 +9,7 @@ export default [
       "**/dist/**",
       "**/node_modules/**",
       "**/.next/**",
-      "**/public/**",  // v5 legacy files
+      "**/public/**",  // static assets (not linted)
     ],
   },
   {

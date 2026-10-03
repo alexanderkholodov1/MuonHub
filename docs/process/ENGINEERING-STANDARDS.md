@@ -16,7 +16,7 @@
 | **SDD — Spec-Driven Development** | ✅ **Our method** | No code without a spec in `specs/` and an approved milestone plan. See [`WORKFLOW.md`](WORKFLOW.md) and the [spec template](templates/spec.md). |
 | **TDD — Test-Driven Development** | ✅ **Pragmatic** | **Test-first where correctness is the product**: `packages/physics` (write the numeric test from the scientific foundation, then implement), `packages/shared` schemas, parsers (golden files from real serial captures), and security rules (negative tests). **Test-after / E2E** for UI and integration. Trustworthy science is the goal, not dogma. |
 | **Design patterns** | ✅ **Judiciously** | As vocabulary, not trophies: **Repository/Facade** (`data-provider`), **Adapter** (device-type parsers, data sources), **Strategy** (recipe steps, chart types), **Observer** (live subscriptions), **Factory** (provider creation). |
-| **C4 documentation** | ✅ **Adopt** | Architecture documented as C4 levels — **Context** and **Container** now (Mermaid, renders on GitHub), **Component** as packages grow. See [`docs/architecture/`](../architecture/ARCHITECTURE.md). |
+| **C4 documentation** | ✅ **Adopt** | Architecture documented as C4 levels — **Context** and **Container** now (text diagrams; Mermaid where it helps), **Component** as packages grow. See [`docs/architecture/`](../architecture/ARCHITECTURE.md). |
 | **MoE — Mixture of Experts** | ⚠️ **Not literally** | As a deep-learning architecture it is overkill (no need, no GPU). Its *spirit* — route work to specialised experts — already lives in our **parallel subagents and reviewer subagents**, and in the champion–challenger idea kept for any future ML layer ([archived design](../archive/planning/06-AI-DESIGN.md)). We adopt the idea, not the machinery. |
 
 ## Standards we also commit to
@@ -29,7 +29,7 @@
   derived data records the recipe and version that produced it. Filtering and calibration are
   welcome — storing altered data as if it were pure is not.
 - **Security by default (ADR-009).** Deny by default; every rule has negative tests run with real
-  client identities; least privilege; no admin keys on detector machines.
+  client identities; least privilege; no admin keys on agent machines.
 - **Free-tier discipline (ADR-005).** Every feature states its cost against the Firebase Spark quotas
   (connections, downloads, storage, reads/writes, hosting transfer) and is designed to stay inside
   them.

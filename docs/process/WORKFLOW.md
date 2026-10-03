@@ -31,8 +31,10 @@ v6 is built in about six milestones, one pull request each (ADR-008).
 5. **Review.** Reviewer subagents check the work (§5); every finding is resolved or explicitly
    accepted.
 6. **Pull request — only at the end.** The PR opens only when the milestone is fully planned,
-   tested, validated in practice, reviewed, and documented. Its description is a Stage Report
-   ([`templates/stage-report.md`](templates/stage-report.md)). CI must be green.
+   tested, validated in practice, reviewed, and documented. Its description follows the GitHub PR
+   template ([`.github/pull_request_template.md`](../../.github/pull_request_template.md)); the
+   milestone's Stage Report ([`templates/stage-report.md`](templates/stage-report.md)) is presented in
+   the chat and saved in `docs/audit/`. CI must be green.
 7. **Merge.** Only the maintainer merges into `main`. The next milestone starts from the merged
    result — never on top of half-finished work.
 
@@ -50,9 +52,10 @@ v6 is built in about six milestones, one pull request each (ADR-008).
 ## 3. Nothing lives only in the chat
 
 - Every decision, finding, proposal, and plan is written down **in this repository** — session
-  records and audits in [`docs/audit/`](../audit/), decisions in `docs/decisions/`, plans in
-  `docs/product/`.
-- Information that must not be public (for example an active security issue in a live system) goes
+  records and audits in [`docs/audit/`](../audit/), decisions in `docs/decisions/`, approved
+  milestone plans in [`docs/product/plans/`](../product/plans/) (one file per milestone,
+  `M<n>-<slug>.md`).
+- Information that must not be public (for example credentials or security-sensitive operational details) goes
   to **`private/`**, which is git-ignored and never pushed.
 - **Agent memory features are not used** for this project. Anything an agent must remember is in the
   repository (or in `private/`).
@@ -86,6 +89,7 @@ v6 is built in about six milestones, one pull request each (ADR-008).
   | `security-reviewer` | **mandatory** for anything touching rules, authentication, keys, endpoints, or dependencies |
   | `silent-failure-hunter` | swallowed errors, dead listeners, bad fallbacks |
   | `docs-auditor` | documentation drift and missing doc updates |
+  | `physicist` | **mandatory** for physics code, scientific wording, and data-processing semantics; veto over incorrect scientific claims |
 
 - **Parallel subagents are welcome** — research, reviews, and disjoint lanes of work run
   concurrently. Lanes are kept disjoint (separate folders or packages) so they never edit the same

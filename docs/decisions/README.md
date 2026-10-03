@@ -24,12 +24,12 @@ This folder is the single place where MuonHub records **why** the project is bui
 | — | ADR-001 was never written | — |
 | [002](adr/002-local-agent-framework.md) | Local agent framework (Tauri) | Superseded by ADR-007 |
 | [003](adr/003-data-storage-and-event-model.md) | Data storage tiers, event model, dynamic capacity | Amended by ADR-005 and ADR-006 |
-| [004](adr/004-terminology-and-domain-model.md) | Terminology and domain model | Accepted (2026-10-03) |
-| [005](adr/005-firebase-only-architecture-and-free-tier-budget.md) | Firebase-only architecture and free-tier budget | Accepted (2026-10-03); public live demo section Proposed |
-| [006](adr/006-data-integrity-raw-canonical-derived.md) | Data integrity: raw, canonical, derived | Accepted (2026-10-03) |
+| [004](adr/004-terminology-and-domain-model.md) | Terminology and domain model | Accepted (2026-10-03); wording of rule 1 pending confirmation |
+| [005](adr/005-firebase-only-architecture-and-free-tier-budget.md) | Firebase-only architecture and free-tier budget | Accepted (2026-10-03); public live demo (§6), job list, and App Check token lifetime Proposed |
+| [006](adr/006-data-integrity-raw-canonical-derived.md) | Data integrity: raw, canonical, derived | Accepted (2026-10-03); wording of rules 7 and 9 pending confirmation |
 | [007](adr/007-agent-runtime-headless-daemon.md) | Agent runtime: headless daemon | Accepted (2026-10-03) |
-| [008](adr/008-versioning-and-milestone-pr-policy.md) | Versioning and milestone PR policy | Accepted (2026-10-03) |
-| [009](adr/009-security-baseline.md) | Security baseline | Accepted (2026-10-03) |
+| [008](adr/008-versioning-and-milestone-pr-policy.md) | Versioning and milestone PR policy | Accepted (2026-10-03); pre-scheme checkpoint note pending confirmation |
+| [009](adr/009-security-baseline.md) | Security baseline | Accepted in principle ("close every security hole", 2026-10-02); specific rules Proposed until confirmed |
 
 ## Historical decision log (D1–D46)
 
@@ -57,7 +57,7 @@ session ([session record](../audit/2026-10-02-V6-RESET-SESSION-RECORD.md)).
 | D9 | Honest particle classification by phases (physics first, ML later) | Active | Unchanged. |
 | D10 | Three-layer redundancy: local SQLite + primary cloud + cold backups | Amended by ADR-005 | Layer 3 is a private, encrypted backup repository (approved; built in M4). No Cloudflare. |
 | D11 | External data: NMDB, NOAA SWPC, NASA DONKI, Dst/Kp | Active | Planned for M4, run as scheduled jobs; open-data references (e.g. HiSPARC, GMDN, Pierre Auger) added as candidates. |
-| D12 | Own AI: classical ML first, scalable later | Active (review in M1) | Deferred beyond 6.0.0; no server compute exists on the free plan (ADR-005). |
+| D12 | Own AI: classical ML first, scalable later | Deferred (placement after 6.0.0 is Proposed) | No server compute exists on the free plan (ADR-005); revisit when ML is planned. |
 | D13 | Specs in `/specs` + GitHub issues | Amended (M0 plan, 2026-10-03) | Specs stay in `specs/`; first-attempt specs 0001–0077 are records; new specs continue from 0083; the backlog lives in `docs/product/`. |
 | D14 | Code license: MIT | Active | Unchanged. |
 | D15 | Toolkit: Tailwind + shadcn/ui + Plotly + MapLibre | Amended (maintainer, 2026-10-02) | uPlot is the primary chart library; Plotly only lazy-loaded for spectrum/fit views (session record §1). |

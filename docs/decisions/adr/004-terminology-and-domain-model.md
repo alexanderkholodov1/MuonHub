@@ -30,7 +30,7 @@ documentation. The Spanish column gives the term used in the chat and in the Spa
 |---|---|---|---|
 | **Device** | Dispositivo | **Always** the physical hardware unit. | "CosmicWatch #3" |
 | **Device type** | Tipo de dispositivo | The definition of a kind of hardware: output format, columns, units, channels, default geometry. This is what users create and share in Bring Your Own Detector. | "CosmicWatch v3X" |
-| **Station** | Estación | The place and setup where devices are installed: location, privacy, public or private. | "USFQ lab, rooftop" |
+| **Station** | Estación | The place and setup where devices are installed: location, public display precision, and visibility (public, institution, private). | "USFQ lab, rooftop" |
 | **Assembly** | Montaje | The physical arrangement of devices in a station: stacking, separation, offsets, tilt. Used for per-area normalisation and coincidence acceptance. | "2 CosmicWatch stacked 5 cm apart" |
 | **Stream** | Flujo de datos | **The space in MuonHub where data lives.** One device at one station produces one stream. Moving the device to another station starts a new stream. | "CosmicWatch #3 @ USFQ" |
 | **Session** | Sesión | A continuous recording period inside a stream. A new session starts on a restart, a device reset, or a configuration change. | |

@@ -60,6 +60,17 @@ external integrations, dependency updates — and before every release.
 
 ## Project specializations (footer — filled by the adopting repo)
 
-<!-- Name the project's security-sensitive paths (e.g. declarative DB rules files, infra/),
-     the secrets layout (e.g. private/ + env loader), the scanners CI runs, and any
-     domain-specific abuse cases. -->
+MuonHub (baseline: `docs/decisions/adr/009-security-baseline.md`):
+- **Sensitive paths:** `infra/firebase/` (Realtime Database and Firestore security rules,
+  emulator config), `packages/data-provider/` (the only SDK boundary), agent sign-in and pairing
+  (`apps/agent`), web authentication flows (`apps/web`).
+- **Secrets layout:** service-account keys only in the git-ignored `private/` folder or CI secrets;
+  never in code, logs, or the agent machines (the agent signs in with a user account). Web
+  client config values are public by design.
+- **Scanners:** gitleaks in CI; `pnpm audit` for dependencies; rules tests in the Firebase emulator.
+- **Rules must be tested with real client identities**, including anonymous reads and negative
+  cases (who must NOT be able to read or write). Tests using the admin target do not count.
+- **Domain abuse cases:** quota exhaustion of the free tier (connections, downloads, daily
+  operations); scraping of public projections; self-assignment of roles; an editor taking over
+  or deleting a station; personal data (emails, names, exact coordinates) reaching publicly
+  readable paths; forged writes into another user's stream.

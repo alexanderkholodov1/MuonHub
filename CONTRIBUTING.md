@@ -14,8 +14,8 @@ human or automated agent** — and complements [`AGENTS.md`](AGENTS.md).
    real practice, and corrected. CI must pass; the maintainer merges into the protected `main`.
 
 ## Branches
-`chore/slug` · `feat/slug` · `fix/slug` · `docs/slug` · `spec/NNNN-slug`. A milestone usually lives on
-one branch with many commits.
+One branch per milestone, named `<type>/m<n>-<slug>` (e.g. `chore/m0-foundation`,
+`feat/m1-core-agent`), with many commits (ADR-008).
 
 ## Commit messages
 - [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`
@@ -31,7 +31,8 @@ and the public. Write them as a professional record of **what the change deliver
 **Do**
 - State the change and the value it adds, neutrally and concretely.
 - Describe it from the product's / codebase's point of view (features, structure, behavior).
-- Fill in the PR template: spec reference, acceptance criteria, tests, risks.
+- Fill in the PR template (`.github/pull_request_template.md`): milestone, approved plan, validation
+  evidence, guardrails, known limitations.
 
 **Don't**
 - Narrate the authoring process, the options weighed, or the reasoning that led here — that belongs

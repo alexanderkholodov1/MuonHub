@@ -85,7 +85,6 @@ export function SiteHeader(): React.ReactElement {
             }}
           >
             MuonHub
-            <span style={{ color: "var(--color-accent)", marginLeft: "2px" }}>Lab</span>
           </span>
         </Link>
 

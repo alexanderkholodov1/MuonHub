@@ -1,5 +1,10 @@
 # v6 reset — session record (2026-10-02)
 
+> **Continued in [`2026-10-03-SESSION-RECORD.md`](2026-10-03-SESSION-RECORD.md).** Since then: the
+> milestones were re-cut from H0–H13 into M0–M5 (`docs/product/ROADMAP.md`), the agent daemon and the
+> terminology were approved (ADR-007, ADR-004), and most open topics of §8 were settled. This record
+> is kept as written on 2026-10-02.
+
 > **What this is:** the durable record of the 2026-10-02 planning session between the maintainer
 > and the Adjutant (Claude Code). It captures the maintainer's decisions, the product requirements
 > stated in the session, the verified audit findings on the v6 code, the research results, and the

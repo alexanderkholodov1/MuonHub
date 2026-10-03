@@ -1,9 +1,13 @@
 # Theoretical and Scientific Foundation of MuonHub
 
-> **Status:** v1 — distilled from the deep research (`docs/archive/planning/research/DEEP-RESEARCH-RESULTS.md`,
-> temporary, discardable). OFFICIAL scientific basis of the project. Every physics claim in
+> **Status:** v1 — distilled from the deep research (archived source:
+> `docs/archive/planning/research/DEEP-RESEARCH-RESULTS.md`). OFFICIAL scientific basis of the project. Every physics claim in
 > the UI, landing, AI, and documentation must be consistent with this document.
-> **Review:** research physicist agent. **Rule:** scientific honesty > marketing.
+> **Review:** the `physicist` reviewer (`.claude/agents/physicist.md`). **Rule:** scientific honesty > marketing.
+>
+> **Editorial note (2026-10-03):** altitude figures such as "Quito ~2850 m, ~730 hPa" describe central
+> Quito. Each station's own altitude and reference pressure come from its metadata and barometer —
+> the first station (USFQ campus, Cumbayá) reads ≈ 768 hPa, i.e. roughly 2.3–2.4 km.
 
 ---
 
@@ -91,7 +95,7 @@ document this in tooltips. The amplitude spectrum is the rich physical observabl
   and ruins the barometric calculation.
 
 → **MuonHub implication:** `packages/physics` MUST apply this correction; τ_DT depends on the
-hardware version (detector metadata). The `dt` field (% dead time) feeds into this.
+hardware version (device-type metadata). The `dt` field (% dead time) feeds into this.
 
 ---
 
@@ -111,7 +115,7 @@ hardware version (detector metadata). The `dt` field (% dead time) feeds into th
   in the rate track galactic muons (e.g., a Forbush decrease is visible).
 - **Never** label an individual event as "muon" with certainty.
 
-→ **MuonHub implication:** see S20 in the backlog. The dashboard uses "charged particles /
+→ **MuonHub implication:** honest labelling. The dashboard uses "charged particles /
 MIP-type" + uncertainty; "muon" only in aggregate context or with coincidence (§7).
 
 ---
@@ -127,7 +131,7 @@ The amplitude histogram aggregated from an individual detector shows 3 structure
    delta rays.
 
 → **MuonHub implication:** the **amplitude/Landau spectrum is a first-class chart**
-(EPIC-5 S18), with log scale and the MPV marked. It is the closest to honest "energy physics".
+with log scale and the MPV marked. It is the closest to honest "energy physics".
 
 ---
 
@@ -139,8 +143,9 @@ The amplitude histogram aggregated from an individual detector shows 3 structure
   (accidental coincidence rate v3X ~4.5×10⁻⁵ Hz), and **directionality** (acceptance cone →
   East-West anisotropy).
 
-→ **MuonHub implication:** `detector_type=coincidence` enables reporting "muons" rigorously and
-with directionality. The schema already supports this (`02-DATA-MODEL`).
+→ **MuonHub implication:** a coincidence assembly (two or more stacked devices) enables reporting
+"muons" rigorously and with directionality. The v6 domain model represents it as an Assembly
+(ADR-004); the data model is specified in milestone M1.
 
 ---
 
@@ -157,7 +162,7 @@ with directionality. The schema already supports this (`02-DATA-MODEL`).
 | Low latitude/high rigidity (Hong Kong) | ≈ −0.085 | Wang & Lee (1967) |
 
 → **MuonHub implication:** `packages/physics` calculates **local β by regression** over the
-historical data of each node; never assume a fixed β. (Reinforces S04 and AI capability C2.)
+historical data of each node; never assume a fixed β. (See also capability C2 of the archived AI design.)
 
 ### (B) Thermal — dual
 - **Negative (surface/altitude):** warm air expands → cascade initiates higher →
@@ -180,7 +185,7 @@ historical data of each node; never assume a fixed β. (Reinforces S04 and AI ca
   (among the highest on Earth; the global maximum ≈17 GV corresponds to Doi Inthanon,
   Thailand — Gerontidou et al. 2021; PSNM) → natural filter that purges low-energy solar noise.
 
-→ **MuonHub implication:** main scientific argument (and for the Red Clara application):
+→ **MuonHub implication:** main scientific argument:
 Ecuadorian data is hard, pristine galactic signal, scarce in Northern Hemisphere networks.
 
 ---
@@ -198,7 +203,7 @@ Ecuadorian data is hard, pristine galactic signal, scarce in Northern Hemisphere
   features for AI; can transiently lower R_c.
 - **11-year solar cycle:** long-term anticorrelation.
 
-→ **MuonHub implication:** validates and prioritizes EPIC-7 (NMDB/NOAA/DONKI/Kp-Dst) and the
+→ **MuonHub implication:** validates and prioritizes external-data correlation (NMDB/NOAA/DONKI/Kp-Dst; milestone M4) and the
 muon↔neutron correlation views.
 
 ---
@@ -211,7 +216,7 @@ muon↔neutron correlation views.
   buried in the per-minute noise.
 - **Best practices:** integrate over **hours** (N≥100k) → error <0.3%. Define anomaly with
   **≥3σ persistent** thresholds, over an already-corrected rate (dead time + barometric + thermal).
-- **Per-detector baseline:** build the "normal" empirically from a solar-quiet historical
+- **Per-stream baseline:** build the "normal" empirically from a solar-quiet historical
   record, after removing thermal-barometric deltas. Do not use a priori formulas.
 
 → **MuonHub implication:** charts/alerts use long rolling windows; AI respects these
@@ -228,8 +233,9 @@ limits (no "anomalies" over one minute). Reinforces C1/C3 of `docs/archive/plann
 - **Forecasting:** ARIMA/SARIMA and LSTM (post-Forbush recovery).
 - **Cross-correlation:** clustering/SVM (DBSCAN) against DONKI/NMDB/Kp to date the shock.
 
-→ **MuonHub implication:** update `docs/archive/planning/06-AI-DESIGN.md` with XGBoost as the correction approach
-(C2) and the Poisson limit as a hard constraint on windows.
+→ **MuonHub implication:** the future AI design (after 6.0.0; archived draft:
+`docs/archive/planning/06-AI-DESIGN.md`) should adopt XGBoost as the correction approach (C2) and the
+Poisson limit as a hard constraint on windows.
 
 ---
 
@@ -261,4 +267,4 @@ agent adapts them to es/en/pt-BR for the educational texts.
   *Int. J. Astron. Astrophys.* 13, 236–258. https://doi.org/10.4236/ijaa.2023.133013
 - NMDB (Neutron Monitor Database); NOAA SWPC; NASA DONKI.
 
-> Verify and complete citations (DOI/links) when preparing the scientific article (EPIC-12 S48).
+> Verify and complete citations (DOI/links) when preparing the scientific article (launch milestone M5).

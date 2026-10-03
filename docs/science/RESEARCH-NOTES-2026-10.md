@@ -12,7 +12,9 @@
 
 Context: MuonHub targets low-cost cosmic-ray detectors (CosmicWatch-class plastic scintillator +
 SiPM, ~5×5 cm, single channel; an older educational detector with larger paddles; stacked devices
-for coincidences) at USFQ, Quito (~2850 m). Planned extensions explored here: a ~20-channel
+for coincidences) at USFQ (Cumbayá campus, Quito metropolitan area; the live station's barometer reads
+≈ 768 hPa, i.e. roughly 2.3–2.4 km — the "~2850 m" used in the research prompts is central Quito's
+altitude, not the station's [verified 2026-10-03]). Planned extensions explored here: a ~20-channel
 muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with precise timestamps.
 
 ---
@@ -22,9 +24,9 @@ muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with prec
 | Source | What it offers | Access | Licence / terms | Usefulness for MuonHub |
 |---|---|---|---|---|
 | **HiSPARC** (NL) | Event data with ns-resolution timestamps, pulse heights, integrals, reconstructed zenith/azimuth; weather data at some stations | TSV download forms, JSON API, Python SAPPHiRE library — https://docs.hisparc.nl/publicdb/data_access.html , https://docs.hisparc.nl/publicdb/api.html , https://docs.hisparc.nl/sapphire/ | **[UNVERIFIED]** (docs only say "© HiSPARC") | Best real *event-level, multi-detector* dataset to test a coincidence pipeline |
-| **LAGO** | Water-Cherenkov detectors; measured data **non-public**; simulated data CC BY-NC-SA 4.0 after a 1-year embargo; non-commercial use with attribution | https://gitmilab.redclara.net/lago/docs/DMP , https://arxiv.org/pdf/1704.03885 | CC BY-NC-SA 4.0 (simulated data) | Ecuador already has LAGO detectors at **USFQ (≈2430 m), EPN (≈2830 m) and ESPOCH Riobamba (2784 m)** — https://research.usfq.edu.ec/en/publications/implementing-a-wcd-detector-system-in-ecuador-as-part-of-the-lago/ . An in-house partner; their simulated Quito flux would be a natural benchmark |
+| **LAGO** | Water-Cherenkov detectors; measured data **non-public**; simulated data CC BY-NC-SA 4.0 after a 1-year embargo; non-commercial use with attribution | https://gitmilab.redclara.net/lago/docs/DMP , https://arxiv.org/pdf/1704.03885 | CC BY-NC-SA 4.0 (simulated data) | Ecuador has LAGO detectors at USFQ, EPN and ESPOCH Riobamba; the cited publication lists sites at about 2400 m and 2817 m without naming them **[UNVERIFIED site-altitude mapping]** — https://research.usfq.edu.ec/en/publications/implementing-a-wcd-detector-system-in-ecuador-as-part-of-the-lago/ . An in-house partner; their simulated Quito flux would be a natural benchmark |
 | **NMDB** (neutron monitors) | Real-time and historical count rates (original and revised) | NEST web interface — https://www.nmdb.eu/nest/statements.html | Free for non-commercial use, acknowledgement of NMDB and each station required | Standard reference to check that a Forbush decrease or the barometric correction behaves sensibly. Closest station at a similar cutoff: **Mexico City** (2274 m, 8.2 GV) — https://www.nmdb.eu/station/mxco/ . Chile runs monitors at Los Cerrillos (570 m) and Putre (3598 m) — https://sites.bc.edu/magnetometers/wp-content/uploads/sites/226/2024/09/CONSORCIO_OBSERVATORIOS_RC_y_Geo_SAMBA_P_A.pdf ; whether they publish to NMDB is **[UNVERIFIED]** |
-| **GMDN** (Nagoya, Hobart, Kuwait, Brazil) | Directional muon rates since 2006, pressure-corrected and uncorrected; CDF format with SPASE metadata | https://cosray.shinshu-u.ac.jp/crest/DB/Public/main.php | Citation required ("GMDN collaboration… http://hdl.handle.net/10091/0002001448") | Closest professional analogue to a muon-rate platform. Time resolution **[UNVERIFIED]** (probably hourly) |
+| **GMDN** (Nagoya, Hobart, Kuwait, Brazil) | Directional muon rates since 2006, pressure-corrected and uncorrected; CDF format with SPASE metadata | https://cosray.shinshu-u.ac.jp/crest/DB/Public/main.php | Citation required ("GMDN collaboration… http://hdl.handle.net/10091/0002001448") | Closest professional analogue: a network of dedicated (directional) muon detectors. Time resolution **[UNVERIFIED]** (probably hourly) |
 | **Pierre Auger** | Shower events, weather, and **scaler (low-threshold counting) rates for space weather** | https://opendata.auger.org/AugerOpenDataPolicy.pdf , https://zenodo.org/record/5588460 , https://arxiv.org/pdf/2507.08504 | CC BY-SA 4.0 | The scaler rates are the useful part |
 | **QuarkNet e-Lab** | More than 100k data files from school detectors (CRMD), web analysis tools | https://quarknet.org/content/resources-cosmic-ray-analyses-online | Licence and bulk API **[UNVERIFIED]** | School-detector comparison data |
 | **EEE** (Italy) | About 70 school telescopes (MRPC chambers); an "OpenData DB" is mentioned; rate data as text | https://eee.cref.it/?p=2671 | Access path and licence **[UNVERIFIED]** | School-telescope comparison data |
@@ -44,7 +46,7 @@ muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with prec
 | **PUMAS** — https://github.com/niess/pumas | Muon transport in matter, forward and **backward** (deterministic CSDA mode up to detailed Monte Carlo) | C99, LGPLv3 | Low | **Muography forward model** (transmission through rock) |
 | MUSIC/MUSUN — https://arxiv.org/pdf/0810.4635 | Muon propagation through thick rock | Fortran; available on request | Low–medium | Alternative to PUMAS |
 | **Geant4** — https://geant4.org/download/license | Full simulation of the detector response | C++, permissive Geant4 licence | High | **Tier 3:** scintillator and SiPM response, strip crosstalk |
-| **CORSIKA 8** — https://gitlab.iap.kit.edu/AirShowerPhysics/corsika , https://pos.sissa.it/484/045 | Full air showers | C++, GPLv3 | Very high (needs a cluster) | Not needed; LAGO's ARTI/CORSIKA site simulations already cover Quito |
+| **CORSIKA 8** — https://gitlab.iap.kit.edu/AirShowerPhysics/corsika , https://pos.sissa.it/484/045 | Full air showers | C++; licence **[UNVERIFIED]** (sources disagree: GPLv3 vs BSD-3-Clause — check the repository LICENSE) | Very high (needs a cluster) | Not needed; LAGO's ARTI/CORSIKA site simulations already cover Quito |
 
 **Tiered approach suggested by the research:**
 1. **Tier 1 (TypeScript, in the repository):** a seeded Poisson stream using a cos²θ or Guan flux,

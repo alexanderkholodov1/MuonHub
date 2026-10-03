@@ -28,5 +28,5 @@ narrative of how it was made).
 ```
 
 ## Release
-At release, the maintainer (or orchestrator) collates all fragments into a new `CHANGELOG.md`
+When a milestone is released, the Adjutant collates all fragments into a new `CHANGELOG.md`
 version section and deletes them. `.gitkeep` keeps this directory present when empty.

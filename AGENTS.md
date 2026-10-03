@@ -37,13 +37,14 @@ reviews, integrates, and reports.
    presented in the chat and approved **before** execution. New decisions are proposed, never taken
    silently.
 3. **Nothing lives only in the chat.** Decisions, findings, and proposals are written down — in this
-   repository, or in the git-ignored `private/` folder when they must not be public (e.g. security
-   findings about live systems).
+   repository, or in the git-ignored `private/` folder when they must not be public (e.g. credentials or
+   security-sensitive operational details).
 4. **Agent memory features are not used** for this project (shared workstation account). State lives
    in the repository.
-5. **Say how you know.** Label claims **[verified]** (checked first-hand: code read, command run,
-   official docs) or **[reported]** (from a subagent or secondary source, not re-checked). Never relay
-   a subagent's claim as fact without checking it.
+5. **Say how you know.** Label claims **[verified]** (checked first-hand: code or document read,
+   data inspected, official docs), **[verified by running]** (confirmed by executing it), or
+   **[reported]** (from a subagent or secondary source, not re-checked). Never relay a subagent's
+   claim as fact without checking it.
 6. **Investigation standard.** Before proposing or rejecting a tool, provider, or capability, read the
    official documentation and verify the current reality. Do not conclude from stale memory.
 7. **Parallel subagents are welcome** for independent work, with disjoint file boundaries. The author
@@ -60,7 +61,7 @@ Full process: [`docs/process/WORKFLOW.md`](docs/process/WORKFLOW.md).
 |---|---|
 | **Device** | Always the **physical** hardware unit (e.g. "CosmicWatch #3"). |
 | **Device type** | The definition of a kind of hardware: output format, columns, units, channels, default geometry. Shared through Bring Your Own Detector. |
-| **Station** | The place and setup where devices are installed: location, privacy, public/private. |
+| **Station** | The place and setup where devices are installed: location, public display precision, and visibility (public, institution, private). |
 | **Assembly** | The physical arrangement of devices in a station (stacking, separation, tilt). |
 | **Stream** | **The space in MuonHub where data lives.** One device at one station produces one stream. |
 | **Session** | A continuous recording period inside a stream. |
@@ -75,15 +76,16 @@ Data belongs to **streams**, never to a "detector". Comparisons are made between
 
 ## Guardrails (non-negotiable)
 
-1. **Git and PR policy (ADR-008).** Work on a branch (`chore/*`, `feat/*`, `fix/*`, `docs/*`,
-   `spec/NNNN-*`). Commit often (Conventional Commits, English, with the agent trailer) and push the
+1. **Git and PR policy (ADR-008).** Each milestone lives on one branch named `<type>/m<n>-<slug>`
+   (e.g. `chore/m0-foundation`, `feat/m1-core-agent`). Commit often (Conventional Commits, English, with the agent trailer) and push the
    branch so work is never only local. A milestone has **one PR, opened only when the milestone is
    planned, tested, validated in real practice, and corrected**. Never commit to `main`, never merge,
    never force-push a shared branch. Versions: `6.0.0-alpha.<milestone>.<iteration>.<fix>`, lockstep
    across all packages.
 2. **No code without a spec.** Implementation follows a spec in `specs/NNNN-*/` (new specs start at
    0083; template: [`docs/process/templates/spec.md`](docs/process/templates/spec.md)), approved as
-   part of the milestone plan.
+   part of the milestone plan. Approved milestone plans live in
+   [`docs/product/plans/`](docs/product/plans/).
 3. **Scientific honesty.** Nothing may contradict
    [`docs/science/THEORETICAL-FOUNDATION.md`](docs/science/THEORETICAL-FOUNDATION.md). Single-SiPM
    devices measure a **charged-particle / MIP-type rate** — never call individual events "muons".
@@ -105,7 +107,7 @@ Data belongs to **streams**, never to a "detector". Comparisons are made between
    `packages/data-provider`. Apps and services go through its interfaces.
 7. **Security baseline (ADR-009).** Deny by default; validate every field; owner-only immutable
    fields; public data only through dedicated projections without personal data; negative tests with
-   real client identities, including anonymous reads; no admin keys on detector machines; safe error
+   real client identities, including anonymous reads; no admin keys on agent machines; safe error
    messages.
 8. **English everywhere** for new content: code, comments, commits, docs, i18n keys (English is the
    UI source locale; es and pt-BR are translations). `docs/archive/` keeps historical documents as

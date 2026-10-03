@@ -1,8 +1,7 @@
 /**
  * Next.js configuration — MuonHub web app.
  *
- * output: "export"  — Phase A: static export for Firebase Hosting (no SSR).
- *                     Phase B (optional): remove this to enable SSR on Supabase/Red Clara.
+ * output: "export"  — static export served by Firebase Hosting (no server rendering; ADR-005).
  *
  * transpilePackages: ensures @muonhub/ui (workspace package) is transpiled
  *                    by Next.js rather than assumed to be pre-compiled CJS.

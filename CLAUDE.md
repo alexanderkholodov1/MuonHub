@@ -46,5 +46,6 @@ docs/                  product, decisions, architecture, science, operations, pr
 
 ## Reviewer subagents
 
-`.claude/agents/` holds `code-reviewer`, `security-reviewer`, `silent-failure-hunter`, and
-`docs-auditor`. Use them before a milestone PR opens; the author is never the only reviewer.
+`.claude/agents/` holds `code-reviewer`, `security-reviewer`, `silent-failure-hunter`,
+`docs-auditor`, and `physicist`. Use them before a milestone PR opens; the author is never the only
+reviewer.

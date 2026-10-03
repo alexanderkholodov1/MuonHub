@@ -47,7 +47,7 @@ The agent is a **headless Node.js 24 LTS daemon written in TypeScript**.
 | Criterion | Daemon (Node/TypeScript) | Tauri (Rust + webview) |
 |---|---|---|
 | Remote, unattended Ubuntu PC | Starts at boot without a login | A desktop app; starts when someone logs into the desktop |
-| After a power cut | Comes back and restarts by itself | Does not record until someone logs in (the v5 lesson) |
+| After a power cut | Comes back and restarts by itself | Does not record until someone logs into the desktop |
 | Remote administration (Tailscale) | SSH plus the web panel through a tunnel | Needs remote desktop to see the window |
 | Headless Raspberry Pi | Natural | Forced (needs a desktop and a webview) |
 | Code | One language, shared parsers/physics/schemas | Serial access in Rust, logic in TypeScript: two codebases to keep in sync |

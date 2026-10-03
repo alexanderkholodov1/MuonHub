@@ -1,6 +1,5 @@
 packages:
   - "apps/*"
-  - "services/*"
   - "packages/*"
 
 # Build-script decisions (pnpm asks before running any postinstall, for supply-chain safety).

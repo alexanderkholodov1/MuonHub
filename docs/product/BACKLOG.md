@@ -2,9 +2,10 @@
 
 > Status: living document · Last updated: 2026-10-03 (milestone M0)
 > Milestones: [`ROADMAP.md`](ROADMAP.md). Items are `B-<milestone>-NN`; a spec gets a number
-> (from **0083** upward) only when it is written. Items without "Proposed" come from the
-> maintainer's approved requirements or from verified audit findings; **Proposed** items or
-> placements still need approval.
+> (from **0083** upward) only when it is written. Every item names its source: an approved
+> requirement or decision (session records), a **[verified]** finding, a **[reported]** finding
+> (re-checked when its spec is written), or a proposal. **Proposed** marks items or milestone
+> placements the maintainer has not approved yet.
 >
 > Sources: session record [`../audit/2026-10-02-V6-RESET-SESSION-RECORD.md`](../audit/2026-10-02-V6-RESET-SESSION-RECORD.md)
 > (§3 requirements, §4 audit findings, Appendix A), the archived first-attempt spec branches
@@ -25,7 +26,7 @@
 | B-M0-06 | Decision records ADR-004 … ADR-009 and a decision log marking D1–D46 as active, amended, or superseded. |
 | B-M0-07 | Rewrite `README.md` (with the version-history table), `AGENTS.md` (the maintainer's data-integrity formulation), `CLAUDE.md`, `CONTRIBUTING.md`, and `docs/STATUS.md`. |
 | B-M0-08 | Product documents: vision, roadmap, backlog, public-site plan. |
-| B-M0-09 | Operations guides: Firebase setup for the maintainer to perform himself; remote access to the detector machine. |
+| B-M0-09 | Operations guides: Firebase setup for the maintainer to perform himself; remote access to the agent machine. |
 | B-M0-10 | Mark the first-attempt specs as superseded; record the first-attempt changelog fragments as history. |
 
 ---
@@ -38,7 +39,7 @@
 |---|---|---|
 | B-M1-01 | **Domain contracts v2** in `packages/shared` using the ADR-004 vocabulary: device, device type, station, assembly, stream, session, calibration, recipe, view. Data belongs to streams. | ADR-004 |
 | B-M1-02 | **Per-minute record v2:** pressure, temperature, and dead time are optional — a device without a barometer must never lose minutes (today the aggregator discards the whole minute). Explicit units (dead-time semantics, τ in µs, pressure in hPa); a missing value is "absent", never 0. | Audit §4.3 [verified] |
-| B-M1-03 | **Calibration defaults reconciled** with the theoretical foundation §3 per device type (today `saturationMv` 5000/3300 and `triggerAdcMin` 50/120 contradict ~180–200 mV and ADC > 30); the "unknown hardware" dead time (50 ms) must never produce negative or infinite corrections. | Audit §4.1, §4.3 |
+| B-M1-03 | **Calibration defaults reconciled** with the theoretical foundation §3 per device type (today `saturationMv` 5000/3300 and `triggerAdcMin` 50/120 contradict ~180–200 mV and ADC > 30); the "unknown hardware" dead time (50 ms) must never produce negative or infinite corrections. | Code: `packages/shared/src/calibration.ts`, `constants.ts` [verified] |
 | B-M1-04 | **Multichannel events and sampled streams** in the contracts, so the muograph (~20 channels) and the seismic sensor (~100 samples/s) fit without a rewrite. | Session record §3.11–12 |
 | B-M1-05 | **Data layers (ADR-006):** raw (immutable) → canonical (deterministic, versioned parser) → derived (versioned recipe, provenance, "derived" label when materialized). | ADR-006 |
 | B-M1-06 | **Time quality as provenance:** each session records its time source (NTP, RTC, GPS, none), offset, and drift; raw times are kept and corrected times are derived. | Session record A.7.6 |
@@ -50,7 +51,7 @@
 |---|---|---|
 | B-M1-08 | **Barometric β:** minimum of one week of minutes (10,080, not 168), a minimum pressure range, σ_β, sign/range sanity checks, outlier exclusion; never apply a β that is statistically noise. | Audit §4.3 [verified] |
 | B-M1-09 | **Anomalies only over hour-scale windows with ≥ 3σ persistence** (foundation §10), never per minute. | Audit §4.3 [reported] |
-| B-M1-10 | **Dead time from measured live time:** CosmicWatch reports cumulative dead time; live fraction = Δdead time / Δdevice time between lines. Correct error propagation (1/(1−Rτ)²); √N uncertainty only on live time actually covered. | Audit §4.3 [verified] |
+| B-M1-10 | **Dead time from measured live time:** CosmicWatch reports cumulative dead time; dead fraction = Δdead time / Δdevice time between lines, live fraction = 1 − dead fraction. Correct error propagation (1/(1−Rτ)²); √N uncertainty only on live time actually covered. | Audit §4.3 [verified] |
 | B-M1-11 | **Amplitude spectrum and MPV:** spectrum only from event-level amplitudes (never per-minute min/avg/max); fixed binning per device type, saturation flag, MPV fit with uncertainty; no `Math.max(...array)` on large arrays. | Audit §4.2, §4.3 |
 | B-M1-12 | **Noise calibration as a suggestion only:** it proposes a threshold; nothing is filtered at ingest. | Audit §4.3 [verified by running]; ADR-006 |
 
@@ -75,14 +76,14 @@
 
 | ID | Item | Source |
 |---|---|---|
-| B-M1-20 | **Headless daemon:** Node 24 TypeScript service under systemd (restart on failure, starts without a login), stable serial device names, local web panel reachable through an SSH tunnel; signs in with the user's account (no admin keys on detector machines). | ADR-007 |
+| B-M1-20 | **Headless daemon:** Node 24 TypeScript service under systemd (restart on failure, starts without a login), stable serial device names, local web panel reachable through an SSH tunnel; signs in with the user's account (no admin keys on agent machines). | ADR-007 |
 | B-M1-21 | **Session persistence and rejected-write detection:** after a reboot the agent restores its session; rejected writes are detected and shown, never silent. | `archive/status-pill-fix` lessons |
 | B-M1-22 | **Robust serial ingest:** framing tolerant to CRLF, partial lines, and concatenated records; configurable baud; reconnect after USB unplug (no silent stop); device-time rollover and resets (a reset starts a new session); event-ID gap detection; counting by readings, never by summing event IDs; units from the device type, never guessed from key names. | Audit §4.3 |
 | B-M1-23 | **Device types as declarative definitions** (Bring Your Own Detector foundation): CosmicWatch v2 and v3X built in; explicit selection per device; auto-detection only proposes. | Session record §3.5 |
 | B-M1-24 | **SQLite local store and durable outbox** for every output kind, keyed by (stream, kind, timestamp): written locally before any upload; transient vs permanent errors; backoff; failures surfaced. Tier-aware routing matrix and per-kind flush counts. | Audit §4.3; `archive/spec-0078` |
 | B-M1-25 | **Session controller:** pure-TS owner of serial source → parser → aggregation → event science → outbox; idempotent start/stop; live status (rate, queue depth, last sync, active calibration, clock offset); connectivity drives flushing with no loss across online/offline transitions. | `archive/spec-0079` |
 | B-M1-26 | **Raw mirror and capture tool:** every raw line is teed to a rotating log and a local socket so the port can be observed remotely without stopping acquisition; `muonhub-agent capture` (baud scan, hex dump, column statistics, proposed device type, fixture capture) identifies the two unknown detectors from their output. | Session record §3.13 |
-| B-M1-27 | **Clock offset** measured (NTP) and stored in session provenance; timestamps taken at read time in the agent. | Audit §4.3 |
+| B-M1-27 | **Clock offset** measured (NTP) and stored in session provenance; timestamps taken at read time in the agent. | Agent/physics review 2026-10-02 [reported] |
 | B-M1-28 | **Fully local operation:** the agent records and shows data with no network and no account yet; it syncs when it can. | Archived backlog 0071 |
 | B-M1-29 | **Public live window (Proposed, ADR-005):** for public streams only, the agent maintains a compact last-~10-minute window with public-safe fields; measure whether short REST requests count toward the 100-connection limit. | ADR-005 |
 
@@ -94,7 +95,7 @@
 | B-M1-31 | **Dependency upgrades:** Next 16, React 19, zod 4, ESLint 10, vitest 5, maplibre 6; evaluate TypeScript 7. | Audit §4.4 [reported] |
 | B-M1-32 | **Remove the Tauri/Rust shell** (superseded by the daemon). | ADR-007 |
 | B-M1-33 | **Firebase project setup by the maintainer** following `docs/operations/` (Authentication providers, Firestore in `nam5`, web app registration, App Check in monitor mode). | Session record A.1 |
-| B-M1-34 | **Detector-site access:** Tailscale on the Ubuntu detector machine (maintainer, on site); identify which v5 reader holds the serial port; short capture pauses are acceptable. | Session record §7 |
+| B-M1-34 | **Detector-site access:** Tailscale on the Ubuntu agent machine at the university (maintainer, on site); identify which v5 reader holds the serial port; short capture pauses are acceptable. | Session record §7 |
 
 **M1 validation:** 72 hours with the real detector writing to `muonhub`, with USB disconnections and
 network cuts, plus the virtual detector.
@@ -116,7 +117,7 @@ network cuts, plus the virtual detector.
 | B-M2-09 | **Public site** per [`PUBLIC-SITE-PLAN.md`](PUBLIC-SITE-PLAN.md), with a design session for the visual layer. | Session (2026-10-03) |
 | B-M2-10 | **Public live demo** of public stations for anonymous visitors, within the 100-connection limit (mechanism decided from the M1 measurement). | Session record §3.1 |
 | B-M2-11 | **Network map from public projections only:** no exact coordinates or personal data reach anonymous visitors; "active now" from the latest data time, not from registration status; unknown locations hidden, not placed at random. | Audit §4.2; archived 0024 |
-| B-M2-12 | **App Check enforced**; Analytics optional with a privacy notice. | Session record A.1 |
+| B-M2-12 | **App Check enforced** (after a monitoring period); Analytics optional with a privacy notice. | Products approved: session record §1.4; monitor-then-enforce approach: A.1 (Proposed) |
 | B-M2-13 | **Accessibility and polish:** form ARIA wiring, no nested interactive elements, no theme flash, mobile navigation. | Audit §4.2 |
 | B-M2-14 | **End-to-end tests** (Playwright) including phone viewports and deep links. | Audit §4.6 (v5 mobile lesson) |
 | B-M2-15 | **i18n-ready strings** from the start (English source); full translations in M5. | Archived 0023 |
@@ -133,7 +134,7 @@ network cuts, plus the virtual detector.
 | B-M3-01 | **Geometry and assemblies:** per-device area, thickness, material, orientation; station assemblies (stacking, separation, offsets, tilt); flux per cm²; expected accidentals; a 2D side-view schematic editor (3D evaluated later). | Session record A.7.2 |
 | B-M3-02 | **Comparison toolkit:** alignment (common bins, live-time weighting, gaps ≠ zeros); selectable normalization (live time, area, own baseline, corrected or not); overlay, ratio, difference, A-vs-B scatter, Bland–Altman, spectrum and diurnal overlays, rolling correlation; Pearson/Spearman with autocorrelation, lagged cross-correlation, χ² compatibility within Poisson; a reproducible card of parameters and versions with every result. | Session record A.7.3 |
 | B-M3-03 | **Spectrum and statistics panels:** log-y spectrum with fit overlay and interval selector; baseline, z-scores, rolling statistics, data quality (dead-time %, coverage). | `archive/spec-0080` |
-| B-M3-04 | **Coincidences:** (a) hardware coincidence — verify the CosmicWatch v3X window first; (b) software coincidence on one machine — window scan (plateau vs accidentals), accidental estimate 2·τ·R₁·R₂, net rate ± error, delay histogram; (c) across machines only with GPS-grade time. Muon language allowed only for coincidence data. | Session record A.7.3 |
+| B-M3-04 | **Coincidences:** (a) hardware coincidence — verify the CosmicWatch v3X window first; (b) software coincidence on one machine — window scan (plateau vs accidentals), accidental estimate 2·τ·R₁·R₂, net rate ± error, delay histogram; (c) across machines only with GPS-grade time. Muon language only for coincidence data or aggregate inference (foundation §5). | Session record A.7.3 |
 | B-M3-05 | **Known-answer validation** with the synthetic generator: the analyses recover planted coincidences and dips. | Session record A.7.4 |
 | B-M3-06 | **Calibration:** versioned per device, source per parameter (default / automatic / manual / imported), uncertainty, lock, validity date; automatic routines propose (noise histogram, MPV fit, β regression with residuals) and the user accepts or edits; applied on read; managed from MuonHub. | Session record §3.4, A.7.9 |
 | B-M3-07 | **Recipes and views:** several views of one stream (e.g. pure vs filtered) compared side by side; event-level recipes run in the agent over its local history and upload labelled derived series; explicit, labelled materialization only on request. | ADR-006 |
@@ -150,7 +151,7 @@ network cuts, plus the virtual detector.
 | B-M4-01 | **Configuration terminal:** a live agent stream or an uploaded sample → auto-detected delimiter, headers, types, monotonic columns, value ranges → a person maps each column to a standard quantity with units (or a custom one) → validation against the sample → publish. LLM assistance later. | Session record §3.5, A.7.1 |
 | B-M4-02 | **Device-type catalogue:** lifecycle Draft → Community → Under review → Verified/Official; labels (needs review, open reports, deprecated); feedback threads to the author; versioned and forkable; official approval by admins. | Session record §3.5 |
 | B-M4-03 | **Friendly installer for Windows and macOS users** of the agent daemon. | ADR-007 |
-| B-M4-04 | **Scheduled jobs on GitHub Actions:** device-silence alerts, usage measurement, admin-role assignment script, periodic integrity checks; push notifications (FCM) and an in-app notification centre. | Session record A.4; archived 0039, 0052 |
+| B-M4-04 | **Scheduled jobs on GitHub Actions** (job list Proposed, confirmed when M4 is planned): device-silence alerts, usage measurement, admin-role assignment script, periodic integrity checks; push notifications (FCM) and an in-app notification centre. | Session record A.4; archived 0039, 0052 |
 | B-M4-05 | **Backups to a private vault repository:** encrypted release assets written with a token restricted to the vault; a restore drill. Verify first whether private-repository release assets count against any quota. | Approved 2026-10-03 |
 | B-M4-06 | **Usage and quota monitor** with a deterministic runway projection, admit-control, thresholds, and capacity notifications. | `archive/spec-0082`; session record A.2 |
 | B-M4-07 | **External data:** an `ExternalDataSource` interface; NMDB, NOAA SWPC, NASA DONKI (and Dst/Kp) adapters; untrusted input validated and never coerced; correlation physics (resampling, Pearson/Spearman, lagged cross-correlation, deterministic Forbush-decrease detector) with numeric tests; overlays on charts. | `archive/spec-0081`; archived 0027–0030 |
@@ -170,7 +171,7 @@ network cuts, plus the virtual detector.
 | ID | Item | Source |
 |---|---|---|
 | B-M5-01 | **v5 → v6 migration tool:** read-only from the live v5 project (`munhub-1`) and the `munra-1` cold dump; streaming, idempotent, resumable, quarantine report; v5 profiles → stations + streams; fragment profiles quarantined; personal data only into protected paths; spectrum recovered only where event amplitudes exist. | Session record §5; archived 0007 |
-| B-M5-02 | **Cutover:** the detector machine switches from the v5 reader to the agent; v5 stays on its own site and project. | Session (2026-10-02) |
+| B-M5-02 | **Cutover:** the agent machine switches from the v5 reader to the agent; v5 stays on its own site and project. | Session (2026-10-02) |
 | B-M5-03 | **Translations** (Spanish, Brazilian Portuguese) and locale-aware units. | Archived 0023, 0073 |
 | B-M5-04 | **User manual and FAQ** (English first, then Spanish and Portuguese); technical documentation complete. | Archived 0047, 0048, 0055 |
 | B-M5-05 | **Academic artifacts:** `CITATION.cff`, Zenodo DOI for the release, a published MuonHub dataset with a DOI (CC-BY 4.0). | Archived 0050, 0069; session record §6 |
@@ -207,7 +208,7 @@ network cuts, plus the virtual detector.
    Database connection limit — measured in M1.
 6. **v5 cold dump:** the `munra-1` dump is not on the development machine; its location is needed for
    M5.
-7. **Detector machine:** which v5 reader holds the serial port (Chrome Web Serial or the Python
+7. **Agent machine:** which v5 reader holds the serial port (Chrome Web Serial or the Python
    bridge).
 8. **New detectors:** their models are unknown and must be determined from their output (capture
    tool, B-M1-26); whether any device accepts configuration commands over serial.

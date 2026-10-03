@@ -4,7 +4,7 @@
 ## Milestone
 - **Milestone:** M? — <name> (see `docs/product/ROADMAP.md`)
 - **Version at PR time:** `6.0.0-alpha.?.?.?`
-- **Approved step plan:** <link to the plan in docs/ or the session record>
+- **Approved step plan:** `docs/product/plans/M<n>-<slug>.md`
 - **Specs delivered:** `specs/NNNN-…`
 
 ## What this milestone delivers
@@ -15,7 +15,7 @@
 - [ ] Firebase emulator tests green (`pnpm --filter @muonhub/data-provider test:emulator`)
 - [ ] Real-practice validation done (describe: hardware, duration, conditions, results)
 - [ ] Reviewer subagents run (author ≠ reviewer): code-reviewer · security-reviewer (rules/auth) ·
-      silent-failure-hunter · docs-auditor — findings resolved or recorded
+      silent-failure-hunter · docs-auditor · physicist (science) — findings resolved or recorded
 <!-- Paste evidence: outputs, measurements, screenshots. -->
 
 ## Guardrails (AGENTS.md)

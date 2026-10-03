@@ -66,7 +66,7 @@ scale they all deposit about the same energy. So MuonHub is careful and honest:
 
 **Your raw data is never altered.** Corrections (dead time, atmospheric pressure), calibrations, and
 filters are applied **on top of** the stored data, through **views**. Every view records exactly how
-it was produced, so you can compare, for example, a pure view and a filtered view of the same device.
+it was produced, so you can compare, for example, a pure view and a filtered view of the same stream.
 
 ---
 
@@ -82,7 +82,7 @@ it was produced, so you can compare, for example, a pure view and a filtered vie
    syncs to the cloud — surviving internet and power interruptions.
 5. **Watch it live** — the dashboard shows the charged-particle rate, pressure, and amplitude
    spectrum. Public stations can also be watched by anyone on the public live page.
-6. **Compare and analyse** — create views (calibrations, filters, corrections), compare devices and
+6. **Compare and analyse** — create views (calibrations, filters, corrections), compare streams and
    views, and study coincidences.
 
 ---
@@ -108,7 +108,8 @@ it was produced, so you can compare, for example, a pure view and a filtered vie
 | **Dead time** | The short time a device is busy after an event and cannot count; corrected in views. |
 | **Barometric correction** | Adjusting the rate for atmospheric pressure, with a coefficient measured locally. |
 | **Visibility** | Who can see a station: **public** (anyone), **institution** (your organization), or **private** (you and the people you share with). |
-| **Realtime vs. minute data** | Realtime = individual recent events in a short live window (not stored permanently in the cloud); minute data = per-minute averages kept indefinitely. |
+| **Realtime vs. minute data** | Realtime = individual recent events in a short live window (not stored permanently in the cloud); minute data = per-minute averages kept long-term (older data is archived to stay within the free
+storage quota). |
 
 ---
 

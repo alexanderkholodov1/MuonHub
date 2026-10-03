@@ -50,8 +50,8 @@ cosmic-ray datasets.
    computed on read or materialised only on explicit request, always labelled).
 2. **The agent is the source of truth for raw data.** The cloud holds canonical per-minute records,
    summaries, live windows, and metadata. Full raw upload to the cloud is an admin-gated option.
-3. **Free-tier budget is a design input** (ADR-005): anonymous visitors never hold persistent database
-   connections; long time ranges read rollups; bundles stay lean.
+3. **Free-tier budget is a design input** (ADR-005): long time ranges read rollups; bundles stay
+   lean; *(proposed, ADR-005 §6)* anonymous visitors do not hold persistent database connections.
 4. **One SDK boundary.** Only `packages/data-provider` talks to Firebase.
 5. **Deny by default** (ADR-009). Public data is served from dedicated projections without personal
    data.
@@ -77,4 +77,5 @@ framework or an SDK.
 
 - The detailed Realtime Database / Firestore layout, security rules, and indexes — specified in M1.
 - The public live page mechanism — proposed in ADR-005, measured in M1 before it is built in M2.
-- The staging environment (dedicated project vs. preview channels) — proposed in the M1 plan.
+- The staging environment (a dedicated project vs. preview channels plus the emulator; preview
+  channels still use the production databases) — proposed in the M1 plan.

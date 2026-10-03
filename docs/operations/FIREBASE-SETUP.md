@@ -50,7 +50,8 @@ handles them itself.
 audit log. The fast, high-volume live data stays in the Realtime Database.
 
 1. **Databases & Storage > Firestore** → **Create database**.
-2. Edition: **Standard** (the free-tier edition). **Do not** choose Enterprise.
+2. Edition: **Standard**. (Enterprise also has no-cost quotas on Spark, but Standard is the edition
+   MuonHub is designed for.) **Do not** choose Enterprise.
 3. Database ID: keep **`(default)`**.
 4. Location: **`nam5 (United States)`**.
    - ⚠️ **This choice is permanent.** Once created, a database's location cannot be changed.

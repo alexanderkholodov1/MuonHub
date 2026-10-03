@@ -1,6 +1,7 @@
 # ADR-009 — Security baseline
 
-- **Status:** Accepted
+- **Status:** Accepted in principle — the maintainer required closing every security hole
+  (2026-10-02); the specific rules below are **Proposed** until he confirms them.
 - **Date:** 2026-10-03
 - **Reinforces:** D39. **Applies to:** every milestone from M1 on.
 
@@ -43,7 +44,7 @@ security rules. The maintainer's instruction: **close every hole; nothing like t
    the precision the owner chose (exact / approximate / city / country / hidden), and the rules
    enforce it (amends D20).
 7. **App Check** protects both databases; it runs in monitor mode first, then is enforced.
-8. **No admin keys on device machines.** The agent signs in with the user's own account
+8. **No admin keys on agent machines.** The agent signs in with the user's own account
    (ADR-007). Service-account keys live only in `private/` (git-ignored) or in CI secrets.
 9. **Safe error messages:** users never see raw backend errors (e.g. `PERMISSION_DENIED` strings).
    Errors are mapped to clear, non-revealing messages.

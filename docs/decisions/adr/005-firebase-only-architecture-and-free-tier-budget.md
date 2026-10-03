@@ -52,13 +52,14 @@ The setup guide lives in `docs/operations/`.
 | **RTDB** | High-rate data: per-minute series and live windows |
 | **Firestore** | Metadata and documents queried by fields: stations, devices, device types, calibrations, summaries, notifications, audit log |
 
-Per-minute records do not go to Firestore: at 1,440 writes per day per stream, about 13 streams
-would exhaust the 20,000 writes/day.
+Per-minute records do not go to Firestore: at 1,440 writes per day per stream, 14 streams
+(20,160 writes) would already exceed the 20,000 writes/day.
 
 ### 3. No server compute, no object storage
-- **Periodic jobs** run as **GitHub Actions scheduled workflows** and in the agent:
+- **Periodic jobs** run as **GitHub Actions scheduled workflows** and in the agent. *(The job list
+  below is the proposal presented on 2026-10-02; it is confirmed when M4 is planned.)*
   - backups;
-  - detector-silence alerts;
+  - device-silence alerts;
   - realtime pruning;
   - external data ingestion;
   - admin role assignment;
@@ -73,13 +74,13 @@ would exhaust the 20,000 writes/day.
 
 | Resource (Spark) | Limit | Design rule |
 |---|---|---|
-| RTDB simultaneous connections | 100 for the whole database, one instance | Every browser with a live listener and every agent uses one. Anonymous visitors do not hold live listeners (§6); listeners close when the tab is hidden. |
+| RTDB simultaneous connections | 100 for the whole database, one instance | Every browser with a live listener and every agent uses one. *(Proposed, §6:)* anonymous visitors do not hold live listeners; listeners close when the tab is hidden. |
 | RTDB storage | 1 GB | About 50 MB per stream-year of per-minute records (estimate). Every materialised view costs about the same. Old data is archived (backups; Zenodo for publication). |
 | RTDB download | 10 GB/month | Long ranges read hourly/daily rollups. Clients fetch only new data, never a full series again. |
 | Firestore | 1 GiB stored; 50k reads, 20k writes, 20k deletes per day; 10 GiB/month egress | Public pages read one aggregated document per visit. |
 | Hosting | 10 GB stored; about 360 MB/day transfer | Lean bundles (uPlot instead of Plotly by default), lazy loading, long cache lifetimes. |
 | Authentication | 50k monthly active users; email verification 1,000/day; password reset 150/day; email-link sign-in 5/day | Email/password and Google sign-in; no email-link sign-in. |
-| App Check (reCAPTCHA Enterprise) | 10k assessments/month | Long token lifetime. Protects both databases from abuse of the quotas. |
+| App Check (reCAPTCHA Enterprise) | 10k assessments/month | Protects both databases from abuse of the quotas. *(Proposed:)* a long token lifetime to save assessments. |
 
 A **usage monitor** in the admin area shows daily consumption and the remaining runway.
 
@@ -87,7 +88,7 @@ A **usage monitor** in the admin area shows daily consumption and the remaining 
 Spreading load over other Firebase projects (e.g. `munra-1`, `munhub-1`) to gain connections or
 quota is **not allowed**:
 
-- Google Cloud Terms of Service §3.3(iii) forbid using the services "in a manner intended to avoid
+- Google Cloud Terms of Service §3.3 (Restrictions), item (iii), forbid using the services "in a manner intended to avoid
   incurring Fees (including creating multiple Customer Applications, Accounts, or Projects to
   simulate or act as a single Customer Application, Account, or Project (respectively)) or to
   circumvent Service-specific usage limits or quotas" (<https://cloud.google.com/terms>).

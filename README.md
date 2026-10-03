@@ -52,7 +52,7 @@ places, and external references such as neutron monitors and space-weather data.
 | **Never loses data** | A headless agent next to the detector reads the serial port 24/7, keeps everything in local SQLite, and syncs when online. |
 | **Live, corrected science** | Live charged-particle rate, pressure, and amplitude spectrum, with dead-time and barometric corrections. |
 | **Bring Your Own Detector** | Configure any device type (columns, units, channels, geometry) and share it with the community, with review states. |
-| **Comparison and coincidences** | Deterministic tools to compare devices and processing views, including stacked devices in coincidence. |
+| **Comparison and coincidences** | Deterministic tools to compare streams and processing views, including stacked devices in coincidence. |
 | **Controllable calibration** | Versioned calibrations and recipes defined by the user; automatic routines only propose. |
 | **Free by design** | Runs entirely on Firebase's no-cost plan, engineered around its quotas. |
 

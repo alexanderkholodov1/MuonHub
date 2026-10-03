@@ -180,6 +180,9 @@ planning/00-MASTER-PLAN and THEORETICAL-FOUNDATION translated to English (WP-01 
 
 ## [6.0.0-alpha.1] — 2026-06-08
 
+> Pre-scheme checkpoint (tag `v6.0.0-alpha`): labelled before the versioning scheme of ADR-008
+> existed; it is not part of the `6.0.0-alpha.<milestone>.<iteration>.<fix>` sequence.
+
 The first tagged checkpoint of the v6 reconstruction: foundations and engineering workflow in place.
 
 ### Added

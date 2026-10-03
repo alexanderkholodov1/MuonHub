@@ -7,7 +7,7 @@
 | [`decisions/`](decisions/) | Architecture decision records (ADRs) and the status of the historical decision log D1–D46 |
 | [`architecture/`](architecture/) | System architecture of the v6 rebuild |
 | [`science/`](science/) | Theoretical foundation, serial data formats, research notes |
-| [`operations/`](operations/) | Environments and projects, Firebase setup guide, remote access to detector machines |
+| [`operations/`](operations/) | Environments and projects, Firebase setup guide, remote access to agent machines |
 | [`process/`](process/) | How work is done: workflow, templates, engineering standards |
 | [`design/`](design/) | The "Observatory Dark" design language and the landing concept |
 | [`user-manual/`](user-manual/) | Concepts and terminology for users |

@@ -1,7 +1,8 @@
 # Stage Report — M<n> <milestone name>
 
 <!--
-  TEMPLATE NOTES — this is the body of the milestone pull request. Delete this block when using it.
+  TEMPLATE NOTES — the milestone's Stage Report, presented in the chat and saved in docs/audit/ when the
+  milestone closes. (The PR body follows .github/pull_request_template.md.) Delete this block when using it.
   Write it for a human reading the history months from now: what the project gained, the evidence,
   and what remains. Follow CONTRIBUTING.md (no process narration, no "as requested").
   Every claim carries a verification label: [verified], [verified by running], or [reported].

@@ -82,8 +82,11 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 
 - **No deploy workflow exists yet.** The previous automatic deploy from `main` was removed; v6
   deployment is designed in the M1/M2 plans.
-- Do not run `firebase deploy` against `muonhub` until then. The root-level v5 Firebase files that
-  made a stray `firebase deploy` dangerous were removed in M0.
+- **Do not run `firebase deploy` until the M1 rules exist.** `infra/firebase/.firebaserc` defaults to
+  the live `muonhub` project, and the rules currently in `infra/firebase/` are the first-attempt set
+  with known security holes (no field validation, editor takeover, self-assigned roles — see the
+  audit record). A deploy from `infra/firebase/` would publish them. The root-level v5 Firebase files
+  were removed in M0, so a deploy from the repository root no longer targets anything.
 
 ## Staging — open question
 
