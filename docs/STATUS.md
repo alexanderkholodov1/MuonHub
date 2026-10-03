@@ -45,15 +45,19 @@ _Last updated: 2026-10-03 · version `6.0.0-alpha.0.x` · branch `chore/m0-found
 4. ADR-008 — the June 2026 checkpoint `6.0.0-alpha.1` predates the scheme and sorts above
    `6.0.0-alpha.0.x`; it is marked pre-scheme (no artifact consumes it).
 5. ADR-009 — the specific security rules (accepted in principle: "close every security hole").
+6. ADR-006 rule 8 precision (physicist review) — intensive quantities are time averages; per-event
+   values are summarised as mean/min/max with N; counts are events per interval with their covered
+   live time; cumulative counters (e.g. dead time) are stored as increments, never averaged. Once
+   confirmed, `AGENTS.md` guardrail 4 and the code-reviewer checklist use the same wording.
 
 **Open, decided later:**
-6. Public live demo mechanism (ADR-005 §6, Proposed) — measured in M1.
-7. Real contact address for the website (the first-attempt landing shows an unverified
+7. Public live demo mechanism (ADR-005 §6, Proposed) — measured in M1.
+8. Real contact address for the website (the first-attempt landing shows an unverified
    `contact@munhub.usfq.edu.ec`).
-8. Staging environment (dedicated project vs. preview channels plus emulator) — proposed in the M1
+9. Staging environment (dedicated project vs. preview channels plus emulator) — proposed in the M1
    plan.
-9. The first station's barometric reference pressure: its barometer reads ≈ 768 hPa (≈ 2.3–2.4 km),
-   not the ≈ 730 hPa used for central Quito in the theoretical foundation — physicist follow-up in M1.
+10. The first station's barometric reference: its barometer reads ≈ 768 hPa (≈ 2.4 km), not the
+    ≈ 730 hPa of central Quito; P₀ will be the station's own long-term mean (B-M1-08, B-M1-35).
 
 ## Environment
 

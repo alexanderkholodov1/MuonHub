@@ -4,8 +4,11 @@
 > to English; its body is historical and keeps every original caveat. Facts checked in the
 > 2026-10-02/03 audit (`docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md` §4.3), verified by reading
 > the code:
-> - **The CosmicWatch dead-time column is cumulative**, not instantaneous: the official v3X order
->   documents `Deadtime[s] (cumulative)` (§0). The first-attempt v6 parser
+> - **On the official CosmicWatch firmware the dead-time column is cumulative**, not instantaneous:
+>   the official v3X order documents `Deadtime[s] (cumulative)` (§0). On the custom MuNRa firmware
+>   its meaning and unit are **unverified** — check on a raw capture whether the column only
+>   increases. (The example line in §2 — 46,100 at 111.75 s, event 270 — fits a cumulative count of
+>   ≈ 171 µs per event; read as a per-event value it would imply ≈ 11 % dead time.) The first-attempt v6 parser
 >   (`apps/agent/src/parsers/cosmicwatch.ts`) converted the raw value into an instantaneous
 >   percentage, which is wrong; a live-time fraction has to come from the difference between
 >   consecutive lines. The unit used by the MuNRa firmware is still unverified (⚠️ §2).
@@ -29,7 +32,7 @@
 
 ---
 
-## v6 agent implementation status (spec 0013)
+## v6 agent implementation status (spec 0013) — first-attempt state, replaced in M1
 
 The TypeScript acquisition core in `apps/agent/src/parsers/` now implements the four documented
 wire formats with the v5 priority order:
@@ -46,7 +49,9 @@ raw reading carries agent time, trigger/rate value, SiPM mV, temperature C, pres
 percent, and coincidence fields as available. Per-minute aggregation converts pressure Pa to the v6
 canonical hPa field and validates the resulting `MinuteRecord` with `MinuteRecordSchema`.
 
-Data-integrity invariant for v6 ingestion: per-minute fields are time-averages, never sums. `sm`,
+*(Superseded by ADR-006 rule 8: `dt` is stored as increments of the cumulative counter, `ec`/`cc`
+as counts per interval with their covered live time.)* First-attempt data-integrity invariant for v6
+ingestion: per-minute fields are time-averages, never sums. `sm`,
 `tp`, `pr`, `dt`, `ec`, and `cc` are averaged over the minute window; `sn` and `sx` keep the
 documented amplitude min/max semantics. No parsed event is filtered during aggregation. *(First-attempt
 state, replaced in M1:)* the Tauri serial bridge under `apps/agent/src-tauri/` is a thin scaffold for port enumeration and line events;
@@ -68,7 +73,8 @@ documentation you were probably given — that is why the format did not match.
   output is `Comp_date Comp_time Event Ardn_time[ms] ADC[0-1023] SiPM[mV] Deadtime[ms] Temp[C]`
   (a single 10-bit ADC, no pressure).
 - The pressure in the example (`76501.6 Pa ≈ 765 hPa`) **matches Quito's altitude** → the
-  firmware is configured for high altitude and column [5] is pressure (confirmed).
+  firmware is configured for high altitude and column [5] is pressure (confirmed). *(Note
+  2026-10-03: ≈ 765 hPa matches the USFQ station in Cumbayá, ≈ 2.4 km; central Quito is ≈ 730 hPa.)*
 - The trailing `COSMIC` marker and the **column order are non-standard** (custom): they differ
   from the official v3X, whose order is `Event, Timestamp[s], Flag(coinc 0/1), ADC[12b],
   SiPM[mV], Deadtime[s] (cumulative), Temp[C], Press[Pa], Accel(XYZ), Gyro(XYZ)` with **a single
@@ -128,7 +134,7 @@ Column mapping (according to `parseTabSeparatedLine`, separator = tabs or multip
 | 2 | ADC1 | 60 | raw | channel 1 |
 | 3 | ADC2 | 1881 | raw | channel 2 (dual channel!) |
 | 4 | SiPM | 0.9 | mV (⚠️) | **ambiguous**: values <1 suggest V, not mV; verify |
-| 5 | Pressure | 76501.6 | Pa | (in hPa it would be ~765 → consistent with Quito's altitude) |
+| 5 | Pressure | 76501.6 | Pa | (in hPa it would be ~765 → consistent with the USFQ station's altitude, ≈ 2.4 km; central Quito ≈ 730 hPa) |
 | 6 | Temp | 27.1 | °C | |
 | 7 | DeadTime | 46100 | µs (⚠️) | see §4 (stored as "dt" but it is in µs, not %) |
 | 8 | Coincident | 0 | 0/1 | coincidence flag |
@@ -167,8 +173,9 @@ Column mapping (according to `parseTabSeparatedLine`, separator = tabs or multip
 | `pr` | **average** pressure | Pa (v5) → **hPa in v6** |
 | `dt` | **average** dead time | µs (v5, ⚠️) → clarify as % or live-time in v6 |
 
-- **Invariant respected:** `sm/tp/pr/dt` are **averages**; `ec/cc` are counts per minute
-  (= rate), not sums of magnitudes. No event filtering.
+- **Invariant respected (v5):** `sm/tp/pr/dt` are **averages**; `ec/cc` are counts per minute
+  (= rate), not sums of magnitudes. No event filtering. *(v6: superseded by ADR-006 rule 8 —
+  averaging a cumulative dead-time counter is meaningless; it is stored as increments.)*
 - **Partial minutes** (the first and the last) are **discarded**: only complete minutes are saved.
 
 ---
@@ -182,4 +189,5 @@ Column mapping (according to `parseTabSeparatedLine`, separator = tabs or multip
 3. **Reconcile v6 units:** pressure → hPa; dead time → define the canonical representation for
    the correction `R/(1−R·τ_DT)` (`THEORETICAL-FOUNDATION.md §4`).
 4. **Auto-detection of version/hardware** from the header (CosmicWatch v2/v3X vs MuNRa).
-5. Keep "averages, never sums" and the discarding of partial minutes.
+5. Keep "averages, never sums" (stated precisely in ADR-006 rule 8) and **mark partial minutes as
+   partial** instead of discarding them (ADR-006 rule 7).

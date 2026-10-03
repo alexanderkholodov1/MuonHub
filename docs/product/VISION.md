@@ -14,8 +14,9 @@ It was born as Alexander Kholodov's contribution to Dennis Cazar's research at t
 laboratory (USFQ, Quito, Ecuador), within the EL-BONGO / Erasmus+ CBHE project
 (source: [`../archive/planning/00-MASTER-PLAN.md`](../archive/planning/00-MASTER-PLAN.md)).
 Its first station is on the USFQ campus in Cumbayá (Quito metropolitan area) at roughly 2,400 m —
-the station's barometer reads ≈ 768 hPa [verified 2026-10-03], consistent with about 2.3–2.4 km,
-not with central Quito's ≈ 2,850 m. The high geomagnetic cutoff rigidity of the region
+the station's barometer reads ≈ 768 hPa [verified by running, 2026-10-03], consistent with about
+2.4 km in a tropical atmosphere (the USFQ weather station EMA is reported at 2,391 m), not with
+central Quito's ≈ 2,850 m. The high geomagnetic cutoff rigidity of the region
 (≈ 12–13 GV) makes the data scientifically distinctive
 ([`../science/THEORETICAL-FOUNDATION.md`](../science/THEORETICAL-FOUNDATION.md) §0, §8E).
 

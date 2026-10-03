@@ -42,7 +42,7 @@ for the old name.
 - `.env.example` reduced to the variables the code reads (Supabase and unused entries removed).
 - A `physicist` reviewer added to `.claude/agents/` (the rules required a physicist review that no
   agent could run); the other reviewers' project sections filled in.
-- The first station's altitude corrected from its barometer (≈ 768 hPa → roughly 2.3–2.4 km, not
-  central Quito's 2,850 m).
+- The first station's altitude corrected from its barometer (≈ 768 hPa → about 2.4 km in a tropical atmosphere,
+  not central Quito's 2,850 m).
 - First-attempt changelog fragments compiled into a historical section of `CHANGELOG.md`.
 - Items pending the maintainer's confirmation are listed in [`../../STATUS.md`](../../STATUS.md).

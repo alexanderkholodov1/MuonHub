@@ -41,13 +41,20 @@
 ## 4. Findings during M0
 
 - **First station altitude [verified by running]:** the live v5 station's barometer reads
-  76,785 Pa ≈ 768 hPa (read-only, authorised), i.e. roughly 2.3–2.4 km — the USFQ campus in
-  Cumbayá, not central Quito (≈ 2,850 m, ≈ 730 hPa). Affects the barometric reference pressure.
+  76,785 Pa ≈ 768 hPa (read-only, authorised), consistent with ≈ 2.4 km in a tropical atmosphere
+  (2.28 km in the ICAO standard atmosphere) — the USFQ campus in Cumbayá (weather station EMA
+  reported at 2,391 m [reported]), not central Quito (≈ 2,850 m, ≈ 730 hPa). Each station's
+  barometric reference pressure P₀ is its own long-term mean pressure.
+- **Physicist review [reported]:** M0 changed no physics; findings on dead-time uncertainty, the β
+  fit, per-minute semantics of counters, MuNRa dead-time units, and correlation surrogates were
+  applied to the backlog, ADR-006 (rule 8 precision, pending confirmation), and the science docs;
+  pre-existing foundation issues became backlog item B-M1-35.
 - **Emulator test timing [verified by running]:** the first-attempt realtime-cap test takes ≈ 12 s
   in CI and exceeds its 20 s timeout on the development machine — a symptom of the pruning design
   replaced in M1.
 - **Physicist review gap [verified]:** the rules required a physicist review that no reviewer could
-  run; a `physicist` reviewer was added (usable as an agent type from the next session).
+  run; a `physicist` reviewer was added (available as an agent type after the session restart, and
+  used to verify the science fixes).
 - **Correction of an Adjutant statement:** the status-pill lesson is that, after a reboot, the v5
   uploader's session was not restored and its writes were silently rejected — not that "the
   uploader did not come back".

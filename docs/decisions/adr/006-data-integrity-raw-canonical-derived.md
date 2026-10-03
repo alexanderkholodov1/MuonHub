@@ -72,7 +72,12 @@ On cloud storage of raw data, he decided:
    - a partial minute is marked partial.
    _(Wording proposed by the Adjutant on 2026-10-03 — pending maintainer confirmation.)_
 8. **Per-minute canonical records keep the earlier rule:** they are **time averages, never sums**,
-   and statistical uncertainties are derived from raw counts (√N).
+   and statistical uncertainties are derived from raw counts (√N). Precisely: intensive quantities
+   (pressure, temperature) are time averages; per-event values (amplitudes) are summarised as event
+   mean/min/max with their count N; counts are events per interval together
+   with the live time they cover; cumulative device counters (e.g. dead time) are stored as
+   increments per interval (dead fraction = Δdead/Δt), never averaged.
+   _(Precision proposed by the physicist review on 2026-10-03 — pending maintainer confirmation.)_
 9. **Time is data too:** raw timestamps are kept; corrected timestamps are derived, with a record
    of time quality (source, offset, drift).
    _(Wording proposed by the Adjutant on 2026-10-03 — pending maintainer confirmation.)_

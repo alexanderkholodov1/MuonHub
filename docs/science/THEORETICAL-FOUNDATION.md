@@ -6,8 +6,11 @@
 > **Review:** the `physicist` reviewer (`.claude/agents/physicist.md`). **Rule:** scientific honesty > marketing.
 >
 > **Editorial note (2026-10-03):** altitude figures such as "Quito ~2850 m, ~730 hPa" describe central
-> Quito. Each station's own altitude and reference pressure come from its metadata and barometer —
-> the first station (USFQ campus, Cumbayá) reads ≈ 768 hPa, i.e. roughly 2.3–2.4 km.
+> Quito. Each station's own altitude and reference pressure come from its metadata and barometer.
+> The first station (USFQ campus, Cumbayá) reads ≈ 768 hPa, consistent with ≈ 2.4 km in a tropical
+> atmosphere (the ICAO standard atmosphere would give 2.28 km); the USFQ weather station EMA in
+> Cumbayá is reported at 2,391 m a.s.l. (Cazorla & Tamayo, ACI Avances 2014). A station's P₀ is its
+> own long-term mean pressure; altitude-dependent factors (§0 item 2, §8D) are rescaled per station.
 
 ---
 
@@ -153,6 +156,10 @@ with log scale and the MPV marked. It is the closest to honest "energy physics".
 
 ### (A) Barometric — the dominant one at surface
 `I(P) = I₀·e^(β(P−P₀))` ⇒ linear: `−ln(I/I₀) = β(P−P₀)`. **β is NOT universal:**
+
+> ⚠️ **Erratum pending (backlog B-M1-35, physicist review 2026-10-03):** with the negative β values
+> below, the linear form must read `ln(I/I₀) = β(P−P₀)` (no leading minus). The correction is made
+> with the M1 physics spec.
 
 | Station | β (%/hPa) | Reference |
 |---|---|---|

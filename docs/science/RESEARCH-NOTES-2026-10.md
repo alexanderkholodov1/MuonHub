@@ -12,9 +12,10 @@
 
 Context: MuonHub targets low-cost cosmic-ray detectors (CosmicWatch-class plastic scintillator +
 SiPM, ~5×5 cm, single channel; an older educational detector with larger paddles; stacked devices
-for coincidences) at USFQ (Cumbayá campus, Quito metropolitan area; the live station's barometer reads
-≈ 768 hPa, i.e. roughly 2.3–2.4 km — the "~2850 m" used in the research prompts is central Quito's
-altitude, not the station's [verified 2026-10-03]). Planned extensions explored here: a ~20-channel
+for coincidences) at USFQ (Cumbayá campus, Quito metropolitan area). The live station's barometer reads
+≈ 768 hPa [verified by running, 2026-10-03], consistent with ≈ 2.4 km in a tropical atmosphere; the USFQ
+weather station EMA is reported at 2,391 m a.s.l. (Cazorla & Tamayo, ACI Avances 2014) [reported]. The
+"~2850 m" used in the research prompts is central Quito's altitude, not the station's. Planned extensions explored here: a ~20-channel
 muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with precise timestamps.
 
 ---
@@ -42,7 +43,7 @@ muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with prec
 |---|---|---|---|---|
 | Gaisser formula and the Guan et al. 2015 modification (low energy, large zenith) — https://arxiv.org/pdf/1509.06176 | Analytic muon flux in energy and angle at sea level | Formula, re-implementable | Negligible | **Tier 1:** a TypeScript generator of Poisson event streams |
 | **EcoMug** — https://github.com/dr4kan/EcoMug (NIM A 1014, 165732, 2021) | Muon generator fitted to data; generates from a plane, cylinder or half-sphere | Header-only C++11; licence **[UNVERIFIED]** | Very low | **Tier 2:** realistic angle and momentum, muography geometry |
-| **CRY** (LLNL) — https://nuclear.llnl.gov/simulation/doc_cry_v1.7/cry.pdf | Correlated shower particles (multiplicity, e/γ/n/μ) | C/C++/Fortran; licence **[UNVERIFIED]** | Low | Tables only for **sea level, 2100 m and 11300 m**, so 2850 m must be interpolated. Useful for coincidence backgrounds |
+| **CRY** (LLNL) — https://nuclear.llnl.gov/simulation/doc_cry_v1.7/cry.pdf | Correlated shower particles (multiplicity, e/γ/n/μ) | C/C++/Fortran; licence **[UNVERIFIED]** | Low | Tables only for **sea level, 2100 m and 11300 m**; for the ≈ 2.4 km USFQ station the 2100 m table is the closest, but it is about 20 g cm⁻² deeper — soft and hadronic yields come out roughly 10–20 % low, so scale them or carry the difference as a systematic. Useful for coincidence backgrounds |
 | **PUMAS** — https://github.com/niess/pumas | Muon transport in matter, forward and **backward** (deterministic CSDA mode up to detailed Monte Carlo) | C99, LGPLv3 | Low | **Muography forward model** (transmission through rock) |
 | MUSIC/MUSUN — https://arxiv.org/pdf/0810.4635 | Muon propagation through thick rock | Fortran; available on request | Low–medium | Alternative to PUMAS |
 | **Geant4** — https://geant4.org/download/license | Full simulation of the detector response | C++, permissive Geant4 licence | High | **Tier 3:** scintillator and SiPM response, strip crosstalk |
@@ -64,8 +65,8 @@ muograph, a seismic sensor, and offline collection (e.g. Raspberry Pi) with prec
 
 **Principles.** Transmission (absorption) muography compares the muon flux through a target with
 an open-sky flux to infer the opacity (density × length) along each line of sight. Scattering
-tomography measures deflection angles and only suits small objects with momentum or angle
-tracking. "Calibrate against the open sky, then point at the object" is the standard transmission
+tomography measures deflection angles — it needs tracks both before and after the object — and only
+suits small objects with momentum or angle tracking. "Calibrate against the open sky, then point at the object" is the standard transmission
 method. Reviews and studies:
 - Tanaka et al., *Nature Reviews Methods Primers* 2023, doi:10.1038/s43586-023-00270-7
   (https://hun-ren.hu/research_news/composed-through-global-cooperation-with-the-participation-of-hun-ren-wigner-rcp-researchers-a-paper-presenting-the-latest-findings-in-muography-research-published-106746)
@@ -81,8 +82,9 @@ https://arxiv.org/pdf/2004.09364 , https://halley.uis.edu.co/fuego/en/el-proyect
 
 **A 20-channel device**, e.g. 2 planes × (5 X + 5 Y) strips, gives 25 pixels per plane and about 81
 directions: coarse (several degrees) but **feasible as a demonstrator** — an open-sky angular map,
-then a building or a hill. Exposure time grows steeply with opacity because the flux falls roughly
-exponentially with rock thickness: large volcanoes need months with m²-scale areas, out of reach
+then a building or a hill. Exposure time grows steeply with opacity: at hill-to-volcano opacities the flux falls roughly as a
+power law of the opacity (~ϱ⁻²), and only becomes exponential at several km water-equivalent (PDG
+Cosmic Rays review): large volcanoes need months with m²-scale areas, out of reach
 for 5 cm strips. Site-specific exposure times were not computed; that needs a PUMAS or EcoMug run
 **[UNVERIFIED for this geometry]**.
 
@@ -108,7 +110,7 @@ for 5 cm strips. Site-specific exposure times were not computed; that needs a PU
 window; reconstruct tracks from strip pairs (X/Y per plane, then a direction); show angular rate
 maps; compute target/open-sky ratio (transmission) maps with Poisson errors; estimate exposure
 time; give a first-order opacity estimate by inverting against a stored flux table; show per-channel
-noise diagnostics (singles rate, accidental rate 2·R1·R2·τ).
+noise diagnostics (singles rate, accidental rate 2·τ_c·R1·R2, τ_c = coincidence half-window).
 
 **Out of reach for the browser:** 3D tomographic inversion, scattering tomography, and full Geant4
 or PUMAS forward modelling — those belong in an offline Python service.
@@ -130,7 +132,10 @@ or PUMAS forward modelling — those belong in an offline Python service.
 - Frame the feature as exploratory, not predictive; never label it "earthquake prediction".
 - Remove pressure, temperature and solar (NMDB) effects first.
 - Pre-register the analysis.
-- Apply look-elsewhere / trial-factor corrections and surrogate (shuffle) tests.
+- Apply look-elsewhere / trial-factor corrections and surrogate tests that **preserve
+  autocorrelation** (block bootstrap, phase-randomised surrogates; Ebisuzaki, J. Climate 10 (1997)
+  2147) — plain shuffles destroy autocorrelation and overstate significance, worst for two series
+  that share a solar-cycle period.
 - Also treat the seismometer as a **systematics channel** (vibration or tilt noise on the SiPM).
 
 **Formats and tooling.** miniSEED through FDSN web services, StationXML metadata, and ObsPy (the
@@ -161,7 +166,7 @@ miniSEED stays elsewhere.
 | Use case | Needed | Sufficient setup |
 |---|---|---|
 | Per-minute rates | ~1 s | RTC or occasional NTP |
-| Coincidence on the same machine | µs (hardware) or ~ms (software over USB) | Hardware coincidence is best; a ~ms software window makes the accidental rate 2·R1·R2·τ non-negligible for noisy channels |
+| Coincidence on the same machine | µs (hardware) or ~ms (software over USB) | Hardware coincidence is best; a ~ms software window makes the accidental rate 2·τ_c·R1·R2 (τ_c = coincidence half-window) non-negligible for noisy channels; host USB-serial latency can exceed 10 ms, so the window is set from the measured delay histogram |
 | Coincidence between machines | µs-scale windows | GPS PPS on each machine plus hardware event timestamping; NTP alone (ms) supports only wide windows with accidentals subtracted |
 
 **CosmicWatch hardware coincidence (v2):** two units linked by a 3.5 mm audio cable (the tip
@@ -179,7 +184,7 @@ extensions up to 8 devices over Ethernet cable: https://archive.aps.org/pss/2025
 - **v6 scope candidates:** a TypeScript synthetic event generator (Guan flux, Poisson, dead time,
   noise, N-device coincidence) used as test fixtures; typed, validated ingest of the CosmicWatch
   coincidence flag with a software coincidence engine that reports the accidental estimate
-  2·R1·R2·τ; offline-first Raspberry Pi collection with GPS PPS + chrony recommended and DS3231 as
+  2·τ_c·R1·R2; offline-first Raspberry Pi collection with GPS PPS + chrony recommended and DS3231 as
   the minimum, storing a clock-quality record (sync source, offset estimate) with every batch;
   benchmark overlays against NMDB (Mexico City) and GMDN, honouring their acknowledgement and
   citation terms; data exchange with the LAGO Ecuador nodes (USFQ is a member).
