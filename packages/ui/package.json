@@ -1,6 +1,6 @@
 {
   "name": "@munhub/ui",
-  "version": "0.1.0",
+  "version": "6.0.0-alpha.0.1",
   "private": true,
   "description": "Design system: Observatory Dark tokens, Tailwind v4, shadcn/ui re-tokenized primitives",
   "license": "MIT",

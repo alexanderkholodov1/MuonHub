@@ -1,7 +1,0 @@
-{
-  "dependsOnUnmergedPRs": false,
-  "workPackages": [
-    { "id": "WP-translate-batch-A", "executor": "gemini", "paths": ["planning/07-*.md", "planning/08-*.md"] },
-    { "id": "WP-translate-batch-B", "executor": "gemini", "paths": ["planning/09-*.md", "planning/10-*.md"] }
-  ]
-}

@@ -1,6 +1,6 @@
 {
   "name": "@munhub/physics",
-  "version": "0.1.0",
+  "version": "6.0.0-alpha.0.1",
   "private": true,
   "description": "Pure scientific calculations: dead-time correction, barometric correction, flux, Landau spectrum",
   "license": "MIT",
