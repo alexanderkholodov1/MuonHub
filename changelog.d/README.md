@@ -23,7 +23,7 @@ narrative of how it was made).
 ## Example
 `changelog.d/physics-corrections.added.md`:
 ```md
-- Dead-time and local-barometric corrections in `@munhub/physics`, with numeric tests against the
+- Dead-time and local-barometric corrections in `@muonhub/physics`, with numeric tests against the
   scientific foundation values.
 ```
 

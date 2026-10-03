@@ -1,5 +1,28 @@
 # ADR-003 — Data storage tiers, event model, and dynamic capacity
 
+> **Status (2026-10-03): Amended by [ADR-005](005-firebase-only-architecture-and-free-tier-budget.md)
+> and [ADR-006](006-data-integrity-raw-canonical-derived.md).** The body below is kept unchanged as
+> the historical record; read it together with these amendments:
+> - **§6 storage layout.**
+>   - **Cloud Storage** is unavailable on the Firebase free plan (Blaze required since
+>     2026-02-03). The signal and complete-raw blobs therefore stay in the agent's local store.
+>     Cloud upload of the full raw stream becomes an optional, admin-gated feature (ADR-006).
+>   - **Firestore** for metadata and summaries is kept, as part of the RTDB + Firestore split in
+>     ADR-005. The detailed model is an M1 spec. The first-attempt implementation stored
+>     summaries in RTDB instead.
+>   - **Cold archive:** Cloudflare R2 is retired. Backups go to a private, encrypted backup
+>     repository built in M4 (ADR-005).
+> - **§3 noise floor.** An automatically calibrated threshold only *proposes* or labels;
+>   nothing is discarded at ingest (ADR-006).
+> - **§8 federation.** Pooling free tiers across accounts or projects to exceed quotas is
+>   rejected; it conflicts with Google's terms (ADR-005 §5).
+> - **Phase B** (Supabase / Red Clara) is retired (ADR-005). Mentions of `munhub-1` here are
+>   historical: v6 runs on `muonhub`.
+> - **Carried forward as inputs to the M1 specs:** the retention-axis ideas (§1), science
+>   summaries (§2), clock correctness (§4), and session provenance (§5), with "per detector"
+>   read as per stream / per device (ADR-004). The capacity and runway ideas (§7) feed the M4
+>   operations work.
+
 - **Status:** accepted (2026-06-14)
 - **Context owners:** Adjutant + maintainer (design dialogue 2026-06-14)
 - **Supersedes/extends:** the minute-record model in `planning/02-DATA-MODEL.md`; informs the

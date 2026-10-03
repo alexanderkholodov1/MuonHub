@@ -2,7 +2,7 @@
  * Closed vocabularies shared across the MuonHub domain.
  *
  * Each is a Zod enum so it validates at runtime and yields a literal union type at compile time.
- * See `planning/02-DATA-MODEL.md` and `docs/research/THEORETICAL-FOUNDATION.md`.
+ * See `docs/archive/planning/02-DATA-MODEL.md` and `docs/science/THEORETICAL-FOUNDATION.md`.
  */
 import { z } from "zod";
 

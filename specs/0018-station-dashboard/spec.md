@@ -1,5 +1,8 @@
 # 0018 — Station dashboard: corrected rate + spectrum + insights (the science payoff)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec) → Cursor (implementation, Claude model) → Gemini (cross-provider review, D35) → Adjutant (verification + macro + PR)
 - **Depends on:** 0005 (`@munhub/physics`), 0007 (`DataProvider.getMinuteRecords`/`subscribeRealtime`), 0008 (`@munhub/ui`), 0009 (auth), 0011 (station/detector). Branches from a linear `main`.

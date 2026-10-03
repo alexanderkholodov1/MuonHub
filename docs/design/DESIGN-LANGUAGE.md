@@ -7,8 +7,8 @@
 > `ThemeProvider`, `Button`, `Card`, `Stat`.
 
 > The visual contract for the whole platform. Every UI spec, every component, every screen — and
-> every agent/tool (v0, Cursor, Copilot, Claude) — obeys this document, exactly as code obeys the
-> contracts in `packages/shared` and science obeys `docs/research/THEORETICAL-FOUNDATION.md`.
+> every agent and tool — obeys this document, exactly as code obeys the contracts in
+> `packages/shared` and science obeys `docs/science/THEORETICAL-FOUNDATION.md`.
 >
 > **North star:** MuonHub is a **scientific instrument**, not a generic SaaS. It should feel like
 > serious observatory / telescope-control software: calm, precise, data-forward, trustworthy.
@@ -111,8 +111,11 @@ Primary series = `accent`. Gridlines = `border` at low opacity. Always offer err
 
 ## 4. Data visualization (the hero)
 
-- **Plotly** themed to Observatory Dark (D15): transparent paper, `border`-opacity gridlines,
-  `text-secondary` ticks, `accent` for the primary series, the categorical palette above.
+- **uPlot** is the primary chart library (lightweight, fast on long series — keeps the free Hosting
+  transfer budget, ADR-005); **Plotly** is loaded lazily only for spectrum/fit views. Both are themed
+  to Observatory Dark: transparent background, `border`-opacity gridlines, `text-secondary` ticks,
+  `accent` for the primary series, the categorical palette above. Chart libraries receive resolved
+  color values (read from the CSS tokens at runtime), never raw `var(...)` strings.
 - Defaults: tabular mono tick labels, **error bars available**, **log-scale toggle**, range
   selector, export PNG/CSV. Gaps in time series **break the line** (≥2 min, per `GAP_THRESHOLD`).
 - A chart is never decorative — every axis labeled with units; every series legible at a glance.
@@ -142,18 +145,20 @@ Primary series = `accent`. Gridlines = `border` at low opacity. Always offer err
 ## 7. Landing vs. App (two registers, one language)
 
 - **Public landing** (attract universities): may be **dramatic** — `display` type, a hero with the
-  Andean night sky / detector imagery, the city-bubble map (D20), one restrained motion. Wow-factor.
+  Andean night sky / detector imagery, the network map (public display precision chosen by each
+  station owner), one restrained motion. Wow-factor.
 - **App / dashboards** (daily science): **calm, dense, data-first.** Restraint wins. Same tokens,
   lower expressiveness. (Same approach as Linear/Stripe: bold marketing, quiet product.)
 
 ---
 
-## 8. How the fleet uses this
+## 8. How agents and tools use this
 
-- **v0.dev (Vercel):** prepend the "v0 prompt kit" (§8.1) so generations are on-brand from token 0.
-- **Cursor / Copilot:** `.cursor/rules` + `copilot-instructions` point here; integrate v0 output into
-  `packages/ui` with these tokens. Never hand-pick raw hex — use semantic tokens.
-- **Claude (design persona):** art-directs, writes/maintains this doc, reviews every UI PR against §0.
+- **Design generators (optional, e.g. v0.dev):** prepend the prompt kit (§8.1) so output is on-brand
+  from the first token; integrate results into `packages/ui` with these tokens. Never hand-pick raw
+  hex — use semantic tokens.
+- **The Adjutant (design role):** art-directs, maintains this document, and reviews every UI change
+  against §0.
 - The concrete token implementation (Tailwind theme + CSS variables + shadcn config) lands in a
   dedicated UI spec under `packages/ui`; this document is its source of truth.
 
@@ -164,5 +169,5 @@ Dark default bg #0B0E14, surface #131722, border #252C3B, text #E6EAF2 / seconda
 ONE accent cyan #4CC9F0 used sparingly; amber #F5B544 for highlights. Max 2 accents per screen.
 Font: Geist Sans (UI) + Geist Mono for ALL numbers (tabular-nums). Body 16px, generous spacing (8pt grid).
 Lucide icons (no emoji). shadcn/ui re-tokenized. No gradients/glows. WCAG AA contrast.
-Data (Plotly charts, KPI mono readouts) is the hero. Calm, precise, lots of whitespace, large hierarchy.
+Data (charts, KPI mono readouts) is the hero. Calm, precise, lots of whitespace, large hierarchy.
 ```

@@ -1,5 +1,8 @@
 # 0008 — Web app shell + UI design-system foundation (Observatory Dark)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** ready for implementation
 - **Responsible:** Adjutant (spec) → Sonnet executor (implementation) → cross-provider review (D35)
 - **Depends on:** 0003 (shared), 0001 (scaffold). Independent of 0007 (FirebaseProvider, PR #42) —

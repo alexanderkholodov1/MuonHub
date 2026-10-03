@@ -1,5 +1,8 @@
 # 0075 — Event & storage data contract (`@munhub/shared` schemas)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec + ADR-003) → Cursor (impl) → cross-provider review (D35; Gemini or
   supervisor fallback if Gemini quota is out) → Adjutant (verify + macro + PR)

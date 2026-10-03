@@ -1,5 +1,8 @@
 # 0024 — Public landing: detector map (city-aggregated) + live demo
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** done
 - **Responsible:** Adjutant (spec) → Cursor (implementation, Claude model) → Gemini (cross-provider review, D35) → Adjutant (verification + macro + PR)
 - **Depends on:** 0007 (`DataProvider.listStations`/`getMinuteRecords`/`subscribeRealtime`), 0008 (`@munhub/ui` + landing shell), 0018 (dashboard chart components + physics). Branches from a linear `main`.

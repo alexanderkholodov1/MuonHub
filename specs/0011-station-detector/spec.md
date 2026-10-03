@@ -1,5 +1,8 @@
 # 0011 — Create Station + Detector management (onboarding the user's site & device)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** ready for implementation
 - **Responsible:** Adjutant (spec) → Cursor (implementation, Claude model) → Gemini (cross-provider review, D35) → Adjutant (verification + macro + PR)
 - **Depends on:** 0003 (`Station`/`Detector`/`Calibration` schemas), 0007 (FirebaseProvider `upsertStation`/`upsertDetector`/`listDetectors`), 0008 (`@munhub/ui`), 0009 (auth — the owner is the signed-in user). Branches from a linear `main`.

@@ -1,5 +1,8 @@
 # 0005 — Physics package (scientific corrections and statistics)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented (this PR)
 - **Responsible:** Adjutant (spec + implementation) — physics lane
 - **Depends on:** 0003 (shared contracts: `MinuteRecord`, `HardwareVersion`, `DEAD_TIME_TAU_S`);

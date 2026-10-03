@@ -1,9 +1,31 @@
-# MuonHub — Formatos serial del detector (referencia canónica)
+# MuonHub — Detector serial formats (canonical reference)
 
-> Extraído del `public/js/serial-reader.js` de la v5 (lógica probada con hardware real).
-> Es la **referencia para el parser del agente Tauri** (ADR-002: portar, no reinventar).
-> ⚠️ Hay **ambigüedades de unidades/columnas** marcadas abajo: **verificar con el detector
-> físico** la próxima vez que esté disponible y fijar el mapeo definitivo en `packages/shared`.
+> **Status note (2026-10-03).** This is the format reference carried over from v5, now translated
+> to English; its body is historical and keeps every original caveat. Facts checked in the
+> 2026-10-02/03 audit (`docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md` §4.3), verified by reading
+> the code:
+> - **The CosmicWatch dead-time column is cumulative**, not instantaneous: the official v3X order
+>   documents `Deadtime[s] (cumulative)` (§0). The first-attempt v6 parser
+>   (`apps/agent/src/parsers/cosmicwatch.ts`) converted the raw value into an instantaneous
+>   percentage, which is wrong; a live-time fraction has to come from the difference between
+>   consecutive lines. The unit used by the MuNRa firmware is still unverified (⚠️ §2).
+> - **Event-count semantics differ across formats.** v5 counts one event per parsed line
+>   (`minuteData.eventCount++`). The first-attempt v6 parsers instead sum a per-reading count taken
+>   from `trg` (CSV, key-value) or from the JSON keys `event`/`eventId`/`event_id`, so a device that
+>   streams a running event id would be summed into an inflated count. A count of events and an
+>   event id are different quantities.
+> - **From M1 on, each Device type declares its own format** (column map, units, time source,
+>   counter and dead-time semantics) instead of relying on the shared per-line heuristics of §1
+>   (ADR-004). Readings from a Device feed its Stream, and the raw lines are kept unaltered. Formats
+>   of new Devices are discovered with the agent's capture tool and its raw-line tee (ADR-007). The
+>   heuristics below remain the reference for the CosmicWatch/MuNRa Device type.
+
+> Extracted from v5's `public/js/serial-reader.js` (branch `v5-production`; logic proven with real
+> hardware).
+> It is the **reference for the agent's parser** (port proven logic, don't reinvent; the agent runtime
+> is a headless daemon per [ADR-007](../decisions/adr/007-agent-runtime-headless-daemon.md)).
+> ⚠️ There are **unit/column ambiguities** marked below: **verify with the physical detector** the
+> next time it is available and pin the definitive mapping in `packages/shared`.
 
 ---
 
@@ -26,136 +48,138 @@ canonical hPa field and validates the resulting `MinuteRecord` with `MinuteRecor
 
 Data-integrity invariant for v6 ingestion: per-minute fields are time-averages, never sums. `sm`,
 `tp`, `pr`, `dt`, `ec`, and `cc` are averaged over the minute window; `sn` and `sx` keep the
-documented amplitude min/max semantics. No parsed event is filtered during aggregation. The Tauri
-serial bridge under `apps/agent/src-tauri/` is a thin scaffold for port enumeration and line events;
+documented amplitude min/max semantics. No parsed event is filtered during aggregation. *(First-attempt
+state, replaced in M1:)* the Tauri serial bridge under `apps/agent/src-tauri/` is a thin scaffold for port enumeration and line events;
 full Tauri packaging and real serial acquisition are out of CI and must be verified manually with the
 physical detector by checking port enumeration, live line streaming, parsed readings, local-first
 minute persistence, and reconnect flush.
 
 ---
 
-## 0. Investigación: ¿qué detector es realmente? (CosmicWatch v3X-derivado)
+## 0. Investigation: which detector is it really? (CosmicWatch v3X-derived)
 
-**Conclusión:** SÍ es un CosmicWatch (Dennis tiene razón: logo en el LCD, diseño base). Pero
-corre **firmware personalizado** ("MuNRa"), derivado de la familia **v3X**, no el v1/v2 clásico
-cuya documentación probablemente te pasaron — por eso el formato no coincidía.
+**Conclusion:** YES, it is a CosmicWatch (Dennis is right: logo on the LCD, base design). But it
+runs **custom firmware** ("MuNRa"), derived from the **v3X** family, not the classic v1/v2 whose
+documentation you were probably given — that is why the format did not match.
 
-**Evidencia:**
-- El formato trae **presión (Pa) y flag de coincidencia**, justo lo que añadió el **CosmicWatch
-  v3X** (sensor de presión BMP280 + modo coincidencia). El v1/v2 clásico NO tiene presión: su
-  salida es `Comp_date Comp_time Event Ardn_time[ms] ADC[0-1023] SiPM[mV] Deadtime[ms] Temp[C]`
-  (un solo ADC de 10 bits, sin presión).
-- La presión del ejemplo (`76501.6 Pa ≈ 765 hPa`) **coincide con la altitud de Quito** → el
-  firmware está configurado para gran altitud y la columna [5] es presión (confirmado).
-- El marcador final `COSMIC` y el **orden de columnas son no estándar** (custom): difieren del
-  v3X oficial, cuyo orden es `Event, Timestamp[s], Flag(coinc 0/1), ADC[12b], SiPM[mV],
-  Deadtime[s] (acumulado), Temp[C], Press[Pa], Accel(XYZ), Gyro(XYZ)` con **un solo ADC de 12
-  bits**.
+**Evidence:**
+- The format carries **pressure (Pa) and a coincidence flag**, exactly what the **CosmicWatch
+  v3X** added (BMP280 pressure sensor + coincidence mode). The classic v1/v2 has NO pressure: its
+  output is `Comp_date Comp_time Event Ardn_time[ms] ADC[0-1023] SiPM[mV] Deadtime[ms] Temp[C]`
+  (a single 10-bit ADC, no pressure).
+- The pressure in the example (`76501.6 Pa ≈ 765 hPa`) **matches Quito's altitude** → the
+  firmware is configured for high altitude and column [5] is pressure (confirmed).
+- The trailing `COSMIC` marker and the **column order are non-standard** (custom): they differ
+  from the official v3X, whose order is `Event, Timestamp[s], Flag(coinc 0/1), ADC[12b],
+  SiPM[mV], Deadtime[s] (cumulative), Temp[C], Press[Pa], Accel(XYZ), Gyro(XYZ)` with **a single
+  12-bit ADC**.
 
-**Lo que NO se puede asegurar sin el hardware:** el significado de las columnas 2 y 3
-(`60`, `1881` — ¿ADC + baseline?, ¿dos lecturas?), la unidad real del SiPM (`0.9` es muy bajo
-para mV) y del dead time (`46100` — ¿µs?, ¿acumulado en otra unidad?).
+**What cannot be asserted without the hardware:** the meaning of columns 2 and 3
+(`60`, `1881` — ADC + baseline? two readings?), the real unit of the SiPM value (`0.9` is very low
+for mV) and of the dead time (`46100` — µs? cumulative in another unit?).
 
-**Mejor acción para cerrar el caso (cuando tengas el detector):** capturar (a) la **línea de
-encabezado** que imprime al arrancar, y (b) si se puede, el **código del firmware** (sketch
-Arduino cargado) o el encabezado del archivo de la microSD. Con eso fijamos el mapeo definitivo
-en `packages/shared`, comparando contra el repo oficial `spenceraxani/CosmicWatch-...-v3X`.
+**Best action to close the case (when you have the detector):** capture (a) the **header line** it
+prints at startup, and (b) if possible, the **firmware code** (the loaded Arduino sketch) or the
+header of the microSD file. With that we pin the definitive mapping in `packages/shared`,
+comparing against the official repo `spenceraxani/CosmicWatch-...-v3X`.
 
-**Implicación de producto:** como hay flag de coincidencia, la estación USFQ probablemente es
-`type=coincidence` (mejor pureza de muones, ver `THEORETICAL-FOUNDATION §7`) — confirmar con el
-encabezado/firmware. Esto **matiza D7** ("mayormente single SiPM"): puede haber coincidencia real.
-
----
-
-## 1. Los 4 formatos (orden de prioridad del parser v5)
-
-El parser salta primero **encabezados / líneas no-dato**: cualquier línea que empiece con letra,
-o contenga `[`, `Event` o `TimeStamp`, o sea muy corta / sin dígitos, se ignora.
-
-| # | Formato | Disparador (heurística) |
-|---|---------|--------------------------|
-| 1 | **JSON** | la línea empieza con `{` |
-| 2 | **MuNRa tab/space (PRIMARIO)** | empieza con ≥3 números separados por espacio/tab, o contiene `COSMIC` |
-| 3 | **Key-Value** | contiene `TRG` seguido de número |
-| 4 | **CSV** | contiene `,` y empieza con dígito |
-| (fallback) | Espacio-separado | empieza con ≥2 números |
-
-**Líneas concatenadas:** a veces llegan dos eventos pegados (`...0 COSMIC488 1059953...`).
-El parser los separa en el límite `COSMIC`+dígito (`split(/(?<=COSMIC)(?=\d)/)`). Portar esto.
+**Product implication:** since there is a coincidence flag, the USFQ station is probably
+`type=coincidence` (better muon purity, see `THEORETICAL-FOUNDATION §7`,
+[THEORETICAL-FOUNDATION.md](THEORETICAL-FOUNDATION.md)) — confirm with the header/firmware. This
+**qualifies D7** ("mostly single SiPM"): there may be real coincidence.
 
 ---
 
-## 2. Formato PRIMARIO MuNRa (tab/espacio)
+## 1. The 4 formats (v5 parser priority order)
 
-Encabezado que emite el detector:
+The parser first skips **headers / non-data lines**: any line that starts with a letter, or
+contains `[`, `Event`, or `TimeStamp`, or is very short / has no digits, is ignored.
+
+| # | Format | Trigger (heuristic) |
+|---|--------|---------------------|
+| 1 | **JSON** | the line starts with `{` |
+| 2 | **MuNRa tab/space (PRIMARY)** | starts with ≥3 numbers separated by space/tab, or contains `COSMIC` |
+| 3 | **Key-Value** | contains `TRG` followed by a number |
+| 4 | **CSV** | contains `,` and starts with a digit |
+| (fallback) | Space-separated | starts with ≥2 numbers |
+
+**Concatenated lines:** sometimes two events arrive glued together (`...0 COSMIC488 1059953...`).
+The parser splits them at the `COSMIC`+digit boundary (`split(/(?<=COSMIC)(?=\d)/)`). Port this.
+
+---
+
+## 2. PRIMARY MuNRa format (tab/space)
+
+Header emitted by the detector:
 ```
 Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Pressure[Pa] Temp[C] DeadTime[us] Coincident COSMIC
 ```
-Ejemplo:
+Example:
 ```
 270  111753  60  1881  0.9  76501.6  27.1  46100  0  COSMIC
 ```
 
-Mapeo de columnas (según `parseTabSeparatedLine`, separador = tabs o múltiples espacios):
+Column mapping (according to `parseTabSeparatedLine`, separator = tabs or multiple spaces):
 
-| Idx | Campo | Ejemplo | Unidad | Notas |
-|-----|-------|---------|--------|-------|
-| 0 | Event ID/contador | 270 | — | |
-| 1 | Timestamp interno | 111753 | ms | reloj del detector; **v5 usa `Date.now()` para la DB**, no este |
-| 2 | ADC1 | 60 | crudo | canal 1 |
-| 3 | ADC2 | 1881 | crudo | canal 2 (¡doble canal!) |
-| 4 | SiPM | 0.9 | mV (⚠️) | **ambiguo**: valores <1 sugieren V, no mV; verificar |
-| 5 | Pressure | 76501.6 | Pa | (en hPa serían ~765 → coherente con altitud de Quito) |
+| Idx | Field | Example | Unit | Notes |
+|-----|-------|---------|------|-------|
+| 0 | Event ID/counter | 270 | — | |
+| 1 | Internal timestamp | 111753 | ms | detector clock; **v5 uses `Date.now()` for the DB**, not this |
+| 2 | ADC1 | 60 | raw | channel 1 |
+| 3 | ADC2 | 1881 | raw | channel 2 (dual channel!) |
+| 4 | SiPM | 0.9 | mV (⚠️) | **ambiguous**: values <1 suggest V, not mV; verify |
+| 5 | Pressure | 76501.6 | Pa | (in hPa it would be ~765 → consistent with Quito's altitude) |
 | 6 | Temp | 27.1 | °C | |
-| 7 | DeadTime | 46100 | µs (⚠️) | ver §4 (se guarda como "dt" pero está en µs, no %) |
-| 8 | Coincident | 0 | 0/1 | flag de coincidencia |
-| 9 | `COSMIC` | — | — | marcador, se ignora |
+| 7 | DeadTime | 46100 | µs (⚠️) | see §4 (stored as "dt" but it is in µs, not %) |
+| 8 | Coincident | 0 | 0/1 | coincidence flag |
+| 9 | `COSMIC` | — | — | marker, ignored |
 
-> ⚠️ **Conflicto en el propio código v5:** un comentario describe la columna [4] como
-> `voltage_V` y otro como `SiPM[mV]`. El mapeo de arriba es el que **usa el parser activo**.
-> Requiere mínimo 7 columnas; si hay menos, descarta la línea.
+> ⚠️ **Conflict inside the v5 code itself:** one comment describes column [4] as
+> `voltage_V` and another as `SiPM[mV]`. The mapping above is the one **used by the active
+> parser**. It requires at least 7 columns; if there are fewer, the line is discarded.
 
 ---
 
-## 3. Otros formatos
+## 3. Other formats
 
-**Key-Value** (`parseKeyValueLine`): pares `CLAVE valor` separados por espacios.
-- `TRG`→trg · `ADC`→sipm = ADC×0.5 (conversión asumida) · `SIPM`/`MV`→sipm(mV) ·
+**Key-Value** (`parseKeyValueLine`): `KEY value` pairs separated by spaces.
+- `TRG`→trg · `ADC`→sipm = ADC×0.5 (assumed conversion) · `SIPM`/`MV`→sipm(mV) ·
   `TEMP`/`T`→°C · `PRES`/`P`→Pa · `DT`/`DEADTIME`→deadtime · `COIN`/`COINCIDENT`→0/1 ·
   `TIME`/`TS`→timestamp.
 
 **CSV** (`parseCSVLine`): `trg,sipm,temp,pressure,deadtime,coincident,timestamp`.
 
-**JSON**: objeto tal cual; se confía en sus claves.
+**JSON**: the object as-is; its keys are trusted.
 
 ---
 
-## 4. Agregación → registro por minuto (mapeo a campos de la DB)
+## 4. Aggregation → per-minute record (mapping to DB fields)
 
-`aggregateData` acumula por evento; `saveMinuteData` emite el registro del minuto:
+`aggregateData` accumulates per event; `saveMinuteData` emits the minute's record:
 
-| Campo DB | Cálculo v5 | Tipo |
-|----------|-----------|------|
-| `ec` | nº de eventos en el minuto (`eventCount`) | conteo/min (= tasa) |
-| `cc` | nº de eventos con `coincident==1` | conteo/min |
-| `sm` | **promedio** de SiPM mV | mV |
-| `sn` / `sx` | mínimo / máximo de SiPM | mV |
-| `tp` | **promedio** de temperatura | °C |
-| `pr` | **promedio** de presión | Pa (v5) → **hPa en v6** |
-| `dt` | **promedio** de dead time | µs (v5, ⚠️) → aclarar a % o live-time en v6 |
+| DB field | v5 computation | Type |
+|----------|----------------|------|
+| `ec` | number of events in the minute (`eventCount`) | count/min (= rate) |
+| `cc` | number of events with `coincident==1` | count/min |
+| `sm` | **average** of SiPM mV | mV |
+| `sn` / `sx` | minimum / maximum of SiPM | mV |
+| `tp` | **average** temperature | °C |
+| `pr` | **average** pressure | Pa (v5) → **hPa in v6** |
+| `dt` | **average** dead time | µs (v5, ⚠️) → clarify as % or live-time in v6 |
 
-- **Invariante respetado:** `sm/tp/pr/dt` son **promedios**; `ec/cc` son conteos por minuto
-  (= tasa), no sumas de magnitudes. Sin filtrado de eventos.
-- **Minutos parciales** (el primero y el último) se **descartan**: solo se guardan minutos completos.
+- **Invariant respected:** `sm/tp/pr/dt` are **averages**; `ec/cc` are counts per minute
+  (= rate), not sums of magnitudes. No event filtering.
+- **Partial minutes** (the first and the last) are **discarded**: only complete minutes are saved.
 
 ---
 
-## 5. Acciones para v6 (agente Tauri — spec S12)
+## 5. Actions for v6 (agent, milestone M1)
 
-1. **Portar** la detección de los 4 formatos + el split de líneas concatenadas (lógica probada).
-2. **Verificar con hardware** y fijar en `packages/shared`: unidad real de SiPM (mV vs V), de
-   dead time (µs vs %), significado de ADC1/ADC2, y si el flag `Coincident` implica `type=coincidence`.
-3. **Reconciliar unidades v6:** presión → hPa; dead time → definir representación canónica para
-   la corrección `R/(1−R·τ_DT)` (`THEORETICAL-FOUNDATION.md §4`).
-4. **Auto-detección de versión/hardware** desde el encabezado (CosmicWatch v2/v3X vs MuNRa).
-5. Mantener "promedios nunca sumas" y el descarte de minutos parciales.
+1. **Port** the detection of the 4 formats + the split of concatenated lines (proven logic).
+2. **Verify with hardware** and pin in `packages/shared`: the real unit of SiPM (mV vs V), of dead
+   time (µs vs %), the meaning of ADC1/ADC2, and whether the `Coincident` flag implies
+   `type=coincidence`.
+3. **Reconcile v6 units:** pressure → hPa; dead time → define the canonical representation for
+   the correction `R/(1−R·τ_DT)` (`THEORETICAL-FOUNDATION.md §4`).
+4. **Auto-detection of version/hardware** from the header (CosmicWatch v2/v3X vs MuNRa).
+5. Keep "averages, never sums" and the discarding of partial minutes.

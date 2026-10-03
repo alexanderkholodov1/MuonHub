@@ -1,5 +1,8 @@
 # 0074 — Storage record slimming + realtime cap enforcement (storage optimization, M1)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec) → Cursor (impl) → Gemini (D35) → Adjutant (verify + macro + PR)
 - **Depends on:** 0003 (schemas), 0007 (FirebaseProvider serializer + realtime cap). Branches from `main`.

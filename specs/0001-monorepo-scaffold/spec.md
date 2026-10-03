@@ -1,5 +1,8 @@
 # 0001 — Scaffold del monorepo y tooling base
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Estado:** ✅ implemented (2026-06-07)
 - **Agente responsable:** Arquitecto de software
 - **Depende de:** D1, D6, D14 (plan maestro); ninguna spec previa

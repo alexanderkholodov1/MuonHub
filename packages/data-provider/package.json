@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/data-provider",
-  "version": "6.0.0-alpha.0.3",
+  "version": "6.0.0-alpha.0.4",
   "private": true,
   "description": "Provider-agnostic DataProvider interface + FirebaseProvider (Phase A) + SupabaseProvider (Phase B)",
   "license": "MIT",

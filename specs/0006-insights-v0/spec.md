@@ -1,5 +1,8 @@
 # 0006 — Insights v0 (per-station corrected rate + statistical baseline)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented by `specs/0018-station-dashboard`
 - **Responsible:** Adjutant (spec) → Sonnet (implementation, after 0005 and FirebaseProvider merge)
 - **Depends on:** 0003 (shared contracts), 0004 (DataProvider interface), 0005 (physics package),

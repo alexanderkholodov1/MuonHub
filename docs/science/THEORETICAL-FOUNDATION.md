@@ -1,6 +1,6 @@
 # Theoretical and Scientific Foundation of MuonHub
 
-> **Status:** v1 — distilled from the deep research (`planning/research/DEEP-RESEARCH-RESULTS.md`,
+> **Status:** v1 — distilled from the deep research (`docs/archive/planning/research/DEEP-RESEARCH-RESULTS.md`,
 > temporary, discardable). OFFICIAL scientific basis of the project. Every physics claim in
 > the UI, landing, AI, and documentation must be consistent with this document.
 > **Review:** research physicist agent. **Rule:** scientific honesty > marketing.
@@ -215,11 +215,11 @@ muon↔neutron correlation views.
   record, after removing thermal-barometric deltas. Do not use a priori formulas.
 
 → **MuonHub implication:** charts/alerts use long rolling windows; AI respects these
-limits (no "anomalies" over one minute). Reinforces C1/C3 of `06-AI-DESIGN`.
+limits (no "anomalies" over one minute). Reinforces C1/C3 of `docs/archive/planning/06-AI-DESIGN.md`.
 
 ---
 
-## 11. Defensible AI/ML (summary; detail in `06-AI-DESIGN.md`)
+## 11. Defensible AI/ML (summary; detail in `docs/archive/planning/06-AI-DESIGN.md`)
 
 - **Anomaly detection (unsupervised):** Autoencoders, Isolation Forest on the
   multivariate vector (mV, corrected rate, pressure, temperature).
@@ -228,7 +228,7 @@ limits (no "anomalies" over one minute). Reinforces C1/C3 of `06-AI-DESIGN`.
 - **Forecasting:** ARIMA/SARIMA and LSTM (post-Forbush recovery).
 - **Cross-correlation:** clustering/SVM (DBSCAN) against DONKI/NMDB/Kp to date the shock.
 
-→ **MuonHub implication:** update `06-AI-DESIGN` with XGBoost as the correction approach
+→ **MuonHub implication:** update `docs/archive/planning/06-AI-DESIGN.md` with XGBoost as the correction approach
 (C2) and the Poisson limit as a hard constraint on windows.
 
 ---

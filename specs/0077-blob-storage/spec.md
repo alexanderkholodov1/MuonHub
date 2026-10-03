@@ -1,5 +1,8 @@
 # 0077 — Blob storage for signals + EventSummary persistence (provider)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec) → Cursor (impl) → independent review (Gemini — re-probe first; Cursor review-only if down) → Adjutant (verify + macro + PR)
 - **Depends on:** 0075 (`SignalRecord`, `EventSummary`), 0007 (FirebaseProvider), 0076 (the agent produces them). Branches from `main`.

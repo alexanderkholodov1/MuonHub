@@ -1,5 +1,9 @@
 # ADR-002 — Local agent framework (serial reading + offline)
 
+> **Status (2026-10-03): Superseded by [ADR-007](007-agent-runtime-headless-daemon.md).** The agent
+> is a headless Node.js/TypeScript daemon. Tauri and Rust are removed from the agent in M1. The
+> body below is kept unchanged as the historical record.
+
 - **Status:** accepted (D5, D31). Decision: **Tauri** as primary; Go as documented fallback.
 - **Context:** the "agent" is our own software running on the detector's PC. It handles serial
   reading (Windows/macOS/Linux), parsing (see `SERIAL-FORMATS.md`), **local SQLite backup**,

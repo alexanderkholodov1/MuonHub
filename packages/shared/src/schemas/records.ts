@@ -8,7 +8,7 @@
  *  - Derived fields (`ecDt`, `ecCorr`, `flux`) are computed later by `@muonhub/physics`,
  *    so they are OPTIONAL here and never required on ingest.
  *
- * See `planning/02-DATA-MODEL.md` and `docs/research/THEORETICAL-FOUNDATION.md` §4, §8.
+ * See `docs/archive/planning/02-DATA-MODEL.md` and `docs/science/THEORETICAL-FOUNDATION.md` §4, §8.
  */
 import { z } from "zod";
 import { EpochMsSchema } from "./primitives.js";

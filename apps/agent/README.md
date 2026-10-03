@@ -1,5 +1,9 @@
 # MuonHub Agent
 
+> **First-attempt code.** This package is rebuilt in milestone M1 as a headless Node.js daemon
+> (ADR-007, [`docs/decisions/`](../../docs/decisions/)); the Tauri scaffold below is replaced. Known
+> defects are listed in [`docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md`](../../docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md).
+
 The agent is the standard ingestion path for physical detectors. Spec 0013 delivers the pure
 TypeScript acquisition core:
 
