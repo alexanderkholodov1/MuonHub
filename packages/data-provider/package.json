@@ -1,6 +1,6 @@
 {
-  "name": "@munhub/data-provider",
-  "version": "6.0.0-alpha.0.1",
+  "name": "@muonhub/data-provider",
+  "version": "6.0.0-alpha.0.2",
   "private": true,
   "description": "Provider-agnostic DataProvider interface + FirebaseProvider (Phase A) + SupabaseProvider (Phase B)",
   "license": "MIT",
@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:emulator": "firebase emulators:exec --only database,auth,storage --project demo-munhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\"",
+    "test:emulator": "firebase emulators:exec --only database,auth,storage --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\"",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
@@ -28,7 +28,7 @@
     "vitest": "*"
   },
   "dependencies": {
-    "@munhub/shared": "workspace:*",
+    "@muonhub/shared": "workspace:*",
     "firebase": "^12.14.0",
     "firebase-admin": "^14.0.0"
   }

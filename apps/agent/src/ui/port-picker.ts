@@ -14,7 +14,7 @@ export function renderPortPicker(options: PortPickerOptions): void {
   mount.replaceChildren();
 
   const title = document.createElement("h1");
-  title.textContent = "MunHub Agent serial port";
+  title.textContent = "MuonHub Agent serial port";
 
   const select = document.createElement("select");
   select.setAttribute("aria-label", "Serial port");

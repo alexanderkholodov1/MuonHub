@@ -1,4 +1,4 @@
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 import { describe, expect, it } from "vitest";
 import { buildCorrectedRateInsights } from "./insights.js";
 

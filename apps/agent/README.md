@@ -1,4 +1,4 @@
-# MunHub Agent
+# MuonHub Agent
 
 The agent is the standard ingestion path for physical detectors. Spec 0013 delivers the pure
 TypeScript acquisition core:
@@ -12,7 +12,7 @@ TypeScript acquisition core:
 
 ## CI scope
 
-`pnpm --filter @munhub/agent test`, `lint`, and `typecheck` validate the TypeScript core without
+`pnpm --filter @muonhub/agent test`, `lint`, and `typecheck` validate the TypeScript core without
 requiring Tauri, Rust, or a connected detector. The package build script remains a stub until the
 packaging milestone.
 

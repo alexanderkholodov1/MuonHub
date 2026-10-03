@@ -8,8 +8,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import type { Language, User } from "@munhub/shared";
-import type { Unsubscribe } from "@munhub/data-provider";
+import type { Language, User } from "@muonhub/shared";
+import type { Unsubscribe } from "@muonhub/data-provider";
 import {
   getDataProvider,
   getDataProviderConfigState,

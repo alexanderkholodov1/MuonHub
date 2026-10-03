@@ -1,4 +1,4 @@
-# MunHub Lab — Technical documentation
+# MuonHub — Technical documentation
 
 Documentation for contributors and integrators. (End-user concepts live in
 [`../user-manual/`](../user-manual/); the internal master plan and decision log live in

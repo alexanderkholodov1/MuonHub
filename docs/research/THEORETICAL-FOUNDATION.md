@@ -1,4 +1,4 @@
-# Theoretical and Scientific Foundation of MunHub Lab
+# Theoretical and Scientific Foundation of MuonHub
 
 > **Status:** v1 — distilled from the deep research (`planning/research/DEEP-RESEARCH-RESULTS.md`,
 > temporary, discardable). OFFICIAL scientific basis of the project. Every physics claim in
@@ -30,7 +30,7 @@
 - **Primaries:** ~89% protons, ~9% alpha particles, ~2% heavy nuclei/electrons (PDG).
   Origin: solar (SEP, MeV–GeV), galactic (GCR, supernovae, Fermi acceleration) and
   extragalactic/AGN (>10¹⁸ eV).
-- **Spectrum:** power law `dN/dE ∝ E⁻²·⁷` up to the "knee" (~10¹⁵ eV). MunHub
+- **Spectrum:** power law `dN/dE ∝ E⁻²·⁷` up to the "knee" (~10¹⁵ eV). MuonHub
   interacts with secondaries from primaries of **10¹⁰–10¹² eV**.
 - **Cascade (Extensive Air Shower):** a primary collides at 15–20 km and generates three
   components:
@@ -41,7 +41,7 @@
   **At Andean altitude** (Quito ~2850 m, ~730 hPa) absorption is incomplete: denser and
   mixed flux (more secondary electrons and gammas) → muonic dominance decreases.
 
-→ **MunHub implication:** the language must distinguish "charged particle" from "muon"; the
+→ **MuonHub implication:** the language must distinguish "charged particle" from "muon"; the
 degree of muonic dominance depends on the site (altitude) and must be declared.
 
 ---
@@ -74,7 +74,7 @@ degree of muonic dominance depends on the site (altitude) and must be declared.
   Calibration (polynomial) ADC→mV. **Saturation ~180–200 mV** (very large deposits "blind"
   the amplitude → ceiling value).
 
-→ **MunHub implication:** `sm/sx/sn` (mV) reflect deposited energy with a saturation ceiling;
+→ **MuonHub implication:** `sm/sx/sn` (mV) reflect deposited energy with a saturation ceiling;
 document this in tooltips. The amplitude spectrum is the rich physical observable (§5).
 
 ---
@@ -90,7 +90,7 @@ document this in tooltips. The amplitude spectrum is the rich physical observabl
 - Ignoring it causes fatal systematic underestimates (especially at high-rate Andean sites)
   and ruins the barometric calculation.
 
-→ **MunHub implication:** `packages/physics` MUST apply this correction; τ_DT depends on the
+→ **MuonHub implication:** `packages/physics` MUST apply this correction; τ_DT depends on the
 hardware version (detector metadata). The `dt` field (% dead time) feeds into this.
 
 ---
@@ -111,7 +111,7 @@ hardware version (detector metadata). The `dt` field (% dead time) feeds into th
   in the rate track galactic muons (e.g., a Forbush decrease is visible).
 - **Never** label an individual event as "muon" with certainty.
 
-→ **MunHub implication:** see S20 in the backlog. The dashboard uses "charged particles /
+→ **MuonHub implication:** see S20 in the backlog. The dashboard uses "charged particles /
 MIP-type" + uncertainty; "muon" only in aggregate context or with coincidence (§7).
 
 ---
@@ -126,7 +126,7 @@ The amplitude histogram aggregated from an individual detector shows 3 structure
 3. **Landau tail (high energy)** — diagonal tracks (larger Δx), multiple showers,
    delta rays.
 
-→ **MunHub implication:** the **amplitude/Landau spectrum is a first-class chart**
+→ **MuonHub implication:** the **amplitude/Landau spectrum is a first-class chart**
 (EPIC-5 S18), with log scale and the MPV marked. It is the closest to honest "energy physics".
 
 ---
@@ -139,7 +139,7 @@ The amplitude histogram aggregated from an individual detector shows 3 structure
   (accidental coincidence rate v3X ~4.5×10⁻⁵ Hz), and **directionality** (acceptance cone →
   East-West anisotropy).
 
-→ **MunHub implication:** `detector_type=coincidence` enables reporting "muons" rigorously and
+→ **MuonHub implication:** `detector_type=coincidence` enables reporting "muons" rigorously and
 with directionality. The schema already supports this (`02-DATA-MODEL`).
 
 ---
@@ -156,7 +156,7 @@ with directionality. The schema already supports this (`02-DATA-MODEL`).
 | Global Muon Detector Network | ≈ −0.12 to −0.17 | De Mendonça et al. (2016) |
 | Low latitude/high rigidity (Hong Kong) | ≈ −0.085 | Wang & Lee (1967) |
 
-→ **MunHub implication:** `packages/physics` calculates **local β by regression** over the
+→ **MuonHub implication:** `packages/physics` calculates **local β by regression** over the
 historical data of each node; never assume a fixed β. (Reinforces S04 and AI capability C2.)
 
 ### (B) Thermal — dual
@@ -180,7 +180,7 @@ historical data of each node; never assume a fixed β. (Reinforces S04 and AI ca
   (among the highest on Earth; the global maximum ≈17 GV corresponds to Doi Inthanon,
   Thailand — Gerontidou et al. 2021; PSNM) → natural filter that purges low-energy solar noise.
 
-→ **MunHub implication:** main scientific argument (and for the Red Clara application):
+→ **MuonHub implication:** main scientific argument (and for the Red Clara application):
 Ecuadorian data is hard, pristine galactic signal, scarce in Northern Hemisphere networks.
 
 ---
@@ -198,7 +198,7 @@ Ecuadorian data is hard, pristine galactic signal, scarce in Northern Hemisphere
   features for AI; can transiently lower R_c.
 - **11-year solar cycle:** long-term anticorrelation.
 
-→ **MunHub implication:** validates and prioritizes EPIC-7 (NMDB/NOAA/DONKI/Kp-Dst) and the
+→ **MuonHub implication:** validates and prioritizes EPIC-7 (NMDB/NOAA/DONKI/Kp-Dst) and the
 muon↔neutron correlation views.
 
 ---
@@ -214,7 +214,7 @@ muon↔neutron correlation views.
 - **Per-detector baseline:** build the "normal" empirically from a solar-quiet historical
   record, after removing thermal-barometric deltas. Do not use a priori formulas.
 
-→ **MunHub implication:** charts/alerts use long rolling windows; AI respects these
+→ **MuonHub implication:** charts/alerts use long rolling windows; AI respects these
 limits (no "anomalies" over one minute). Reinforces C1/C3 of `06-AI-DESIGN`.
 
 ---
@@ -228,7 +228,7 @@ limits (no "anomalies" over one minute). Reinforces C1/C3 of `06-AI-DESIGN`.
 - **Forecasting:** ARIMA/SARIMA and LSTM (post-Forbush recovery).
 - **Cross-correlation:** clustering/SVM (DBSCAN) against DONKI/NMDB/Kp to date the shock.
 
-→ **MunHub implication:** update `06-AI-DESIGN` with XGBoost as the correction approach
+→ **MuonHub implication:** update `06-AI-DESIGN` with XGBoost as the correction approach
 (C2) and the Poisson limit as a hard constraint on windows.
 
 ---

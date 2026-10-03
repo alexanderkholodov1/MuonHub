@@ -1,6 +1,6 @@
-# MunHub Lab — Engineering standards & practices
+# MuonHub — Engineering standards & practices
 
-> The standards MunHub holds itself to, and the honest verdict on industry practices we evaluated.
+> The standards MuonHub holds itself to, and the honest verdict on industry practices we evaluated.
 > The rule of thumb: **a practice earns its place only if it adds real value or robustness** —
 > never cargo-cult, never gold-plating.
 
@@ -38,4 +38,4 @@
 ## The throughline
 Clean Architecture gives us the *shape*, SOLID gives us the *discipline*, SDD/TDD give us the
 *method*, C4/ADR/Changelog give us the *memory*, and YAGNI/KISS keep us *honest*. Together they are
-why MunHub can run on a free tier today and a self-hosted cluster tomorrow without a rewrite.
+why MuonHub can run on a free tier today and a self-hosted cluster tomorrow without a rewrite.

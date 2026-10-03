@@ -3,7 +3,7 @@ import {
   StorageTierConfigSchema,
   type NoiseCalibration,
   type StorageTierConfig,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import { describe, expect, it } from "vitest";
 import { AgentEventSciencePipeline } from "./event-science-pipeline.js";
 import type { RawReading } from "./parsers/index.js";

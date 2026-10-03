@@ -1,4 +1,4 @@
-# MunHub Lab v6.0 — Design Language: "Observatory Dark"
+# MuonHub — Design Language: "Observatory Dark"
 
 > **Implementation status:** token foundation and primitive set LANDED in `packages/ui` (spec 0008).
 > The full token set (CSS custom properties + Tailwind v4 `@theme`) lives in
@@ -10,7 +10,7 @@
 > every agent/tool (v0, Cursor, Copilot, Claude) — obeys this document, exactly as code obeys the
 > contracts in `packages/shared` and science obeys `docs/research/THEORETICAL-FOUNDATION.md`.
 >
-> **North star:** MunHub is a **scientific instrument**, not a generic SaaS. It should feel like
+> **North star:** MuonHub is a **scientific instrument**, not a generic SaaS. It should feel like
 > serious observatory / telescope-control software: calm, precise, data-forward, trustworthy.
 > The data is the hero; the chrome gets out of the way.
 > **References (study these):** Linear (precision), Observable & Windy (data-forward), Vercel/Geist

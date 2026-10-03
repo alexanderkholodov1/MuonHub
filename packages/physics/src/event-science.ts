@@ -3,7 +3,7 @@ import {
   type EventSummary,
   type NoiseCalibrationMethod,
   type SignalRecord,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import { buildAmplitudeHistogram, estimateMpv } from "./spectrum.js";
 
 const DEFAULT_NOISE_FRACTION = 0.25;

@@ -18,7 +18,7 @@ open a PR for partial or unverified work — keep going on the same branch. One-
 
 ## What this repository is
 
-**MunHub Lab v6.0** (pre-alpha): ground-up reconstruction of a cosmic-ray detector monitoring
+**MuonHub** (pre-alpha): ground-up reconstruction of a cosmic-ray detector monitoring
 platform (CosmicWatch-class hardware) as a typed pnpm/Turborepo monorepo. The legacy v5 app
 (vanilla JS + Firebase) lives in `public/` as a **read-only behavioral reference** — see
 `docs/technical/V5-LEGACY-REFERENCE.md`. Do not edit `public/` except to consult it.
@@ -34,7 +34,7 @@ pnpm build          # build all packages (Turborepo)
 pnpm test           # vitest suites
 pnpm lint           # eslint
 pnpm typecheck      # strict TS across the workspace
-pnpm --filter @munhub/shared test   # single-package runs
+pnpm --filter @muonhub/shared test   # single-package runs
 firebase deploy --only hosting      # legacy v5 only (public/)
 ```
 

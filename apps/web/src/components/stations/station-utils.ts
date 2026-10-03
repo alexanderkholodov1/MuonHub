@@ -7,8 +7,8 @@ import type {
   StationPlacement,
   StationType,
   Visibility,
-} from "@munhub/shared";
-import { defaultCalibration } from "@munhub/shared";
+} from "@muonhub/shared";
+import { defaultCalibration } from "@muonhub/shared";
 
 export const VISIBILITY_OPTIONS = [
   {

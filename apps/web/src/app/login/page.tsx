@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { Button, Card } from "@munhub/ui";
+import { Button, Card } from "@muonhub/ui";
 import { AuthGate } from "../../components/AuthGate";
 import { useAuth } from "../../components/AuthProvider";
 import { authErrorToMessage } from "../../lib/auth-errors";
@@ -54,7 +54,7 @@ export default function LoginPage(): React.ReactElement {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!isValidEmail(normalizedEmail)) {
-      setError("Enter the email address linked to your MunHub account.");
+      setError("Enter the email address linked to your MuonHub account.");
       return;
     }
     if (password.length === 0) {
@@ -79,7 +79,7 @@ export default function LoginPage(): React.ReactElement {
   return (
     <AuthGate mode="guest">
       <div style={{ maxWidth: "480px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
-        <Card title="Sign in to MunHub Lab">
+        <Card title="Sign in to MuonHub">
           <p
             style={{
               marginTop: 0,
@@ -89,7 +89,7 @@ export default function LoginPage(): React.ReactElement {
               lineHeight: 1.6,
             }}
           >
-            Access your station dashboard, detector setup, and collaboration tools with your MunHub
+            Access your station dashboard, detector setup, and collaboration tools with your MuonHub
             account.
           </p>
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-# MunHub Lab
+# MuonHub
 
 ### Turning cosmic-ray detectors across Latin America into one open, living observatory.
 
@@ -15,7 +15,7 @@
 
 ---
 
-**MunHub Lab is the platform that lets any university, lab, or student connect a particle detector
+**MuonHub is the platform that lets any university, lab, or student connect a particle detector
 and turn it into a node of a continental scientific network** — recording the cosmic radiation that
 rains on the Andes every second, correcting it to research grade, visualizing it live, and
 correlating it with the activity of the Sun. One detector is an experiment. A hundred, synchronized
@@ -25,7 +25,7 @@ and open, are an observatory that **has never existed in this region before.**
 
 > ### 🚀 Live production vs. this branch
 > - **The platform running in production today is the stable v5 app**, served at
->   **[munhub-lab.web.app](https://munhub-lab.web.app)** from the **[`v5-production`](https://github.com/alexanderkholodov1/MunHub/tree/v5-production)**
+>   **[munhub-lab.web.app](https://munhub-lab.web.app)** from the **[`v5-production`](https://github.com/alexanderkholodov1/MuonHub/tree/v5-production)**
 >   branch. Fixes for the live site are applied there.
 > - **`main` is the in-progress v6 reconstruction** described below. It does **not** auto-deploy —
 >   the production site is never redeployed from `main`. v6 will ship to its own URL when ready.
@@ -43,11 +43,11 @@ place, is genuinely valuable — and **Ecuador sits in one of the best places on
   high-latitude stations is filtered out by the Earth itself.
 - **A continental network, not a lonely detector.** When stations from different cities and
   altitudes measure *at the same time*, a simultaneous dip becomes a confirmed scientific event —
-  a **Forbush decrease**, the fingerprint of a solar storm sweeping past Earth. MunHub is built to
+  a **Forbush decrease**, the fingerprint of a solar storm sweeping past Earth. MuonHub is built to
   catch exactly that, and to correlate it with neutron monitors (NMDB) and space-weather feeds
   (NOAA, NASA).
 - **Research-grade by construction.** Every rate is corrected for detector **dead time** and for
-  **local atmospheric pressure** (a β coefficient measured per station, not assumed). MunHub
+  **local atmospheric pressure** (a β coefficient measured per station, not assumed). MuonHub
   reports the observables the physics actually supports — the **charged-particle flux** and the
   **Landau amplitude spectrum** — so the data is trustworthy enough to publish and cite.
 - **Open by principle.** Public data under CC-BY, a reproducible correction pipeline, and a path to
@@ -160,7 +160,7 @@ Live progress: [`docs/STATUS.md`](docs/STATUS.md) · full plan: [`planning/`](pl
 | [Technical docs](docs/technical/) | Architecture (C4), data model, serial formats, engineering standards |
 | [User manual](docs/user-manual/) | Concepts & terminology — institutions, stations, detectors, sessions |
 | [Design language](docs/design/DESIGN-LANGUAGE.md) | "Observatory Dark" visual system |
-| [Scientific foundation](docs/research/THEORETICAL-FOUNDATION.md) | The physics MunHub is built on |
+| [Scientific foundation](docs/research/THEORETICAL-FOUNDATION.md) | The physics MuonHub is built on |
 | [Changelog](CHANGELOG.md) | Every notable change, release by release |
 | [How it's built](AGENTS.md) | Spec-driven, multi-agent development workflow |
 

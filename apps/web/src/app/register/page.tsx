@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { Button, Card } from "@munhub/ui";
-import { LANGUAGES, type Language } from "@munhub/shared";
+import { Button, Card } from "@muonhub/ui";
+import { LANGUAGES, type Language } from "@muonhub/shared";
 import { AuthGate } from "../../components/AuthGate";
 import { useAuth } from "../../components/AuthProvider";
 import { authErrorToMessage } from "../../lib/auth-errors";
@@ -60,7 +60,7 @@ export default function RegisterPage(): React.ReactElement {
     const trimmedName = displayName.trim();
 
     if (trimmedName.length < 2) {
-      setError("Enter the name that collaborators will recognize in MunHub.");
+      setError("Enter the name that collaborators will recognize in MuonHub.");
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
@@ -94,7 +94,7 @@ export default function RegisterPage(): React.ReactElement {
   return (
     <AuthGate mode="guest">
       <div style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
-        <Card title="Create your MunHub account">
+        <Card title="Create your MuonHub account">
           <p
             style={{
               marginTop: 0,

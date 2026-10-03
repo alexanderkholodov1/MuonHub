@@ -7,10 +7,10 @@
  *   R_real = R_measured / (1 − R_measured · τ_DT)
  *
  * Units: rates are counts per minute (the `ec` field semantics); τ_DT is in seconds
- * (per-hardware constants in `DEAD_TIME_TAU_S`, @munhub/shared).
+ * (per-hardware constants in `DEAD_TIME_TAU_S`, @muonhub/shared).
  */
-import { DEAD_TIME_TAU_S } from "@munhub/shared";
-import type { HardwareVersion } from "@munhub/shared";
+import { DEAD_TIME_TAU_S } from "@muonhub/shared";
+import type { HardwareVersion } from "@muonhub/shared";
 
 const SECONDS_PER_MINUTE = 60;
 

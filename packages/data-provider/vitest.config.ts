@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   resolve: {
     alias: {
-      "@munhub/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
+      "@muonhub/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
     },
   },
   test: {

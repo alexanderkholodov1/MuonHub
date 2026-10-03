@@ -5,7 +5,7 @@
  *  - Minute fields are **averages over the minute, never sums**.
  *  - No event filtering upstream of these records.
  *  - Raw fields use the canonical short keys (continuity with v5 storage).
- *  - Derived fields (`ecDt`, `ecCorr`, `flux`) are computed later by `@munhub/physics`,
+ *  - Derived fields (`ecDt`, `ecCorr`, `flux`) are computed later by `@muonhub/physics`,
  *    so they are OPTIONAL here and never required on ingest.
  *
  * See `planning/02-DATA-MODEL.md` and `docs/research/THEORETICAL-FOUNDATION.md` §4, §8.
@@ -35,7 +35,7 @@ export const MinuteRecordSchema = z
     /** Dead-time average (percent). */
     dt: z.number().min(0).max(100),
 
-    // ── Derived (optional; produced by @munhub/physics) ───────────────────────
+    // ── Derived (optional; produced by @muonhub/physics) ───────────────────────
     /** Dead-time corrected rate: R / (1 − R·τ_DT). */
     ecDt: NonNegative.optional(),
     /** Barometric corrected rate (over ecDt), using a station-local β. */

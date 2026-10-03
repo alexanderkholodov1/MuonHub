@@ -1,4 +1,4 @@
-# MunHub Lab v6.0 — line-ending normalization (CI runs on Linux).
+# MuonHub — line-ending normalization (CI runs on Linux).
 # Default: normalize text to LF in the repo.
 * text=auto eol=lf
 

@@ -17,7 +17,7 @@ import type {
   RealtimeRecord,
   EventSummary,
   SignalRecord,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import type {
   TimeRange,
   SignalBlobRef,

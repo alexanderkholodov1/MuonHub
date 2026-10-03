@@ -1,4 +1,4 @@
-# MunHub Lab v6.0 — Status dashboard
+# MuonHub — Status dashboard
 
 > Living quality/progress board, updated by the orchestrator at the close of each wave.
 > Source of truth for "where are we" across the agent fleet. The system that produces these
@@ -17,7 +17,7 @@ location privacy pre-merge.)_
 | **Design** | Design Language "Observatory Dark" (D36) → feeds all UI specs | ✅ merged (PR #20); landing design session pending |
 | **Docs** | README v6, technical docs, standards, fleet charter | ✅ merged (PRs #21–#23) |
 | **Audit** | Project audit + English agent entry points + reconstruction work packages | ✅ merged (PR #26; see `docs/audit/2026-06-12-STATE-OF-PROJECT.md`) |
-| **Fleet** | Fleet kit extraction (WP-10/FWP-01…09) + MunHub adoption (FWP-08) | ✅ kit v0.1 built at `alexanderkholodov1/fleet`; adoption = this PR |
+| **Fleet** | Fleet kit extraction (WP-10/FWP-01…09) + MuonHub adoption (FWP-08) | ✅ kit v0.1 built at `alexanderkholodov1/fleet`; adoption = this PR |
 | F2 | Migration munra-1 → munhub-1 | ⏳ |
 | F3 | Public landing + live demo | ⏳ |
 | F4+ | Ecosystem, AI, networks, admin… | ⏳ |
@@ -54,7 +54,7 @@ location privacy pre-merge.)_
 | CI: build/test/lint/typecheck | GitHub Actions `ci.yml` | ✅ active |
 | Secret scan | gitleaks | ✅ active |
 | `main` protection | PR + both CI checks required; no force-push/delete | ✅ active |
-| Coverage hard-gate (≥80%) | vitest coverage (`@munhub/physics`) | 🔍 active in PR #31 |
+| Coverage hard-gate (≥80%) | vitest coverage (`@muonhub/physics`) | 🔍 active in PR #31 |
 | Auto PR review #1 | Copilot review | ⏳ enable on repo (free on Education plan) |
 | Auto PR review #2 | Claude reviewer personas (`.claude/agents/`) | ✅ installed (WP-08) — replaces Cursor Bugbot |
 | Cross-provider review | author ≠ reviewer (D35) | ⏳ from F1 wave 2 |

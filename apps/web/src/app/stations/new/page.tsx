@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import type { Detector, Station } from "@munhub/shared";
-import { Button, Card } from "@munhub/ui";
+import type { Detector, Station } from "@muonhub/shared";
+import { Button, Card } from "@muonhub/ui";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../../components/AuthProvider";
 import {
@@ -38,7 +38,7 @@ export default function NewStationPage(): React.ReactElement {
         </h1>
         <p className="mt-3 max-w-[760px] text-base leading-relaxed text-[var(--color-text-secondary)]">
           Create the station profile/site first, then register the physical detector that will send
-          data to MunHub.
+          data to MuonHub.
         </p>
       </div>
 

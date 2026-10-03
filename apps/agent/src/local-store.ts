@@ -1,4 +1,4 @@
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 
 export interface StoredMinuteRecord {
   detectorId: string;

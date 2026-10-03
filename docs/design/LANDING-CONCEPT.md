@@ -1,4 +1,4 @@
-# MunHub Lab — Landing concept (parking lot)
+# MuonHub — Landing concept (parking lot)
 
 > **Status: not started — to be developed in the dedicated design session (with Claude Design).**
 > This file only captures the idea so it isn't lost. It obeys `DESIGN-LANGUAGE.md` ("Observatory

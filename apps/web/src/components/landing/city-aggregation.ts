@@ -1,4 +1,4 @@
-import type { Station } from "@munhub/shared";
+import type { Station } from "@muonhub/shared";
 
 export interface PublicStationCitySummary {
   readonly id: string;

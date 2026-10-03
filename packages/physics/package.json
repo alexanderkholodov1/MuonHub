@@ -1,6 +1,6 @@
 {
-  "name": "@munhub/physics",
-  "version": "6.0.0-alpha.0.1",
+  "name": "@muonhub/physics",
+  "version": "6.0.0-alpha.0.2",
   "private": true,
   "description": "Pure scientific calculations: dead-time correction, barometric correction, flux, Landau spectrum",
   "license": "MIT",
@@ -26,6 +26,6 @@
     "vitest": "*"
   },
   "dependencies": {
-    "@munhub/shared": "workspace:*"
+    "@muonhub/shared": "workspace:*"
   }
 }

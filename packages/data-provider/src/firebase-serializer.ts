@@ -1,6 +1,6 @@
 /**
  * Serialization / deserialization between typed v6 entities and the Firebase RTDB plain-object
- * representation. All schemas from `@munhub/shared` are used for validation at every boundary
+ * representation. All schemas from `@muonhub/shared` are used for validation at every boundary
  * (guardrail FR6).
  *
  * Values are stored verbatim — no scientific rounding, no filtering.
@@ -19,7 +19,7 @@ import type {
   MinuteRecord,
   RealtimeRecord,
   EventSummary,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import {
   UserSchema,
   InstitutionSchema,
@@ -29,7 +29,7 @@ import {
   MinuteRecordSchema,
   RealtimeRecordSchema,
   EventSummarySchema,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import { padTs, unpadTs } from "./firebase-paths.js";
 import {
   type CanonicalSlimMinuteRecord,

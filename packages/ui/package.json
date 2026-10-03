@@ -1,6 +1,6 @@
 {
-  "name": "@munhub/ui",
-  "version": "6.0.0-alpha.0.1",
+  "name": "@muonhub/ui",
+  "version": "6.0.0-alpha.0.2",
   "private": true,
   "description": "Design system: Observatory Dark tokens, Tailwind v4, shadcn/ui re-tokenized primitives",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "vitest": "*"
   },
   "dependencies": {
-    "@munhub/shared": "workspace:*",
+    "@muonhub/shared": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",

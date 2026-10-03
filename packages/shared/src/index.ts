@@ -1,7 +1,7 @@
 /**
- * @munhub/shared
+ * @muonhub/shared
  *
- * Single source of truth for the MunHub domain: Zod schemas (authored once) with TypeScript types
+ * Single source of truth for the MuonHub domain: Zod schemas (authored once) with TypeScript types
  * inferred from them, plus shared constants. No I/O — pure and independently testable.
  *
  * Consumers import schemas to validate and types to annotate; the two can never drift because the

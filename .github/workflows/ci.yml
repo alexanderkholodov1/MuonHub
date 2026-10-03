@@ -78,7 +78,7 @@ jobs:
         run: pnpm build
 
       - name: FirebaseProvider integration + rules tests (emulator)
-        run: pnpm --filter @munhub/data-provider test:emulator
+        run: pnpm --filter @muonhub/data-provider test:emulator
 
   secret-scan:
     name: gitleaks (secret scan)

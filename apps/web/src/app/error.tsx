@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * Route-level error state for the MunHub Lab web app.
+ * Route-level error state for the MuonHub web app.
  *
  * Uses the same Card error treatment as in-page states, with a reset action
  * supplied by the Next.js App Router.
  */
 import { RefreshCw } from "lucide-react";
-import { Button, Card } from "@munhub/ui";
+import { Button, Card } from "@muonhub/ui";
 
 interface ErrorProps {
   error: Error & { digest?: string };

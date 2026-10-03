@@ -32,13 +32,13 @@ importers:
 
   apps/agent:
     dependencies:
-      '@munhub/data-provider':
+      '@muonhub/data-provider':
         specifier: workspace:*
         version: link:../../packages/data-provider
-      '@munhub/physics':
+      '@muonhub/physics':
         specifier: workspace:*
         version: link:../../packages/physics
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
     devDependencies:
@@ -51,16 +51,16 @@ importers:
 
   apps/web:
     dependencies:
-      '@munhub/data-provider':
+      '@muonhub/data-provider':
         specifier: workspace:*
         version: link:../../packages/data-provider
-      '@munhub/physics':
+      '@muonhub/physics':
         specifier: workspace:*
         version: link:../../packages/physics
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@munhub/ui':
+      '@muonhub/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@tailwindcss/postcss':
@@ -130,7 +130,7 @@ importers:
 
   packages/data-provider:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
       firebase:
@@ -155,7 +155,7 @@ importers:
 
   packages/physics:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -184,7 +184,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
       class-variance-authority:

@@ -1,4 +1,4 @@
-<!-- MunHub Lab v6.0 — Pull Request. Fill every section. PRs that skip this are not reviewable. -->
+<!-- MuonHub — Pull Request. Fill every section. PRs that skip this are not reviewable. -->
 
 ## Spec & scope
 - **Spec:** specs/NNNN-<slug>/spec.md

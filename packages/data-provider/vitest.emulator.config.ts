@@ -3,11 +3,11 @@ import { fileURLToPath } from "node:url";
 
 // Emulator suite: only `*.emulator.test.ts`, run inside `firebase emulators:exec`
 // (see the `test:emulator` script) so FIREBASE_DATABASE_EMULATOR_HOST / _AUTH_EMULATOR_HOST
-// are set and the provider talks to the local emulator instead of munhub-1.
+// are set and the provider talks to the local emulator instead of muonhub.
 export default defineConfig({
   resolve: {
     alias: {
-      "@munhub/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
+      "@muonhub/shared": fileURLToPath(new URL("../shared/src/index.ts", import.meta.url)),
     },
   },
   test: {

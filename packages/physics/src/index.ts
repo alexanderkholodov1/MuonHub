@@ -1,5 +1,5 @@
 /**
- * @munhub/physics
+ * @muonhub/physics
  *
  * Pure scientific calculations for cosmic-ray / MIP-type particle data.
  * NO I/O dependencies — every function is a pure transformation testable in isolation.

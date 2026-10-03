@@ -1,4 +1,4 @@
-# MunHub Lab — Formatos serial del detector (referencia canónica)
+# MuonHub — Formatos serial del detector (referencia canónica)
 
 > Extraído del `public/js/serial-reader.js` de la v5 (lógica probada con hardware real).
 > Es la **referencia para el parser del agente Tauri** (ADR-002: portar, no reinventar).

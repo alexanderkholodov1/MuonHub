@@ -1,5 +1,5 @@
 /**
- * Landing page — MunHub Lab.
+ * Landing page — MuonHub.
  *
  * §0 compliance:
  * - Body ≥ 16px (base is 1rem = 16px, enforced in tokens.css).
@@ -17,7 +17,7 @@
 import React from "react";
 import Link from "next/link";
 import { Activity, Globe, ShieldCheck, ArrowRight, Zap } from "lucide-react";
-import { Button } from "@munhub/ui";
+import { Button } from "@muonhub/ui";
 import { PublicLandingNetwork } from "../components/landing/PublicLandingNetwork";
 
 const features = [
@@ -110,7 +110,7 @@ export default function LandingPage() {
             marginBottom: "var(--space-8)",
           }}
         >
-          MunHub Lab connects CosmicWatch-class scintillator detectors across Latin American
+          MuonHub connects CosmicWatch-class scintillator detectors across Latin American
           universities into a unified monitoring platform — live charged-particle rates,
           barometric corrections, and Forbush decrease alerts, all in one instrument-grade interface.
         </p>
@@ -137,7 +137,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── What is MunHub ────────────────────────────────────────────────── */}
+      {/* ── What is MuonHub ────────────────────────────────────────────────── */}
       <section
         id="about"
         style={{
@@ -174,9 +174,9 @@ export default function LandingPage() {
             }}
           >
             CosmicWatch single-SiPM detectors measure charged-particle / MIP-type (minimum ionising
-            particle) events — a proxy for the secondary cosmic-ray flux at ground level. MunHub
+            particle) events — a proxy for the secondary cosmic-ray flux at ground level. MuonHub
             aggregates these measurements, applies dead-time correction and local barometric
-            correction (β coefficient fit per station) through <span className="font-mono">@munhub/physics</span>,
+            correction (β coefficient fit per station) through <span className="font-mono">@muonhub/physics</span>,
             and surfaces the corrected rate alongside raw counts so researchers retain full audit
             trail of every data point.
           </p>
@@ -263,7 +263,7 @@ export default function LandingPage() {
             }}
           >
             University research groups can register their CosmicWatch stations and join the
-            Latin American monitoring network. Contact the MunHub Lab team at USFQ to get started.
+            Latin American monitoring network. Contact the MuonHub team at USFQ to get started.
           </p>
           <span
             style={{

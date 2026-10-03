@@ -6,7 +6,7 @@ packages:
 # Build-script decisions (pnpm asks before running any postinstall, for supply-chain safety).
 #   esbuild      → true:  needs its postinstall to fetch the native binary used by vite/vitest.
 #   @firebase/*, protobufjs, re2 → false: Firebase toolchain native/codegen scripts pulled in by
-#     @munhub/data-provider. The provider and the emulator suite work without them; not running
+#     @muonhub/data-provider. The provider and the emulator suite work without them; not running
 #     them keeps `pnpm install` deterministic (exit 0) instead of ERR_PNPM_IGNORED_BUILDS.
 allowBuilds:
   esbuild: true

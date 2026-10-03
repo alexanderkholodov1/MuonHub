@@ -19,7 +19,7 @@ export const GAP_THRESHOLD_MS = 2 * 60 * 1000;
 export const MAX_CHART_POINTS = 500;
 
 /**
- * Dead-time constant τ_DT per hardware version (seconds), used by `@munhub/physics`.
+ * Dead-time constant τ_DT per hardware version (seconds), used by `@muonhub/physics`.
  * v2 ≈ 50 ms, v3X ≈ 400 µs. `unknown` falls back to the conservative v2 value.
  */
 export const DEAD_TIME_TAU_S = Object.freeze({

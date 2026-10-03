@@ -1,4 +1,4 @@
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 import type { LocalStore } from "./local-store.js";
 
 export interface MinuteRecordUploader {

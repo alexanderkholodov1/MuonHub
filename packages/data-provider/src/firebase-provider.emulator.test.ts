@@ -3,7 +3,7 @@
  *
  * Executed only via `pnpm test:emulator` (firebase emulators:exec), which sets
  * FIREBASE_DATABASE_EMULATOR_HOST so the admin target talks to the local emulator,
- * never munhub-1. Excluded from the default `pnpm test` (see vitest.config.ts).
+ * never muonhub. Excluded from the default `pnpm test` (see vitest.config.ts).
  *
  * Covers spec 0007 acceptance criteria 2 (CRUD + index + minutes + idempotent latest),
  * 3 (incremental realtime), and 4 (streaming export/import round trip + quarantine).
@@ -24,7 +24,7 @@ import {
   type RealtimeRecord,
   type EventSummary,
   type SignalRecord,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import { createFirebaseProvider, REALTIME_CAP } from "./firebase-provider.js";
 import { Paths, padTs, signalBlobObjectPath } from "./firebase-paths.js";
 import { CANONICAL_SLIM_MINUTE_RECORD_FIELDS } from "./slim-minute-record.js";
@@ -33,8 +33,8 @@ import type { DataChunk, SignalBlobRef } from "./types.js";
 
 const emulatorOn = Boolean(process.env["FIREBASE_DATABASE_EMULATOR_HOST"]);
 const describeEmu = emulatorOn ? describe : describe.skip;
-const databaseURL = "https://demo-munhub-default-rtdb.firebaseio.com";
-const storageBucket = "demo-munhub.appspot.com";
+const databaseURL = "https://demo-muonhub-default-rtdb.firebaseio.com";
+const storageBucket = "demo-muonhub.appspot.com";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────────
 let seq = 0;
@@ -136,7 +136,7 @@ function makeSignal(ts: number, sipmMv: number, coincident = false): SignalRecor
 }
 
 function adminDatabase() {
-  const app = getApps().find((candidate) => candidate.name === "munhub-admin");
+  const app = getApps().find((candidate) => candidate.name === "muonhub-admin");
   if (app == null) {
     throw new Error("Firebase admin app is not initialized");
   }
@@ -144,7 +144,7 @@ function adminDatabase() {
 }
 
 function adminBucket() {
-  const app = getApps().find((candidate) => candidate.name === "munhub-admin");
+  const app = getApps().find((candidate) => candidate.name === "muonhub-admin");
   if (app == null) {
     throw new Error("Firebase admin app is not initialized");
   }
@@ -488,9 +488,9 @@ describeEmu("FirebaseProvider (emulator)", () => {
     const authProvider = await createFirebaseProvider({
       target: "client",
       apiKey: "demo-key",
-      authDomain: "demo-munhub.firebaseapp.com",
+      authDomain: "demo-muonhub.firebaseapp.com",
       databaseURL,
-      projectId: "demo-munhub",
+      projectId: "demo-muonhub",
     });
     const email = authEmail();
 
@@ -524,9 +524,9 @@ describeEmu("FirebaseProvider (emulator)", () => {
     const authProvider = await createFirebaseProvider({
       target: "client",
       apiKey: "demo-key",
-      authDomain: "demo-munhub.firebaseapp.com",
+      authDomain: "demo-muonhub.firebaseapp.com",
       databaseURL,
-      projectId: "demo-munhub",
+      projectId: "demo-muonhub",
     });
     const email = authEmail();
     const created = await authProvider.register(email, authPassword, {
@@ -548,9 +548,9 @@ describeEmu("FirebaseProvider (emulator)", () => {
     const authProvider = await createFirebaseProvider({
       target: "client",
       apiKey: "demo-key",
-      authDomain: "demo-munhub.firebaseapp.com",
+      authDomain: "demo-muonhub.firebaseapp.com",
       databaseURL,
-      projectId: "demo-munhub",
+      projectId: "demo-muonhub",
     });
     const email = authEmail();
     const created = await authProvider.register(email, authPassword, {

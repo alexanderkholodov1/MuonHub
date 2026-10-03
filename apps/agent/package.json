@@ -1,8 +1,8 @@
 {
-  "name": "@munhub/agent",
-  "version": "6.0.0-alpha.0.1",
+  "name": "@muonhub/agent",
+  "version": "6.0.0-alpha.0.2",
   "private": true,
-  "description": "MunHub Lab local agent (Tauri): serial reading, SQLite local backup, offline sync queue",
+  "description": "MuonHub local agent (Tauri): serial reading, SQLite local backup, offline sync queue",
   "license": "MIT",
   "scripts": {
     "build": "echo 'agent build stub — Tauri wired in S16'",
@@ -17,8 +17,8 @@
     "vitest": "*"
   },
   "dependencies": {
-    "@munhub/shared": "workspace:*",
-    "@munhub/data-provider": "workspace:*",
-    "@munhub/physics": "workspace:*"
+    "@muonhub/shared": "workspace:*",
+    "@muonhub/data-provider": "workspace:*",
+    "@muonhub/physics": "workspace:*"
   }
 }

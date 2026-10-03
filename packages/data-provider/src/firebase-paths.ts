@@ -1,5 +1,5 @@
 /**
- * RTDB path helpers for the Phase A munhub-1 node layout.
+ * RTDB path helpers for the Phase A muonhub node layout.
  *
  * Layout (spec 0007):
  *   /users/{uid}

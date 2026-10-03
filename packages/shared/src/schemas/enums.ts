@@ -1,5 +1,5 @@
 /**
- * Closed vocabularies shared across the MunHub domain.
+ * Closed vocabularies shared across the MuonHub domain.
  *
  * Each is a Zod enum so it validates at runtime and yields a literal union type at compile time.
  * See `planning/02-DATA-MODEL.md` and `docs/research/THEORETICAL-FOUNDATION.md`.
@@ -30,7 +30,7 @@ export const RoleSchema = z.enum(["admin", "user", "guest"]);
 export type Role = z.infer<typeof RoleSchema>;
 
 /**
- * Detector hardware generation — determines the dead-time constant τ_DT used by `@munhub/physics`
+ * Detector hardware generation — determines the dead-time constant τ_DT used by `@muonhub/physics`
  * (v2 ≈ 50 ms, v3X ≈ 400 µs). `unknown` allows ingest before the version is confirmed.
  */
 export const HardwareVersionSchema = z.enum(["v2", "v3X", "unknown"]);

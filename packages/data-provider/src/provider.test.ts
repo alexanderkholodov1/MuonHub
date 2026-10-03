@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import type { EventSummary, SignalRecord } from "@munhub/shared";
-import { EventSummarySchema, SignalRecordSchema } from "@munhub/shared";
+import type { EventSummary, SignalRecord } from "@muonhub/shared";
+import { EventSummarySchema, SignalRecordSchema } from "@muonhub/shared";
 import type { DataProvider } from "./provider.js";
 import type { DataChunk, SignalBlobRef } from "./types.js";
 import { AuthProviderError } from "./types.js";
 
 /**
  * A trivial in-memory mock typed as `DataProvider`. If the interface is internally inconsistent or
- * misaligned with `@munhub/shared`, this file fails to compile — that is the point of the test.
+ * misaligned with `@muonhub/shared`, this file fails to compile — that is the point of the test.
  */
 function createMockProvider(): DataProvider {
   const summaries = new Map<string, EventSummary>();

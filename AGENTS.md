@@ -1,6 +1,6 @@
 # AGENTS.md — Agent entry point (START HERE)
 
-> If you are an agent (any provider, any model) picking up work on MunHub v6.0: **read this file
+> If you are an agent (any provider, any model) picking up work on MuonHub v6.0: **read this file
 > first, in full, before touching anything.** It is the binding entry contract. Provider shims
 > (`GEMINI.md`, `.cursor/rules/00-agents.mdc`, `.github/copilot-instructions.md`, `CLAUDE.md`)
 > are pointers to this document.
@@ -9,7 +9,7 @@
 
 ## What this is
 
-**MunHub Lab v6.0** is the complete reconstruction of a web platform for acquiring, storing,
+**MuonHub** is the complete reconstruction of a web platform for acquiring, storing,
 visualizing, and analyzing data from cosmic-ray detectors (CosmicWatch-class / muon detectors),
 built to become a multi-university research network across Latin America.
 
@@ -113,7 +113,7 @@ before relying on it.
     narrate the process, the options considered, or frame a change as a reaction to a correction
     ("as requested", "now without X", "fixed the issue where…"). No apologies, no deliberation:
     the history records what the project gained; the negotiation stays in the chat. SemVer:
-    `6.0.0` = the MunHub Lab 6 launch (D45).
+    `6.0.0` = the MuonHub 6 launch (D45).
 
 ---
 

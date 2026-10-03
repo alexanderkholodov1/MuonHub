@@ -1,8 +1,8 @@
 {
-  "name": "munhub",
-  "version": "6.0.0-alpha.0.1",
+  "name": "muonhub",
+  "version": "6.0.0-alpha.0.2",
   "private": true,
-  "description": "MunHub Lab — Cosmic ray detector monitoring platform (v6 reconstruction, pre-alpha)",
+  "description": "MuonHub — Cosmic ray detector monitoring platform (v6 reconstruction, pre-alpha)",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0",

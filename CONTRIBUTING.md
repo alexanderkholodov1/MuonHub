@@ -1,6 +1,6 @@
-# Contributing to MunHub Lab
+# Contributing to MuonHub
 
-MunHub is built with Spec-Driven Development in a typed monorepo. This guide defines how changes are
+MuonHub is built with Spec-Driven Development in a typed monorepo. This guide defines how changes are
 proposed, written, described, versioned, and documented. It applies to **every contributor —
 human or automated agent** — and complements [`AGENTS.md`](AGENTS.md).
 
@@ -62,7 +62,7 @@ editing `CHANGELOG.md` directly. Fragments are compiled into `CHANGELOG.md` at r
 ## Versioning
 [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
-- **`6.0.0`** is the launch of **MunHub Lab 6** — the platform described in [`planning/`](planning/).
+- **`6.0.0`** is the launch of **MuonHub 6** — the platform described in [`planning/`](planning/).
 - Pre-launch builds are `6.0.0-alpha.N` (current) → `6.0.0-beta.N` → `6.0.0-rc.N`.
 - After launch: **`6.0.x`** = backward-compatible fixes; **`6.x.0`** = backward-compatible features;
   **`7.0.0`** = a breaking change to public contracts (schema, API, the `DataProvider` interface).
