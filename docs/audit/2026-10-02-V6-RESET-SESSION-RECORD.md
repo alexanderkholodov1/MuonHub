@@ -33,6 +33,8 @@
 | 13 | **PR policy:** about 5–6 large PRs for the whole of v6. A PR opens only when its milestone is fully planned, tested (unit/integration), validated in real practice with real hardware, and corrected along the way. Each PR contains many commits carrying the minor versions of §1.8. |
 | 14 | **AGENTS.md data-integrity guardrail is rewritten** with the maintainer's formulation (§2). |
 | 15 | The agent as a **headless daemon** (instead of Tauri) is liked but **not yet decided** — the maintainer wants it argued against Tauri (§8). |
+| 16 | **Known v5 production issues are left until v6.** The audit found one in v5; it is recorded in a private, git-ignored note under `private/`. v5 is not touched while the detector is running. |
+| 17 | **Nothing may live only in the chat.** Every decision, finding, and proposal is written down — in this repository, or in `private/` when it must not be public. |
 
 ## 2. Data principles (maintainer's formulation)
 
@@ -225,9 +227,10 @@ measured.
 - Detector machine: **Ubuntu at the university**, no Tailscale yet (the maintainer installs it on
   site). Which v5 reader holds the serial port (Chrome Web Serial or the Python bridge) is unknown;
   pausing it for a capture is acceptable.
-- Development machine: Windows + WSL2. git identity configured; **push not possible yet** (no
-  credentials until gh is upgraded and authenticated). No `pwsh`, Rust, or Java installed (Java is
-  only needed by the Firebase emulator, which runs in CI).
+- Development machine: Windows + WSL2. git identity configured; gh 2.102.0 installed from the
+  official repository and authenticated (git protocol: SSH); the `origin` remote now uses the SSH
+  URL; **push works** (verified 2026-10-02). No `pwsh`, Rust, or Java installed (Java is only needed
+  by the Firebase emulator, which runs in CI).
 - Keys present in `private/` (gitignored): service accounts for `muonhub` and `munhub-1`. The v5
   cold dump of `munra-1` is not on this machine.
 
@@ -244,3 +247,157 @@ measured.
 7. **H0 file-by-file list** (moves, archives, removals, rename) shown for approval before execution.
 8. **Raw-upload option** (admin-gated) and the **BYODB** PoC.
 9. Measure v5 session/minute volume in `munhub-1` (read-only) for migration planning.
+
+---
+
+## Appendix A — Proposals presented in the session
+
+Recorded so that nothing lives only in the chat. **Not approved unless §1 says so.** Content is
+limited to what was actually presented to the maintainer.
+
+### A.1 Firebase setup checklist (to do together; nothing done yet)
+
+| # | Where | Action | Purpose |
+|---|---|---|---|
+| 1 | Authentication | Enable Email/Password and Google | User accounts |
+| 2 | Firestore | Create database: Standard edition, production mode, location `nam5` (confirmed) | Stations, device types, calibrations, notifications, audit log |
+| 3 | Hosting | Add site `muonhub-staging` | Test before publishing to `muonhub.web.app` |
+| 4 | Project settings | Register a Web app | Public web configuration |
+| 5 | App Check | Register the web app with reCAPTCHA Enterprise (free up to 10k assessments/month); monitor first, enforce later | Only our web app and agent may use the databases — protects the free quotas |
+| 6 | Cloud Messaging | Generate the Web Push (VAPID) key pair | Browser notifications (e.g. "your detector is silent") |
+| 7 | Remote Config | Nothing until flags exist | Feature flags, emergency switch without redeploy |
+| 8 | Analytics | Optional, with the landing page | Visit metrics; requires a privacy notice |
+| 9 | AI Logic (Gemini) | Later | Help assistant; free-tier content may be used by Google → public data only |
+
+### A.2 Free-tier constraints that drive the design
+
+- **RTDB 100 simultaneous connections in total** (every browser with live listeners and every agent
+  holds one). The public live demo must fit inside this limit (open topic §8.4).
+- **RTDB 10 GB/month download:** long ranges read hourly/daily rollups; only new data is fetched,
+  never the full series again.
+- **RTDB 1 GB stored:** ≈ 50 MB per detector-year of per-minute records (estimate); every
+  materialised view adds about the same; old data is archived to backups and, for publication,
+  Zenodo with a DOI.
+- **Firestore 50k reads/day:** the landing page reads one aggregated document per visit.
+- **Hosting ≈ 360 MB/day:** lean bundles (uPlot ≈ 50 KB vs Plotly ≈ 3.5 MB), lazy loading, long cache.
+- **Auth email limits:** verification 1,000/day, password reset 150/day, email-link sign-in 5/day
+  (so no email-link sign-in).
+- **Usage monitor** in the admin area: daily consumption and remaining runway.
+
+### A.3 Agent as a headless daemon (to be argued against Tauri, §8.2)
+
+TypeScript on Node 24, sharing parsers, physics, and schemas with the monorepo; runs as a systemd
+service (starts with the machine, restarts on failure); local web panel on `localhost:8787`, reachable
+from the laptop through an SSH tunnel; targets Ubuntu, Raspberry Pi (arm64), later Windows/macOS.
+`serialport` 13 ships prebuilt binaries (no compiler); `node:sqlite` (release candidate) with
+`better-sqlite3` as fallback; Bun ruled out (open bug: serial callbacks never fire); Go as plan C.
+The agent signs in with the user's normal account — no admin keys on detector machines. It tees every
+raw line to a log and a socket, so the port can be observed remotely over SSH without stopping
+acquisition. A `muonhub-agent capture` command discovers formats (baud scan, hex dump, column
+statistics, proposed configuration, capture saved as a test fixture). PoC risk to validate: 72 h on
+Ubuntu and a Raspberry Pi with USB unplug/replug and network loss.
+
+### A.4 Scheduled jobs ("ops worker") and the private vault
+
+No server exists on Spark, so periodic tasks run as **GitHub Actions scheduled workflows** (free for
+public repositories; ≥ 5-minute granularity; schedules pause after 60 days without activity), using
+a service account stored as a repository secret. Tasks: alert when a detector has been silent for
+more than 15 minutes; nightly backups; delete old realtime data; ingest external data (NMDB, NOAA);
+assign admin roles; measure usage. Some tasks move to the agent (realtime pruning, hourly summaries,
+its own station's public card). **Private vault (to be argued, §8.3):** the public repository holds
+code and schedules; a separate private repository (e.g. `muonhub-vault`) only stores encrypted backup
+files as release assets; the job writes there with a token restricted to that repository.
+
+### A.5 Security approach
+
+Deny by default; validation of every field; owner-only immutable fields (`ownerUid`, roles);
+negative tests (who must NOT be able to do something) with real client identities in the emulator; a
+dedicated security review on every PR touching rules or accounts; admin role only through a trusted
+script, never from the browser; App Check; no admin keys on detector machines. Holes to close (from
+§4.1–4.2): self-assigned admin, editor takeover/deletion, public reads of full station records,
+`detector_index` hijacking, unvalidated data, raw backend errors shown to users.
+
+### A.6 Rebuild plan per package
+
+| Package | Decision | Reason |
+|---|---|---|
+| `packages/physics` | Keep and fix | Base formulas and 55 tests are sound; fix β (real minimum, σ_β, sign check), hour-scale persistent anomalies, measured dead time, error propagation 1/(1−Rτ)², MPV fit with uncertainty and saturation, the `Math.max(...)` crash, noise calibration as suggestion only |
+| `packages/shared` | Keep the approach, redesign the content | Missing: device types, calibrations, recipes/views, multichannel events, sampled streams, geometry, time quality; wrong calibration defaults and units |
+| `packages/data-provider` | Rewrite | The three critical defects are structural (series nested inside the station); new layout Firestore + flat RTDB, pagination, error channel, split file |
+| Firebase rules | Rewrite | Field validation and negative tests with real identities |
+| `apps/web` | Restructure | Feature folders, static-hosting-safe routes, config, uPlot, mobile from day one; reuse auth logic, the tested city aggregation, design tokens |
+| `packages/ui` | Keep | Tokens and theme; add accessible primitives |
+| `apps/agent` | Rewrite as a daemon | Reuse the knowledge and tests of the 4 formats behind device configurations; drop Rust |
+| `services/api`, `services/ai` | Remove (empty stubs) | Create `services/ops` when needed |
+| CI and tooling | Keep and fix | Node/pnpm mismatch, `out/` not cached, broken `clean`, unpinned TypeScript/vitest, weak ESLint; add Prettier, Playwright with mobile viewports, emulator with real identities; upgrade Next 16, React 19, zod 4, ESLint 10, maplibre 6; evaluate TypeScript 7 |
+
+Kept knowledge: theoretical foundation, serial-format documentation, v5 reference, ADR-003 ideas
+(storage tiers, event summaries, clock sync), design language.
+
+### A.7 Analysis of the maintainer's new ideas (endorsed; A.7.2 strongly)
+
+1. **Bring Your Own Detector:** versioned catalogue with lifecycle Draft → Community → Under review →
+   Verified/Official; labels (needs review, open reports, deprecated); feedback threads to the author;
+   forkable. Configuration terminal: live agent stream or uploaded sample → auto-detect delimiter,
+   headers, types, monotonic columns (counters/timestamps), value ranges → a human maps each column to
+   a standard quantity with units, or a custom one → validation against the sample → publish. LLM
+   assistance later. Generic instrument model: **event streams** (particle detectors, muograph
+   channels) and **sampled streams** (seismometer ~100 Hz, weather); the per-minute record is the
+   common comparison currency.
+2. **Geometry and assemblies:** per device active area, thickness, material, orientation; per station
+   an assembly (stacking, separation, offsets, tilt) → flux per cm², coincidence acceptance, expected
+   accidentals, fair comparison across hardware. 2D side-view schematic first; 3D later (assembly
+   editor, acceptance cone, muograph pointing, outreach).
+3. **Comparison and coincidences (v6 priority):** alignment (common bins, live-time weighting, gaps ≠
+   zeros); selectable normalisation (live time, area, own baseline, corrected or not); visuals
+   (overlay, ratio, difference, A-vs-B scatter, Bland–Altman, spectrum and diurnal overlays, rolling
+   correlation); statistics (Pearson/Spearman with autocorrelation, lagged cross-correlation, χ²
+   compatibility within Poisson); coincidences (a) hardware master/slave cable — window to verify
+   (~30 µs in the v2 paper vs 0.1 s in a 2026 preprint), (b) software on the same machine — window
+   scan (plateau = true, slope = accidentals), accidental estimate 2·τ·R1·R2, net rate ± error, delay
+   histogram, (c) across machines needs GPS-grade time. Every parameter configurable; every result
+   carries a reproducible card of parameters and versions.
+4. **Synthetic data (`@muonhub/simulator`):** Tier 1 in TypeScript — Poisson events, angular
+   distribution, altitude/pressure modulation, Landau-like amplitudes, noise, dead time, N detectors
+   in a geometry with true coincidences, clock drift/jitter, gaps, resets, Forbush-like dips; output
+   in any device format → test fixtures, a virtual detector feeding the agent end to end, demo data;
+   known-answer validation (does the analysis recover the planted coincidences?). Tier 2 EcoMug/CRY
+   offline; Tier 3 PUMAS/Geant4 offline.
+5. **Open data:** HiSPARC, NMDB, GMDN, Pierre Auger scalers, LAGO (in-house collaboration
+   opportunity), QuarkNet, EEE; MuonHub can publish the missing CosmicWatch dataset on Zenodo.
+6. **Offline collection:** RTC minimum, GPS PPS recommended; per-session time-quality provenance
+   (source, offset, drift); raw times kept, corrected times derived; sealed session bundle (data +
+   manifest + checksums + clock log) uploaded later without duplicates.
+7. **Seismic:** raw data stays local; per-minute features (RMS, peaks, triggers) plus an event
+   catalogue are uploaded; exploratory analysis with pre-registration, removal of pressure,
+   temperature and solar effects, surrogate tests; the seismometer also serves as a systematics
+   channel; never "prediction".
+8. **Muography:** hit grouping → track reconstruction → angular rate maps → transmission ratio maps
+   with Poisson errors → exposure-time estimator → first-order opacity; heavy inversion/simulation in
+   a separate offline Python service; feasibility simulations with the planned geometry first; the
+   multichannel data model is designed now.
+9. **Calibration from MuonHub:** platform-managed, versioned, applied on read; event-level recipes
+   executed by the agent; hardware settings only if a device accepts serial commands (unknown).
+
+### A.8 Draft milestone outline (to be re-cut into ~5–6 PRs, §8.6)
+
+H0 foundation (cleanup, decisions, roadmap/backlog) · H1 technical base (contracts v2, data layer v2,
+rules with negative tests, CI) · H2 agent daemon + simulator tier 1 · H3 web base (accounts, stations
+and devices, live dashboard incl. mobile, map with privacy levels; first deploy to staging, then
+`muonhub.web.app`) · H4 comparison + coincidences · H5 calibration + views · H6 Bring Your Own
+Detector · H7 operations (backups, FCM alerts, usage monitor) · H8 external/open data · H9 offline
+collection with GPS/RTC time · H10 seismic (exploratory) · H11 v5 → v6 migration · H12 muography
+(study → simulation → demonstrator) · H13 launch → `6.0.0`.
+
+### A.9 Planned H0 contents (not started)
+
+Rename to MuonHub (~178 files; `@munhub/*` → `@muonhub/*`). Restructure AFLEK: keep its principles
+(the PR is the deliverable, CI is the referee, nothing lives only in the chat, author ≠ reviewer), the
+spec and Stage Report templates, and the `.claude/agents` reviewers; remove the `.aflek/` kit copy,
+`FLEET-VERSION`, `infra/fleet`, the PowerShell SessionStart hook, the superseded `planning/18`/`20`,
+and the Gemini/Cursor/Copilot configuration. Restructure the docs (`docs/product`,
+`docs/decisions` with D1–D46 as an ADR log marked active/superseded, `docs/architecture`,
+`docs/science`, `docs/operations`, `docs/process`, and `docs/archive` keeping the old planning
+intact). Remove `public/`. Archive the spec branches as tags. Neutralise the root v5 Firebase files.
+New decision records: Firebase architecture, data model v2, device configurations and calibration,
+agent architecture, versioning. Every step is shown file by file for approval before execution.
