@@ -25,7 +25,8 @@ _Last updated: 2026-10-03 · version `6.0.0-alpha.0.x` · branch `chore/m0-found
 - [x] Independent review: docs-auditor, code-reviewer, fact-check, physicist; findings fixed
       (`6.0.0-alpha.0.4.x`).
 - [x] Maintainer confirmed the pending items (2026-10-04).
-- [ ] PR #1 open → maintainer review and merge.
+- [x] Pull request opened: [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57).
+- [ ] Maintainer review and merge.
 
 ## Quality gates
 
@@ -33,7 +34,7 @@ _Last updated: 2026-10-03 · version `6.0.0-alpha.0.x` · branch `chore/m0-found
 |---|---|
 | typecheck · lint · build · test (145 tests) | ✅ green locally after the rename |
 | Firebase emulator tests | ✅ 19/20 locally; ⚠️ the realtime-cap test exceeds its 20 s timeout on the development machine (≈12 s in CI) — a symptom of the first-attempt realtime pruning design, replaced in M1 |
-| CI on GitHub | runs when the milestone PR opens |
+| CI on GitHub | runs on PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57) |
 
 ## Open questions for the maintainer
 
