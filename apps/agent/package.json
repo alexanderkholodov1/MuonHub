@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/agent",
-  "version": "6.0.0-alpha.1.1",
+  "version": "6.0.0-alpha.1.1.1",
   "private": true,
   "description": "MuonHub agent — the headless Node.js daemon is built in milestone M1 (ADR-007); this package holds the first-attempt TypeScript core until then",
   "license": "MIT",

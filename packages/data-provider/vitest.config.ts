@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 // Default suite: unit/contract tests only. Emulator-backed tests (`*.emulator.test.ts`)
@@ -13,6 +13,6 @@ export default defineConfig({
   test: {
     environment: "node",
     passWithNoTests: true,
-    exclude: ["**/node_modules/**", "**/dist/**", "**/*.emulator.test.ts"],
+    exclude: [...configDefaults.exclude, "**/dist/**", "**/*.emulator.test.ts"],
   },
 });

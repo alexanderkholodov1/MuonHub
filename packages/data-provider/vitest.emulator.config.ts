@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 // Emulator suite: only `*.emulator.test.ts`, run inside `firebase emulators:exec`
@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.emulator.test.ts"],
+    exclude: [...configDefaults.exclude, "**/dist/**"],
     // Emulator state is shared, so keep these serial.
     fileParallelism: false,
     testTimeout: 20000,

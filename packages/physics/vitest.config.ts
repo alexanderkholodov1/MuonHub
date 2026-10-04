@@ -1,8 +1,10 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     environment: "node",
+    // vitest 5 no longer excludes build output by default; compiled tests in dist/ must not run twice.
+    exclude: [...configDefaults.exclude, "**/dist/**"],
     // Coverage hard-gate (≥80%) — activated with spec 0005 (docs/STATUS.md quality gates).
     coverage: {
       provider: "v8",
