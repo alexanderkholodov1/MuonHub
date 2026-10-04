@@ -1,13 +1,14 @@
 name: CI
 
-# Quality gate for every PR (and pushes to main). Must be green before a PR is mergeable.
+# Quality gate for every PR and for pushes to main and work branches. Must be green before a PR is mergeable.
 # The author of a change is never its only reviewer: CI is the shared referee (docs/process/WORKFLOW.md).
 
 on:
   pull_request:
     branches: [main, master]
   push:
-    branches: [main, master]
+    # main, plus milestone work branches: every pushed step is verified, not only the final PR.
+    branches: [main, master, "feat/**", "fix/**", "chore/**", "docs/**"]
 
 permissions:
   contents: read
