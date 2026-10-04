@@ -36,8 +36,7 @@
 - **Pre-scheme checkpoint:** the June 2026 checkpoint was labelled `6.0.0-alpha.1` (git tag
   `v6.0.0-alpha`) before this scheme existed. Under SemVer precedence it sorts above every
   `6.0.0-alpha.0.x`. No distributed artifact or updater consumes it, so it has no practical effect;
-  `CHANGELOG.md` marks it as pre-scheme. *(Handling proposed by the Adjutant on 2026-10-03 —
-  pending maintainer confirmation.)*
+  `CHANGELOG.md` marks it as pre-scheme. *(Confirmed by the maintainer on 2026-10-04.)*
 - **Commits that change the version** carry it in their subject, e.g.
   `chore: … (6.0.0-alpha.0.2)`.
 - **Tags:** a milestone is tagged `v<version>` when the maintainer merges its PR.

@@ -69,18 +69,22 @@ On cloud storage of raw data, he decided:
 7. **Missing is not zero:**
    - an absent quantity (e.g. no barometer) is recorded as absent, never as 0;
    - a gap in recording is a gap, never a run of zero counts;
-   - a partial minute is marked partial.
-   _(Wording proposed by the Adjutant on 2026-10-03 — pending maintainer confirmation.)_
+   - **partial minutes are not recorded** (established v5 behavior; `docs/science/SERIAL-FORMATS.md`
+     §4, ADR-003 §5): the first minute after a start and the last minute before a cut are discarded;
+     only complete minutes become per-minute records. The raw lines of those minutes still remain in
+     the agent's local raw store (layer 0).
+   _(Confirmed by the maintainer on 2026-10-04.)_
 8. **Per-minute canonical records keep the earlier rule:** they are **time averages, never sums**,
    and statistical uncertainties are derived from raw counts (√N). Precisely: intensive quantities
    (pressure, temperature) are time averages; per-event values (amplitudes) are summarised as event
    mean/min/max with their count N; counts are events per interval together
    with the live time they cover; cumulative device counters (e.g. dead time) are stored as
-   increments per interval (dead fraction = Δdead/Δt), never averaged.
-   _(Precision proposed by the physicist review on 2026-10-03 — pending maintainer confirmation.)_
+   increments per interval (dead fraction = Δdead/Δt), never averaged — a change from v5, which
+   averaged the raw dead-time column.
+   _(Precision from the physicist review, confirmed by the maintainer on 2026-10-04.)_
 9. **Time is data too:** raw timestamps are kept; corrected timestamps are derived, with a record
    of time quality (source, offset, drift).
-   _(Wording proposed by the Adjutant on 2026-10-03 — pending maintainer confirmation.)_
+   _(Confirmed by the maintainer on 2026-10-04.)_
 10. **Realtime is ephemeral** in the cloud: a short live window, pruned by time.
 
 ## Consequences

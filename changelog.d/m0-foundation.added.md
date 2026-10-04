@@ -9,4 +9,8 @@
   offline timestamping; the serial-formats reference in English.
 - Operations guides: environments, a step-by-step Firebase setup guide, and remote access to
   detector machines with Tailscale.
-- Workflow guide and templates for specs, stage reports, and milestone plans.
+- Workflow guide and templates for specs, stage reports, and milestone plans; approved milestone
+  plans live in `docs/product/plans/`.
+- A `physicist` reviewer subagent with veto over incorrect scientific claims; the other reviewer
+  subagents carry MuonHub-specific checks.
+- Session records of 2026-10-03 and 2026-10-04.

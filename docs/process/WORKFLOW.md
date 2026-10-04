@@ -75,6 +75,11 @@ v6 is built in about six milestones, one pull request each (ADR-008).
   already exists.
 - **Production is read-only** unless the maintainer explicitly authorises otherwise, and the v5
   production project is not modified at all.
+- **Proposals that change established behavior say so.** Before proposing a rule or design, check
+  what MuonHub does today (v5 behavior, `docs/science/`, ADRs, code). A proposal that changes an
+  established behavior quotes the current behavior and its source and is labelled as a change —
+  never presented as a neutral clarification. Reviewer suggestions are checked against the same
+  sources before they are adopted.
 
 ## 5. Quality gates
 

@@ -189,5 +189,5 @@ Column mapping (according to `parseTabSeparatedLine`, separator = tabs or multip
 3. **Reconcile v6 units:** pressure → hPa; dead time → define the canonical representation for
    the correction `R/(1−R·τ_DT)` (`THEORETICAL-FOUNDATION.md §4`).
 4. **Auto-detection of version/hardware** from the header (CosmicWatch v2/v3X vs MuNRa).
-5. Keep "averages, never sums" (stated precisely in ADR-006 rule 8) and **mark partial minutes as
-   partial** instead of discarding them (ADR-006 rule 7).
+5. Keep "averages, never sums" (stated precisely in ADR-006 rule 8) and the **discarding of partial
+   minutes** (the first and the last; only complete minutes are saved — ADR-006 rule 7).

@@ -24,7 +24,8 @@ _Last updated: 2026-10-03 · version `6.0.0-alpha.0.x` · branch `chore/m0-found
       documents (`6.0.0-alpha.0.4`).
 - [x] Independent review: docs-auditor, code-reviewer, fact-check, physicist; findings fixed
       (`6.0.0-alpha.0.4.x`).
-- [ ] Maintainer confirms the pending items below → PR #1.
+- [x] Maintainer confirmed the pending items (2026-10-04).
+- [ ] PR #1 open → maintainer review and merge.
 
 ## Quality gates
 
@@ -36,28 +37,19 @@ _Last updated: 2026-10-03 · version `6.0.0-alpha.0.x` · branch `chore/m0-found
 
 ## Open questions for the maintainer
 
-**To confirm before PR #1 (wording proposed by the Adjutant):**
-1. ADR-004 rule 1 — "detector" keeps only its general scientific sense and never names a data space.
-2. ADR-006 rule 7 — missing is not zero: an absent quantity (e.g. no barometer) is recorded as absent;
-   a recording gap is never a run of zero counts; a partial minute is marked partial.
-3. ADR-006 rule 9 — raw timestamps are kept; corrected timestamps are derived, with a record of time
-   quality (source, offset, drift).
-4. ADR-008 — the June 2026 checkpoint `6.0.0-alpha.1` predates the scheme and sorts above
-   `6.0.0-alpha.0.x`; it is marked pre-scheme (no artifact consumes it).
-5. ADR-009 — the specific security rules (accepted in principle: "close every security hole").
-6. ADR-006 rule 8 precision (physicist review) — intensive quantities are time averages; per-event
-   values are summarised as mean/min/max with N; counts are events per interval with their covered
-   live time; cumulative counters (e.g. dead time) are stored as increments, never averaged. Once
-   confirmed, `AGENTS.md` guardrail 4 and the code-reviewer checklist use the same wording.
+**Resolved on 2026-10-04:** ADR-004 rule 1, ADR-006 rules 7–9 (partial minutes are discarded, as in
+v5), ADR-008 pre-scheme note, and ADR-009 (owners can share and transfer ownership; nobody grants
+themselves rights) — see [`audit/2026-10-04-SESSION-RECORD.md`](audit/2026-10-04-SESSION-RECORD.md).
 
 **Open, decided later:**
-7. Public live demo mechanism (ADR-005 §6, Proposed) — measured in M1.
-8. Real contact address for the website (the first-attempt landing shows an unverified
+1. Public live demo mechanism (ADR-005 §6, Proposed) — measured in M1.
+2. Real contact address for the website (the first-attempt landing shows an unverified
    `contact@munhub.usfq.edu.ec`).
-9. Staging environment (dedicated project vs. preview channels plus emulator) — proposed in the M1
+3. Staging environment (dedicated project vs. preview channels plus emulator) — proposed in the M1
    plan.
-10. The first station's barometric reference: its barometer reads ≈ 768 hPa (≈ 2.4 km), not the
-    ≈ 730 hPa of central Quito; P₀ will be the station's own long-term mean (B-M1-08, B-M1-35).
+4. The first station's barometric reference: its barometer reads ≈ 768 hPa (≈ 2.4 km), not the
+   ≈ 730 hPa of central Quito; P₀ will be the station's own long-term mean (B-M1-08, B-M1-35).
+5. Whether a recipient must accept an ownership transfer (M2 spec).
 
 ## Environment
 

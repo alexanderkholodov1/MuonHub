@@ -24,12 +24,12 @@ This folder is the single place where MuonHub records **why** the project is bui
 | — | ADR-001 was never written | — |
 | [002](adr/002-local-agent-framework.md) | Local agent framework (Tauri) | Superseded by ADR-007 |
 | [003](adr/003-data-storage-and-event-model.md) | Data storage tiers, event model, dynamic capacity | Amended by ADR-005 and ADR-006 |
-| [004](adr/004-terminology-and-domain-model.md) | Terminology and domain model | Accepted (2026-10-03); wording of rule 1 pending confirmation |
+| [004](adr/004-terminology-and-domain-model.md) | Terminology and domain model | Accepted (2026-10-03; rule 1 confirmed 2026-10-04) |
 | [005](adr/005-firebase-only-architecture-and-free-tier-budget.md) | Firebase-only architecture and free-tier budget | Accepted (2026-10-03); public live demo (§6), job list, and App Check token lifetime Proposed |
-| [006](adr/006-data-integrity-raw-canonical-derived.md) | Data integrity: raw, canonical, derived | Accepted (2026-10-03); wording of rules 7 and 9 pending confirmation |
+| [006](adr/006-data-integrity-raw-canonical-derived.md) | Data integrity: raw, canonical, derived | Accepted (2026-10-03; rules 7–9 confirmed 2026-10-04 — partial minutes are discarded, as in v5) |
 | [007](adr/007-agent-runtime-headless-daemon.md) | Agent runtime: headless daemon | Accepted (2026-10-03) |
-| [008](adr/008-versioning-and-milestone-pr-policy.md) | Versioning and milestone PR policy | Accepted (2026-10-03); pre-scheme checkpoint note pending confirmation |
-| [009](adr/009-security-baseline.md) | Security baseline | Accepted in principle ("close every security hole", 2026-10-02); specific rules Proposed until confirmed |
+| [008](adr/008-versioning-and-milestone-pr-policy.md) | Versioning and milestone PR policy | Accepted (2026-10-03; pre-scheme note confirmed 2026-10-04) |
+| [009](adr/009-security-baseline.md) | Security baseline | Accepted (2026-10-04, with the maintainer's correction: owners can share and transfer ownership) |
 
 ## Historical decision log (D1–D46)
 

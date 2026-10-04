@@ -43,7 +43,7 @@ documentation. The Spanish column gives the term used in the chat and in the Spa
 
 1. **The physical object is a Device.** The word "detector" keeps only its general scientific sense
    ("a cosmic-ray detector"). It never names a data space and is not a domain term.
-   _(Wording proposed by the Adjutant on 2026-10-03 — pending maintainer confirmation.)_
+   _(Confirmed by the maintainer on 2026-10-04.)_
 2. **Data belongs to a stream.** It does not belong to a device or a station on their own.
 3. **Comparisons are between views.** Pure and filtered data of the same stream are two views of
    one stream, never two copies of the data.

@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/agent",
-  "version": "6.0.0-alpha.0.4.2",
+  "version": "6.0.0-alpha.0.4.3",
   "private": true,
   "description": "MuonHub local agent (Tauri): serial reading, SQLite local backup, offline sync queue",
   "license": "MIT",

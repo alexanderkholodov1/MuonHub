@@ -96,8 +96,11 @@ Data belongs to **streams**, never to a "detector". Comparisons are made between
    **forbidden to overwrite data and store it in an altered form as if it were pure.** Storing a
    filtered dataset is allowed only as an explicit, labelled setting whose calibration the user
    defines. Raw data is immutable; derived data carries its provenance (which raw data, which recipe
-   version). Per-minute values are **time-averages, never sums**; statistical uncertainties come from
-   raw counts (√N); a gap is never recorded as zero. Validate every boundary with `zod`.
+   version). Per-minute records are written only for **complete minutes** (partial first/last minutes
+   are discarded, as in v5). Intensive quantities are **time-averages, never sums**; counts are events
+   per minute with their covered live time; cumulative device counters are stored as increments;
+   statistical uncertainties come from raw counts (√N); a gap or an absent quantity is never
+   recorded as zero. Validate every boundary with `zod`.
 5. **Free tier only (ADR-005).** MuonHub runs on the Firebase Spark (no-cost) plan indefinitely: no
    paid services, no credit cards, no Cloudflare. Design against the quotas (100 simultaneous RTDB
    connections, 10 GB/month RTDB download, 1 GB RTDB storage, Firestore daily operation limits,
@@ -105,8 +108,9 @@ Data belongs to **streams**, never to a "detector". Comparisons are made between
    forbid it.
 6. **Provider boundary.** Backend SDKs (Firebase client/admin) are used only inside
    `packages/data-provider`. Apps and services go through its interfaces.
-7. **Security baseline (ADR-009).** Deny by default; validate every field; owner-only immutable
-   fields; public data only through dedicated projections without personal data; negative tests with
+7. **Security baseline (ADR-009).** Deny by default; validate every field; rights change only through
+   authorized flows (an owner can share or transfer ownership, with a notice to the recipient;
+   nobody grants themselves rights); public data only through dedicated projections without personal data; negative tests with
    real client identities, including anonymous reads; no admin keys on agent machines; safe error
    messages.
 8. **English everywhere** for new content: code, comments, commits, docs, i18n keys (English is the

@@ -34,7 +34,9 @@ for the old name.
 | 6.0.0-alpha.0.2 | rename the product to MuonHub | 93 files; 145 tests green; emulator 19/20 (see STATUS) |
 | 6.0.0-alpha.0.3 | reorganize documentation (moves only) | 32 renames, history preserved |
 | 6.0.0-alpha.0.4 | v6 rebuild foundation — decisions, product plan, operations, process | 4 parallel writing lanes |
-| 6.0.0-alpha.0.4.x | review fixes | see below |
+| 6.0.0-alpha.0.4.1 | align M0 documentation after independent review | docs-auditor, code-reviewer, fact-check |
+| 6.0.0-alpha.0.4.2 | apply the physicist review to the science and backlog documents | physicist review and verification |
+| 6.0.0-alpha.0.4.3 | record the maintainer's confirmations | partial minutes discarded (as in v5); ownership transfer by owners; pending wording confirmed |
 
 ## Additions made during execution (reported in the chat)
 
@@ -45,4 +47,7 @@ for the old name.
 - The first station's altitude corrected from its barometer (≈ 768 hPa → about 2.4 km in a tropical atmosphere,
   not central Quito's 2,850 m).
 - First-attempt changelog fragments compiled into a historical section of `CHANGELOG.md`.
-- Items pending the maintainer's confirmation are listed in [`../../STATUS.md`](../../STATUS.md).
+- The maintainer's confirmations of 2026-10-04 are recorded in
+  [`../../audit/2026-10-04-SESSION-RECORD.md`](../../audit/2026-10-04-SESSION-RECORD.md).
+- `docs/process/WORKFLOW.md` §4: proposals that change established behavior must say so and cite the
+  current behavior.

@@ -1,7 +1,7 @@
 # ADR-009 — Security baseline
 
-- **Status:** Accepted in principle — the maintainer required closing every security hole
-  (2026-10-02); the specific rules below are **Proposed** until he confirms them.
+- **Status:** Accepted (2026-10-04). The maintainer required closing every security hole
+  (2026-10-02) and confirmed these rules with a correction on ownership transfer (rule 3).
 - **Date:** 2026-10-03
 - **Reinforces:** D39. **Applies to:** every milestone from M1 on.
 
@@ -28,12 +28,20 @@ security rules. The maintainer's instruction: **close every hole; nothing like t
 2. **Validate every field** in the security rules: type, range, allowed keys, and no unexpected
    keys. Writes that do not match the schema are rejected; they are never stored for later
    cleanup.
-3. **Owner-only, immutable fields.** Ownership, roles, sharing lists, and visibility are writable
-   only by the owner, or by an admin through the trusted path. Ownership cannot be reassigned by
-   an editor.
-4. **Roles are custom claims set by a trusted script** that runs on the maintainer's machine or in
-   CI. They are never written from a browser. The client never trusts a role field stored in a
-   user-writable document.
+3. **Rights change only through authorized flows — nobody grants themselves rights.**
+   - The **owner** of a station (with its devices and streams) can, from the web app, share it
+     (viewer / editor), change its visibility, and **transfer or share ownership** with another
+     account easily. The receiving user is notified by email (delivery depends on the
+     transactional-email item; until it exists, an in-app notice). Whether the recipient must
+     accept a transfer is decided in the M2 spec.
+   - **Editors and viewers** can never change ownership, sharing, or visibility.
+   - The security rules enforce this: only the current owner can write those fields, and every
+     transfer leaves an auditable record.
+4. **Platform roles (admin).** No user can grant themselves a platform role. Admins are managed by
+   existing admins from the admin area; the first admin is set by a trusted script. The rules never
+   trust a role field the user can write. How admin rights are stored on Spark (no Cloud Functions
+   to set custom claims) is specified in M1, e.g. a rules-protected admin list writable only by
+   admins.
 5. **Public data only through dedicated public projections.**
    - Anonymous visitors read only purpose-built public documents and windows: station cards,
      aggregates, and the live showcase (ADR-005).
@@ -73,5 +81,5 @@ security rules. The maintainer's instruction: **close every hole; nothing like t
 
 - **Client-side checks only (hiding data in the UI):** rejected. Anyone can read what the rules
   allow, whatever the UI shows.
-- **Roles stored in a user document checked by the client:** rejected; such a field is writable by
-  its owner.
+- **Roles stored in a user-writable document checked by the client:** rejected; such a field is
+  writable by the user it describes.

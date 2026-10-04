@@ -83,8 +83,9 @@ MuonHub (TypeScript strict, pnpm/Turborepo, Next.js static export, Firebase Spar
 - **Boundaries:** Firebase SDKs only inside `packages/data-provider`; every boundary validated
   with `zod` (`packages/shared`); no `any`.
 - **Data integrity (ADR-006):** raw data never overwritten or filtered at ingest; derived data
-  labelled with provenance; per-minute values are time-averages, never sums; gaps and absent
-  quantities never become zeros. Any violation is HIGH.
+  labelled with provenance; per-minute records only for complete minutes; intensive quantities are
+  time-averages, never sums; counts carry their live time; cumulative counters stored as
+  increments; gaps and absent quantities never become zeros. Any violation is HIGH.
 - **Free-tier cost (ADR-005):** flag unbounded reads, re-downloading whole series, per-event reads
   or writes in hot paths, persistent realtime listeners for anonymous visitors, heavy bundles on
   public pages. Each is a concrete quota risk on Spark.
