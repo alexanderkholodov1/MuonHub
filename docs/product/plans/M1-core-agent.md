@@ -1,6 +1,7 @@
 # Milestone plan — M1 Core + Agent
 
-- **Status:** **Proposed** (2026-10-04) — nothing is executed until the maintainer approves it.
+- **Status:** **Approved** by the maintainer on 2026-10-04, with decisions A–H as recommended below.
+  Execution log at the end of this document.
 - **Goal:** trustworthy data from the real detector reaches the `muonhub` project end to end, with
   no web interface yet: a headless agent on the university PC reads the CosmicWatch 24/7, keeps all
   raw data locally, writes complete-minute records, hourly summaries, and a live window to Firebase,
@@ -101,3 +102,9 @@ data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seis
   reports, stopping only for new decisions. Recommended.
 - **H. Disruption tests need sudo on the university PC** (USB unbind/rebind, temporary firewall
   rule, reboot). Confirm that this access is acceptable.
+
+## Execution log
+
+| Version | Step | Notes |
+|---|---|---|
+| — | plan approved (2026-10-04) | decisions A–H as recommended |

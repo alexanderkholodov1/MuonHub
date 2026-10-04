@@ -7,7 +7,7 @@ _Last updated: 2026-10-04 · version `6.0.0-alpha.0.4.3` (tag) · branch `feat/m
 | Milestone | Scope | State |
 |---|---|---|
 | **M0 Foundation** | Cleanup, rename to MuonHub, documentation structure, decisions (ADR-004…009), roadmap and backlog | ✅ merged (PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57), tag `v6.0.0-alpha.0.4.3`) |
-| **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 📝 step plan proposed — [`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md), awaiting approval |
+| **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 🔄 in progress — plan approved 2026-10-04 ([`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md)) |
 | M2 Web platform | Accounts, stations and devices, live dashboard, public site and live page | ⏳ |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
