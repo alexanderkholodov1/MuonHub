@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/web",
-  "version": "6.0.0-alpha.0.4.3",
+  "version": "6.0.0-alpha.1.1",
   "private": true,
   "description": "MuonHub web app (Next.js static export): public landing, station dashboards, admin console",
   "license": "MIT",
@@ -10,11 +10,11 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "dev": "next dev",
-    "clean": "rm -rf .next out"
+    "clean": "rm -rf .next out *.tsbuildinfo"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
-    "@types/node": "^22.15.29",
+    "@types/node": "catalog:",
     "@types/plotly.js": "^3.0.10",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
@@ -22,8 +22,8 @@
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.2.9",
     "jsdom": "^29.1.1",
-    "typescript": "*",
-    "vitest": "*"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@muonhub/data-provider": "workspace:*",

@@ -1,20 +1,20 @@
 {
   "name": "@muonhub/agent",
-  "version": "6.0.0-alpha.0.4.3",
+  "version": "6.0.0-alpha.1.1",
   "private": true,
-  "description": "MuonHub local agent (Tauri): serial reading, SQLite local backup, offline sync queue",
+  "description": "MuonHub agent — the headless Node.js daemon is built in milestone M1 (ADR-007); this package holds the first-attempt TypeScript core until then",
   "license": "MIT",
   "scripts": {
-    "build": "echo 'agent build stub — Tauri wired in S16'",
+    "build": "echo 'agent: no build output until the M1 daemon'",
     "test": "vitest run",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "dev": "echo 'agent dev stub — Tauri wired in S16'",
-    "clean": "rm -rf dist src-tauri/target"
+    "dev": "echo 'agent: no dev server until the M1 daemon'",
+    "clean": "rm -rf dist *.tsbuildinfo"
   },
   "devDependencies": {
-    "typescript": "*",
-    "vitest": "*"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@muonhub/shared": "workspace:*",

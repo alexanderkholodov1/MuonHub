@@ -1,8 +1,6 @@
 export { aggregateMinuteReadings } from "./aggregate.js";
 export { InMemoryLocalStore } from "./local-store.js";
 export { OfflineSyncQueue } from "./sync-queue.js";
-export { listSerialPorts, TauriSerialBridge } from "./tauri-serial-bridge.js";
-export { renderPortPicker } from "./ui/port-picker.js";
 export {
   detectSerialFormat,
   parseCosmicWatchLine,
@@ -25,12 +23,6 @@ export type {
   MinuteRecordUploader,
   OfflineSyncQueueOptions,
 } from "./sync-queue.js";
-export type {
-  SerialBridgeOptions,
-  SerialPortInfo,
-  TauriInvoker,
-} from "./tauri-serial-bridge.js";
-export type { PortPickerOptions } from "./ui/port-picker.js";
 export type {
   ParseOptions,
   ParserLogger,

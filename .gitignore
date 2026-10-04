@@ -54,9 +54,6 @@ out/
 .pnpm-store/
 .turbo/
 
-# Tauri build artifacts
-src-tauri/target/
-
 # SQLite databases (local agent data — backed up separately)
 *.sqlite
 *.sqlite-shm

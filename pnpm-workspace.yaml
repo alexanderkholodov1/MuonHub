@@ -18,3 +18,12 @@ allowBuilds:
   unrs-resolver: true
   # es5-ext: optional compatibility helper pulled by Plotly dependencies; no native build needed
   es5-ext: false
+
+# Single source of truth for shared tool versions (pnpm catalogs): packages reference them as
+# "catalog:". TypeScript stays on 6.0 until typescript-eslint supports TypeScript 7
+# (its peer range is ">=4.8.4 <6.1.0" as of 2026-10-04).
+catalog:
+  typescript: 6.0.3
+  vitest: ^5.0.3
+  "@vitest/coverage-v8": ^5.0.3
+  "@types/node": ^24.19.1

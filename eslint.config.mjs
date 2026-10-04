@@ -1,30 +1,29 @@
 // @ts-check
-import tseslint from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
+// Root ESLint configuration for the TypeScript packages and the agent. The first-attempt web app
+// (apps/web) keeps its own `next lint` setup until it is rebuilt in milestone M2.
+import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-/** @type {import("eslint").Linter.Config[]} */
-export default [
+export default tseslint.config(
   {
-    ignores: [
-      "**/dist/**",
-      "**/node_modules/**",
-      "**/.next/**",
-      "**/public/**",  // static assets (not linted)
-    ],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/.next/**", "**/out/**", "**/coverage/**"],
   },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ["**/*.ts", "**/*.tsx"],
-    plugins: {
-      "@typescript-eslint": tseslint,
-    },
     languageOptions: {
-      parser: tsParser,
       parserOptions: {
-        project: true,
+        projectService: true,
       },
     },
     rules: {
-      // Enforce English-only identifiers by disallowing non-ASCII in code
+      // English-only identifiers (AGENTS.md guardrail 8): identifiers must be ASCII.
+      "id-match": [
+        "error",
+        "^[A-Za-z_$][A-Za-z0-9_$]*$",
+        { properties: true, classFields: true, onlyDeclarations: false, ignoreDestructuring: false },
+      ],
       "no-irregular-whitespace": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "@typescript-eslint/no-explicit-any": "error",
@@ -33,4 +32,4 @@ export default [
       "@typescript-eslint/no-floating-promises": "error",
     },
   },
-];
+);

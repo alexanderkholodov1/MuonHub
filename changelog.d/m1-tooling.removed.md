@@ -1,0 +1,1 @@
+- The Tauri/Rust shell of the agent (superseded by the headless daemon, ADR-007).

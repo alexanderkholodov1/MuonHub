@@ -20,13 +20,14 @@ in full first.** If this file and `AGENTS.md` ever disagree, `AGENTS.md` wins.
 ## Commands
 
 ```bash
-pnpm install        # bootstrap the workspace (Node >= 22.13, pnpm 11 via corepack)
+pnpm install        # bootstrap the workspace (Node 24 LTS — see .nvmrc; pnpm 11 via corepack)
 pnpm build          # build all packages (Turborepo)
 pnpm test           # vitest suites
 pnpm lint           # eslint
 pnpm typecheck      # strict TypeScript across the workspace
 pnpm --filter @muonhub/shared test                   # single-package run
 pnpm --filter @muonhub/data-provider test:emulator   # Firebase emulator tests (needs Java 21)
+pnpm format:check   # Prettier check (code only; Markdown is formatted by hand)
 ```
 
 CI runs `typecheck · lint · build · test`, the emulator tests, and gitleaks on every PR; `main` is

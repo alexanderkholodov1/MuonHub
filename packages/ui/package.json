@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/ui",
-  "version": "6.0.0-alpha.0.4.3",
+  "version": "6.0.0-alpha.1.1",
   "private": true,
   "description": "Design system: Observatory Dark tokens, Tailwind v4, shadcn/ui re-tokenized primitives",
   "license": "MIT",
@@ -19,14 +19,14 @@
     "test": "vitest run",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist *.tsbuildinfo"
   },
   "devDependencies": {
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "jsdom": "^29.1.1",
-    "typescript": "*",
-    "vitest": "*"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@muonhub/shared": "workspace:*",

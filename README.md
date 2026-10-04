@@ -83,7 +83,7 @@ docs/                  Product, decisions, architecture, science, operations, pr
 
 ## Development
 
-Requires Node.js ≥ 22.13 and pnpm 11 (via corepack).
+Requires Node.js 24 LTS (`.nvmrc`) and pnpm 11 (via corepack).
 
 ```bash
 pnpm install

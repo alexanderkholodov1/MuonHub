@@ -98,5 +98,5 @@ project, or Hosting preview channels plus the emulator. Note that an extra Hosti
 
 | Machine | Facts |
 |---|---|
-| Development laptop | Windows + WSL2 (Ubuntu). Node **22.13+** is required (pnpm 11.5.2, pinned in `packageManager`, needs it; the `engines` field still says `>=20` — fixed in M1). GitHub CLI 2.102 from the official repository, authenticated; git uses SSH and the `origin` remote has the SSH URL. No PowerShell or Rust; Java only for the emulator. |
+| Development laptop | Windows + WSL2 (Ubuntu). Node **24 LTS** (`.nvmrc`, `engines`) with pnpm 11.28 pinned in `packageManager`; shared tool versions come from the pnpm catalog in `pnpm-workspace.yaml`. GitHub CLI 2.102 from the official repository, authenticated; git uses SSH and the `origin` remote has the SSH URL. No PowerShell or Rust; Java only for the emulator. |
 | University detector PC | Ubuntu. Currently runs the v5 reader for the CosmicWatch (whether Chrome Web Serial or the Python bridge is unknown). No Tailscale yet — the maintainer installs it on site; see [`REMOTE-ACCESS.md`](REMOTE-ACCESS.md). |

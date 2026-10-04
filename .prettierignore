@@ -1,0 +1,16 @@
+# Generated and dependency files
+pnpm-lock.yaml
+**/dist/**
+**/out/**
+**/.next/**
+**/coverage/**
+**/node_modules/**
+apps/web/next-env.d.ts
+
+# Prose is formatted by hand (tables, line breaks); historical records stay as they were
+**/*.md
+docs/archive/
+specs/
+
+# Secrets and local data
+private/

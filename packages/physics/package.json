@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/physics",
-  "version": "6.0.0-alpha.0.4.3",
+  "version": "6.0.0-alpha.1.1",
   "private": true,
   "description": "Pure scientific calculations: dead-time correction, barometric correction, flux, Landau spectrum",
   "license": "MIT",
@@ -18,12 +18,12 @@
     "test": "vitest run --coverage",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist *.tsbuildinfo"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^3.2.6",
-    "typescript": "*",
-    "vitest": "*"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "dependencies": {
     "@muonhub/shared": "workspace:*"

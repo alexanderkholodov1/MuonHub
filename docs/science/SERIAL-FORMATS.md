@@ -54,7 +54,7 @@ as counts per interval with their covered live time.)* First-attempt data-integr
 ingestion: per-minute fields are time-averages, never sums. `sm`,
 `tp`, `pr`, `dt`, `ec`, and `cc` are averaged over the minute window; `sn` and `sx` keep the
 documented amplitude min/max semantics. No parsed event is filtered during aggregation. *(First-attempt
-state, replaced in M1:)* the Tauri serial bridge under `apps/agent/src-tauri/` is a thin scaffold for port enumeration and line events;
+state; the Tauri shell was removed in M1:)* the Tauri serial bridge under `apps/agent/src-tauri/` was a thin scaffold for port enumeration and line events;
 full Tauri packaging and real serial acquisition are out of CI and must be verified manually with the
 physical detector by checking port enumeration, live line streaming, parsed readings, local-first
 minute persistence, and reconnect flush.

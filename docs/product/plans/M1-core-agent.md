@@ -108,3 +108,4 @@ data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seis
 | Version | Step | Notes |
 |---|---|---|
 | — | plan approved (2026-10-04) | decisions A–H as recommended |
+| 6.0.0-alpha.1.1 | 1 — tooling and upgrades | Node 24, pnpm 11.28, TypeScript 6.0 (7 not yet supported by typescript-eslint), vitest 5, ESLint 10 (web keeps ESLint 9 until M2), Prettier check, Turbo fixes and `agentGuidance: false`, Tauri shell removed. zod 4 moves to step 3 with the new contracts. |
