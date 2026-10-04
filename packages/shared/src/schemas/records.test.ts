@@ -32,7 +32,9 @@ describe("MinuteRecordSchema", () => {
   });
 
   it("enforces SiPM ordering sn <= sm <= sx", () => {
-    expect(MinuteRecordSchema.safeParse({ ...validMinute, sn: 5, sm: 1, sx: 3 }).success).toBe(false);
+    expect(MinuteRecordSchema.safeParse({ ...validMinute, sn: 5, sm: 1, sx: 3 }).success).toBe(
+      false,
+    );
   });
 
   it("allows negative temperature", () => {

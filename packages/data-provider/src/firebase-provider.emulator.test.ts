@@ -254,7 +254,9 @@ describeEmu("FirebaseProvider (emulator)", () => {
     await provider.pushMinuteRecord(did, record);
 
     const rawMinute = (
-      await adminDatabase().ref(Paths.minute(sid, did, ts)).get()
+      await adminDatabase()
+        .ref(Paths.minute(sid, did, ts))
+        .get()
     ).val();
     expect(rawMinute).toEqual({
       ec: 42,
@@ -266,13 +268,9 @@ describeEmu("FirebaseProvider (emulator)", () => {
       pr: 1013,
       dt: 1.2,
     });
-    expect(snapshotChildKeys(rawMinute)).toEqual(
-      [...CANONICAL_SLIM_MINUTE_RECORD_FIELDS].sort(),
-    );
+    expect(snapshotChildKeys(rawMinute)).toEqual([...CANONICAL_SLIM_MINUTE_RECORD_FIELDS].sort());
 
-    const rawLatest = (
-      await adminDatabase().ref(Paths.latest(sid, did)).get()
-    ).val();
+    const rawLatest = (await adminDatabase().ref(Paths.latest(sid, did)).get()).val();
     expect(rawLatest).toMatchObject({ ts });
     expect(rawLatest).not.toHaveProperty("ecDt");
     expect(rawLatest).not.toHaveProperty("ecCorr");
@@ -304,14 +302,13 @@ describeEmu("FirebaseProvider (emulator)", () => {
       fromTs: t0,
       toTs: t0 + 3_600_000,
     });
-    expect(got.map((summary) => summary.intervalStartTs)).toEqual([
-      t0,
-      t0 + 3_600_000,
-    ]);
+    expect(got.map((summary) => summary.intervalStartTs)).toEqual([t0, t0 + 3_600_000]);
     expect(got).toEqual([first, second]);
 
     const rawSummary = (
-      await adminDatabase().ref(Paths.eventSummary(sid, did, t0)).get()
+      await adminDatabase()
+        .ref(Paths.eventSummary(sid, did, t0))
+        .get()
     ).val();
     expect(rawSummary).toMatchObject({
       sessionId,
@@ -369,11 +366,7 @@ describeEmu("FirebaseProvider (emulator)", () => {
       ...makeSignal(intervalStartTs + 2_000, 99),
       sipmMv: "99",
     };
-    const ndjson = [
-      JSON.stringify(valid),
-      "{not-json",
-      JSON.stringify(schemaInvalid),
-    ].join("\n");
+    const ndjson = [JSON.stringify(valid), "{not-json", JSON.stringify(schemaInvalid)].join("\n");
     await adminBucket()
       .file(signalBlobObjectPath(ref))
       .save(gzipSync(Buffer.from(ndjson, "utf8")), {
@@ -434,9 +427,7 @@ describeEmu("FirebaseProvider (emulator)", () => {
       });
     }
 
-    const rawRealtime = (
-      await adminDatabase().ref(Paths.realtime(sid, did)).get()
-    ).val();
+    const rawRealtime = (await adminDatabase().ref(Paths.realtime(sid, did)).get()).val();
     const keys = snapshotChildKeys(rawRealtime);
     expect(keys.length).toBeLessThanOrEqual(REALTIME_CAP);
     expect(keys.length).toBe(REALTIME_CAP);

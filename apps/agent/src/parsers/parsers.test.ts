@@ -18,29 +18,26 @@ function testLogger(messages: string[]): ParserLogger {
 
 describe("serial parser format detection", () => {
   it("detects the four documented wire formats", () => {
-    expect(
-      detectSerialFormat("270  111753  60  1881  0.9  76501.6  27.1  46100  0  COSMIC"),
-    ).toBe("cosmicwatch");
-    expect(detectSerialFormat('{"trg":1,"sipm":122.5,"temp":22.5}')).toBe("json");
-    expect(detectSerialFormat("TRG 1 CH 1 ADC 245 TEMP 22.5 PRES 101320 DT 0.15")).toBe(
-      "keyValue",
+    expect(detectSerialFormat("270  111753  60  1881  0.9  76501.6  27.1  46100  0  COSMIC")).toBe(
+      "cosmicwatch",
     );
+    expect(detectSerialFormat('{"trg":1,"sipm":122.5,"temp":22.5}')).toBe("json");
+    expect(detectSerialFormat("TRG 1 CH 1 ADC 245 TEMP 22.5 PRES 101320 DT 0.15")).toBe("keyValue");
     expect(detectSerialFormat("1,122.5,22.5,101320,0.15,1,1717200000000")).toBe("csv");
   });
 
   it("skips headers and non-data lines", () => {
-    expect(
-      detectSerialFormat("Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Pressure[Pa] Temp[C]"),
-    ).toBe("unknown");
+    expect(detectSerialFormat("Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Pressure[Pa] Temp[C]")).toBe(
+      "unknown",
+    );
   });
 });
 
 describe("serial parser normalization", () => {
   it("parses the CosmicWatch/MuNRa standard sample line", () => {
-    const reading = parseSerialLine(
-      "270  111753  60  1881  0.9  76501.6  27.1  46100  0  COSMIC",
-      { now: () => NOW },
-    );
+    const reading = parseSerialLine("270  111753  60  1881  0.9  76501.6  27.1  46100  0  COSMIC", {
+      now: () => NOW,
+    });
 
     expect(reading).toMatchObject({
       timestamp: NOW,

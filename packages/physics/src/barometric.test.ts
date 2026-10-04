@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {
-  applyBarometricCorrection,
-  betaToPercentPerHpa,
-  fitBarometricBeta,
-} from "./barometric.js";
+import { applyBarometricCorrection, betaToPercentPerHpa, fitBarometricBeta } from "./barometric.js";
 
 /** Synthetic exponential series I(P) = I₀·e^{β(P−P₀)} at Andean pressures (~730 hPa). */
-function syntheticSeries(beta: number, i0: number, p0: number): { rate: number; pressureHpa: number }[] {
+function syntheticSeries(
+  beta: number,
+  i0: number,
+  p0: number,
+): { rate: number; pressureHpa: number }[] {
   const points: { rate: number; pressureHpa: number }[] = [];
   for (let p = 700; p <= 760; p += 2) {
     points.push({ pressureHpa: p, rate: i0 * Math.exp(beta * (p - p0)) });
@@ -78,9 +78,10 @@ describe("applyBarometricCorrection", () => {
   });
 
   it("is the identity at the reference pressure", () => {
-    expect(
-      applyBarometricCorrection(123, 730, { beta: -0.0024, refPressureHpa: 730 }),
-    ).toBeCloseTo(123, 12);
+    expect(applyBarometricCorrection(123, 730, { beta: -0.0024, refPressureHpa: 730 })).toBeCloseTo(
+      123,
+      12,
+    );
   });
 
   it("rejects non-physical inputs", () => {

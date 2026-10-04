@@ -52,7 +52,11 @@ export function hasRequiredNumber(value: number | null): value is number {
   return value !== null;
 }
 
-export function warnSkipped(options: ParseOptions | undefined, message: string, line: string): null {
+export function warnSkipped(
+  options: ParseOptions | undefined,
+  message: string,
+  line: string,
+): null {
   getLogger(options).warn(message, { line });
   return null;
 }

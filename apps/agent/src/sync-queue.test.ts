@@ -52,7 +52,11 @@ describe("OfflineSyncQueue", () => {
     await queue.enqueueMinuteRecord("detector-a", record(120_000));
     await queue.enqueueMinuteRecord("detector-a", record(60_000));
 
-    await expect(queue.setOnline(true)).resolves.toEqual({ attempted: 2, uploaded: 2, remaining: 0 });
+    await expect(queue.setOnline(true)).resolves.toEqual({
+      attempted: 2,
+      uploaded: 2,
+      remaining: 0,
+    });
     expect(uploader.calls.map((call) => call.record.ts)).toEqual([60_000, 120_000]);
     await expect(store.listQueuedMinuteRecords()).resolves.toEqual([]);
   });

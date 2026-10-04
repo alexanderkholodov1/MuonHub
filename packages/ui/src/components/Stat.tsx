@@ -34,13 +34,10 @@ export interface StatProps {
   className?: string;
 }
 
-const trendConfig: Record<
-  StatTrend,
-  { icon: LucideIcon; color: string }
-> = {
-  up:      { icon: TrendingUp,   color: "text-[var(--color-success)]" },
-  down:    { icon: TrendingDown, color: "text-[var(--color-danger)]" },
-  neutral: { icon: Minus,        color: "text-[var(--color-text-muted)]" },
+const trendConfig: Record<StatTrend, { icon: LucideIcon; color: string }> = {
+  up: { icon: TrendingUp, color: "text-[var(--color-success)]" },
+  down: { icon: TrendingDown, color: "text-[var(--color-danger)]" },
+  neutral: { icon: Minus, color: "text-[var(--color-text-muted)]" },
 };
 
 export function Stat({
@@ -61,7 +58,7 @@ export function Stat({
       className={cn(
         "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]",
         "p-4 flex flex-col gap-1 min-h-[36px]",
-        className
+        className,
       )}
       role="figure"
       aria-label={label}
@@ -82,24 +79,16 @@ export function Stat({
           <span className="text-sm">—</span>
         </div>
       ) : error ? (
-        <span
-          className="text-sm text-[var(--color-danger)]"
-          role="alert"
-          title={error}
-        >
+        <span className="text-sm text-[var(--color-danger)]" role="alert" title={error}>
           Error
         </span>
       ) : (
         <div className="flex items-baseline gap-2">
-          <span
-            className="font-mono tabular-nums text-[length:var(--text-h2)] font-semibold text-[var(--color-text)] leading-none"
-          >
+          <span className="font-mono tabular-nums text-[length:var(--text-h2)] font-semibold text-[var(--color-text)] leading-none">
             {value ?? "—"}
           </span>
           {unit && (
-            <span className="text-xs text-[var(--color-text-secondary)] font-mono">
-              {unit}
-            </span>
+            <span className="text-xs text-[var(--color-text-secondary)] font-mono">{unit}</span>
           )}
         </div>
       )}
@@ -108,9 +97,7 @@ export function Stat({
       {!loading && !error && (trend ?? note) && (
         <div className={cn("flex items-center gap-1 text-xs", trendColor)}>
           {TrendIcon && <TrendIcon size={12} />}
-          {note && (
-            <span className="text-[var(--color-text-muted)]">{note}</span>
-          )}
+          {note && <span className="text-[var(--color-text-muted)]">{note}</span>}
         </div>
       )}
     </div>

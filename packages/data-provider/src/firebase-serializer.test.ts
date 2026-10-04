@@ -53,8 +53,6 @@ describe("Firebase minute serializer", () => {
       ts_iso: new Date(record.ts).toISOString(),
     };
 
-    expect(jsonBytes(serializeMinuteRecord(record))).toBeLessThan(
-      jsonBytes(legacyPayload) * 0.75,
-    );
+    expect(jsonBytes(serializeMinuteRecord(record))).toBeLessThan(jsonBytes(legacyPayload) * 0.75);
   });
 });

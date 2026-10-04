@@ -124,8 +124,9 @@ function resolveCityPosition(
   }
 
   const countryCentroid =
-    COUNTRY_FALLBACK_CENTROIDS[country.trim().toUpperCase() as keyof typeof COUNTRY_FALLBACK_CENTROIDS] ??
-    globalFallbackCentroid(country);
+    COUNTRY_FALLBACK_CENTROIDS[
+      country.trim().toUpperCase() as keyof typeof COUNTRY_FALLBACK_CENTROIDS
+    ] ?? globalFallbackCentroid(country);
   return {
     centroid: coarseJitteredFallback(countryCentroid, cityKey(city, country)),
     source: "coarse-country-fallback",

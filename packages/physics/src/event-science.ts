@@ -159,11 +159,18 @@ export function calibrateNoiseThreshold(
     throw new RangeError(`noiseMarginMv must be non-negative, got ${noiseMarginMv}`);
   }
 
-  const noiseSampleCount = Math.min(values.length, Math.max(minNoiseSamples, Math.ceil(values.length * noiseFraction)));
+  const noiseSampleCount = Math.min(
+    values.length,
+    Math.max(minNoiseSamples, Math.ceil(values.length * noiseFraction)),
+  );
   const seedLobe = values.slice(0, noiseSampleCount);
   const seedCenter = median(seedLobe);
   const seedSigma = robustSigma(seedLobe, seedCenter);
-  const noiseLobe = expandNoiseLobe(values, noiseSampleCount, Math.max(noiseMarginMv, seedSigma * 4));
+  const noiseLobe = expandNoiseLobe(
+    values,
+    noiseSampleCount,
+    Math.max(noiseMarginMv, seedSigma * 4),
+  );
   const center = median(noiseLobe);
   const sigma = robustSigma(noiseLobe, center);
   const highQuantile = quantile(noiseLobe, 0.995);
@@ -175,7 +182,10 @@ export function calibrateNoiseThreshold(
   };
 }
 
-function buildEmptyHistogram(noiseThresholdMv: number, binCount: number): EventSummary["histogram"] {
+function buildEmptyHistogram(
+  noiseThresholdMv: number,
+  binCount: number,
+): EventSummary["histogram"] {
   return {
     binWidthMv: 1,
     minMv: noiseThresholdMv,
@@ -183,7 +193,11 @@ function buildEmptyHistogram(noiseThresholdMv: number, binCount: number): EventS
   };
 }
 
-function assertIntervalSignals(signals: ReadonlyArray<SignalRecord>, startTs: number, endTs: number): void {
+function assertIntervalSignals(
+  signals: ReadonlyArray<SignalRecord>,
+  startTs: number,
+  endTs: number,
+): void {
   for (const signal of signals) {
     if (signal.ts < startTs || signal.ts >= endTs) {
       throw new RangeError("all signals must be inside [intervalStartTs, intervalEndTs)");
@@ -209,12 +223,16 @@ export function buildEventSummary(
   }
 
   if (!(Number.isFinite(params.noiseThresholdMv) && params.noiseThresholdMv >= 0)) {
-    throw new RangeError(`noiseThresholdMv must be finite and non-negative, got ${params.noiseThresholdMv}`);
+    throw new RangeError(
+      `noiseThresholdMv must be finite and non-negative, got ${params.noiseThresholdMv}`,
+    );
   }
 
   assertIntervalSignals(signals, params.intervalStartTs, params.intervalEndTs);
 
-  const aboveThresholdSignals = signals.filter((signal) => signal.sipmMv >= params.noiseThresholdMv);
+  const aboveThresholdSignals = signals.filter(
+    (signal) => signal.sipmMv >= params.noiseThresholdMv,
+  );
   const signalCount = params.signalCount ?? signals.length;
   const aboveThresholdCount = params.aboveThresholdCount ?? aboveThresholdSignals.length;
   assertNonNegativeInteger(signalCount, "signalCount");
@@ -244,7 +262,11 @@ export function buildEventSummary(
     mpvMv = estimateMpv(spectrum);
   }
 
-  const tailCutMv = params.tailCutMv ?? (mpvMv === undefined ? Number.POSITIVE_INFINITY : mpvMv * (params.tailMpvMultiplier ?? DEFAULT_TAIL_MPV_MULTIPLIER));
+  const tailCutMv =
+    params.tailCutMv ??
+    (mpvMv === undefined
+      ? Number.POSITIVE_INFINITY
+      : mpvMv * (params.tailMpvMultiplier ?? DEFAULT_TAIL_MPV_MULTIPLIER));
   const tailCount = aboveThresholdSignals.filter((signal) => signal.sipmMv >= tailCutMv).length;
   const coincidenceCount = aboveThresholdSignals.filter((signal) => signal.coincident).length;
 

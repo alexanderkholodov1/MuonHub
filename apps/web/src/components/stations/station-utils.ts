@@ -77,7 +77,10 @@ export function missingOptionalStationMetadata(station: Station): string[] {
   return missing;
 }
 
-export function hasDetectorTokenConsistencyAdvisory(detectors: Detector[], nextToken: string): boolean {
+export function hasDetectorTokenConsistencyAdvisory(
+  detectors: Detector[],
+  nextToken: string,
+): boolean {
   return detectors.some((detector) => detector.deviceToken !== nextToken);
 }
 

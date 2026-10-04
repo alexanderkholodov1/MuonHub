@@ -111,8 +111,8 @@ export default function LandingPage() {
           }}
         >
           MuonHub connects CosmicWatch-class scintillator detectors across Latin American
-          universities into a unified monitoring platform — live charged-particle rates,
-          barometric corrections, and Forbush decrease alerts, all in one instrument-grade interface.
+          universities into a unified monitoring platform — live charged-particle rates, barometric
+          corrections, and Forbush decrease alerts, all in one instrument-grade interface.
         </p>
 
         {/* CTAs */}
@@ -176,9 +176,9 @@ export default function LandingPage() {
             CosmicWatch single-SiPM detectors measure charged-particle / MIP-type (minimum ionising
             particle) events — a proxy for the secondary cosmic-ray flux at ground level. MuonHub
             aggregates these measurements, applies dead-time correction and local barometric
-            correction (β coefficient fit per station) through <span className="font-mono">@muonhub/physics</span>,
-            and surfaces the corrected rate alongside raw counts so researchers retain full audit
-            trail of every data point.
+            correction (β coefficient fit per station) through{" "}
+            <span className="font-mono">@muonhub/physics</span>, and surfaces the corrected rate
+            alongside raw counts so researchers retain full audit trail of every data point.
           </p>
 
           {/* Feature grid */}
@@ -262,8 +262,8 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            University research groups can register their CosmicWatch stations and join the
-            Latin American monitoring network. Contact the MuonHub team at USFQ to get started.
+            University research groups can register their CosmicWatch stations and join the Latin
+            American monitoring network. Contact the MuonHub team at USFQ to get started.
           </p>
           <span
             style={{

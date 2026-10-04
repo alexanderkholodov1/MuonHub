@@ -45,10 +45,7 @@ export function correctDeadTime(ratePerMin: number, tauSeconds: number): number 
 }
 
 /** Convenience wrapper resolving τ_DT from the detector hardware generation. */
-export function correctDeadTimeForHardware(
-  ratePerMin: number,
-  hwVersion: HardwareVersion,
-): number {
+export function correctDeadTimeForHardware(ratePerMin: number, hwVersion: HardwareVersion): number {
   return correctDeadTime(ratePerMin, DEAD_TIME_TAU_S[hwVersion]);
 }
 

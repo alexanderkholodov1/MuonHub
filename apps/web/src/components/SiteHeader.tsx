@@ -70,12 +70,7 @@ export function SiteHeader(): React.ReactElement {
           }}
           aria-label="MuonHub — home"
         >
-          <Radio
-            size={22}
-            color="var(--color-accent)"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
+          <Radio size={22} color="var(--color-accent)" strokeWidth={1.5} aria-hidden="true" />
           <span
             style={{
               fontSize: "var(--text-h4)",

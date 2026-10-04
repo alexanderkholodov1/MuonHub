@@ -24,7 +24,9 @@ export const NoiseCalibrationHistorySchema = z
   .array(NoiseCalibrationSchema)
   .refine(
     (history) =>
-      history.every((entry, index) => index === 0 || entry.calibratedAt >= history[index - 1]!.calibratedAt),
+      history.every(
+        (entry, index) => index === 0 || entry.calibratedAt >= history[index - 1]!.calibratedAt,
+      ),
     {
       message: "noise calibration history must be ordered by calibratedAt",
     },

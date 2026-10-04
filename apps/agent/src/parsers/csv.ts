@@ -21,13 +21,16 @@ export function parseCsvLine(line: string, options?: ParseOptions): RawReading |
     return warnSkipped(options, "Skipped malformed CSV serial line.", line);
   }
 
-  const tempC = tokens[2] === undefined || tokens[2] === "" ? null : parseFiniteNumberToken(tokens[2]);
+  const tempC =
+    tokens[2] === undefined || tokens[2] === "" ? null : parseFiniteNumberToken(tokens[2]);
   const pressurePa =
     tokens[3] === undefined || tokens[3] === "" ? null : parseFiniteNumberToken(tokens[3]);
   const coincident =
     tokens[5] === undefined || tokens[5] === "" ? 0 : parseFiniteNumberToken(tokens[5]);
   const timestamp =
-    tokens[6] === undefined || tokens[6] === "" ? getNow(options) : parseFiniteNumberToken(tokens[6]);
+    tokens[6] === undefined || tokens[6] === ""
+      ? getNow(options)
+      : parseFiniteNumberToken(tokens[6]);
 
   if (tempC === null || pressurePa === null || coincident === null || timestamp === null) {
     return warnSkipped(options, "Skipped malformed CSV serial line.", line);

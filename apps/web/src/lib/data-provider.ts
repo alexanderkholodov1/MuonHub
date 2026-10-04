@@ -32,9 +32,7 @@ export interface DataProviderUnsupportedState {
 }
 
 export type DataProviderConfigState =
-  | DataProviderReadyState
-  | DataProviderMissingConfigState
-  | DataProviderUnsupportedState;
+  DataProviderReadyState | DataProviderMissingConfigState | DataProviderUnsupportedState;
 
 export class DataProviderConfigurationError extends Error {
   readonly state: Exclude<DataProviderConfigState, DataProviderReadyState>;

@@ -32,7 +32,11 @@ function calibration(thresholdMv: number, calibratedAt = BASE_TS): NoiseCalibrat
   };
 }
 
-function reading(offsetMs: number, sipmMv: number, overrides: Partial<RawReading> = {}): RawReading {
+function reading(
+  offsetMs: number,
+  sipmMv: number,
+  overrides: Partial<RawReading> = {},
+): RawReading {
   return {
     timestamp: BASE_TS + offsetMs,
     eventCount: 1,

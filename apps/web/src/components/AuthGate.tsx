@@ -35,7 +35,9 @@ export function AuthGate({ mode, children }: AuthGateProps): React.ReactElement 
 
   if (loading) {
     return (
-      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card title="Checking session" loading />
       </div>
     );
@@ -43,7 +45,9 @@ export function AuthGate({ mode, children }: AuthGateProps): React.ReactElement 
 
   if (backendStatus === "not-configured") {
     return (
-      <div style={{ maxWidth: "640px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "640px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card
           title="Backend not configured"
           error={
@@ -57,7 +61,9 @@ export function AuthGate({ mode, children }: AuthGateProps): React.ReactElement 
 
   if (mode === "protected" && user == null) {
     return (
-      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card title="Redirecting to sign in" loading />
       </div>
     );
@@ -65,7 +71,9 @@ export function AuthGate({ mode, children }: AuthGateProps): React.ReactElement 
 
   if (mode === "guest" && user != null) {
     return (
-      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card title="Opening your dashboard" loading />
       </div>
     );

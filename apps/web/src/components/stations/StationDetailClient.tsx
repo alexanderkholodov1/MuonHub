@@ -10,10 +10,7 @@ import { useAuth } from "../AuthProvider";
 import { getDataProvider } from "../../lib/data-provider";
 import { StationDashboard } from "./StationDashboard";
 import { DetectorRegistrationForm, StationForm } from "./StationForms";
-import {
-  missingOptionalStationMetadata,
-  stationHasMixedDeviceTokens,
-} from "./station-utils";
+import { missingOptionalStationMetadata, stationHasMixedDeviceTokens } from "./station-utils";
 
 export function StationDetailClient(): React.ReactElement {
   const { user } = useAuth();
@@ -163,7 +160,11 @@ export function StationDetailClient(): React.ReactElement {
             <MetadataItem label="Timezone" value={station.timezone} />
             <MetadataItem label="Latitude" value={station.latitude.toFixed(6)} mono />
             <MetadataItem label="Longitude" value={station.longitude.toFixed(6)} mono />
-            <MetadataItem label="Altitude" value={`${station.altitudeM.toLocaleString("en-US")} m`} mono />
+            <MetadataItem
+              label="Altitude"
+              value={`${station.altitudeM.toLocaleString("en-US")} m`}
+              mono
+            />
             <MetadataItem label="Floor" value={station.floor ?? "Not provided"} />
             <MetadataItem label="Shielding" value={station.shielding ?? "Not provided"} />
             <MetadataItem label="Orientation" value={station.orientation ?? "Not provided"} />
@@ -274,9 +275,7 @@ function DetectorCard({ detector }: { detector: Detector }): React.ReactElement 
         />
         <MetadataItem
           label="Trigger min"
-          value={
-            calibration?.triggerAdcMin == null ? "Not set" : String(calibration.triggerAdcMin)
-          }
+          value={calibration?.triggerAdcMin == null ? "Not set" : String(calibration.triggerAdcMin)}
           mono
         />
       </dl>
@@ -295,7 +294,9 @@ function NonBlockingStationNotice({
     <div className="rounded-md border border-[var(--color-warning)] bg-[var(--color-surface-2)] p-4">
       <p className="text-base font-medium text-[var(--color-text)]">{title}</p>
       <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{body}</p>
-      <p className="mt-2 text-sm text-[var(--color-text-muted)]">This advisory does not block station use.</p>
+      <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+        This advisory does not block station use.
+      </p>
     </div>
   );
 }

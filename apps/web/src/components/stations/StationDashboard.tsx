@@ -87,7 +87,11 @@ export function StationDashboard({
   const [error, setError] = useState<string | null>(null);
 
   const selectedDetector = useMemo(() => {
-    return availableDetectors.find((detector) => detector.id === detectorId) ?? availableDetectors[0] ?? null;
+    return (
+      availableDetectors.find((detector) => detector.id === detectorId) ??
+      availableDetectors[0] ??
+      null
+    );
   }, [availableDetectors, detectorId]);
 
   useEffect(() => {
@@ -178,8 +182,8 @@ export function StationDashboard({
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <p className="m-0 text-base leading-relaxed text-[var(--color-text-secondary)]">
-              {primaryMetricLabel}, corrected rate, amplitude spectrum, and statistical insights
-              for the selected physical detector.
+              {primaryMetricLabel}, corrected rate, amplitude spectrum, and statistical insights for
+              the selected physical detector.
             </p>
             <p className="mt-3 max-w-[900px] text-sm leading-relaxed text-[var(--color-text-muted)]">
               {scientificTooltip}
@@ -288,9 +292,15 @@ function DashboardBody({
       <div className="grid gap-4 md:grid-cols-4">
         <Stat
           label={primaryMetricLabel}
-          value={formatMaybeNumber(latestPoint?.barometricCorrectedRate ?? latestPoint?.deadTimeCorrectedRate)}
+          value={formatMaybeNumber(
+            latestPoint?.barometricCorrectedRate ?? latestPoint?.deadTimeCorrectedRate,
+          )}
           unit="counts / min"
-          note={latestPoint?.barometricCorrectedRate == null ? "dead-time corrected" : "dead-time + pressure corrected"}
+          note={
+            latestPoint?.barometricCorrectedRate == null
+              ? "dead-time corrected"
+              : "dead-time + pressure corrected"
+          }
         />
         <Stat
           label="Pressure"
@@ -306,7 +316,11 @@ function DashboardBody({
               : formatMaybeNumber(insights.beta.fit.betaPercentPerHpa, 3)
           }
           unit={insights.beta == null ? "" : "% / hPa"}
-          note={insights.beta == null ? `${insights.usableBetaSampleCount}/${DEFAULT_BETA_MIN_POINTS} samples` : `r2 ${formatMaybeNumber(insights.beta.fit.rSquared, 3)}`}
+          note={
+            insights.beta == null
+              ? `${insights.usableBetaSampleCount}/${DEFAULT_BETA_MIN_POINTS} samples`
+              : `r2 ${formatMaybeNumber(insights.beta.fit.rSquared, 3)}`
+          }
         />
         <Stat
           label="Anomaly flags"
@@ -408,10 +422,26 @@ function InsightsPanel({
             </p>
           ) : (
             <dl className="grid grid-cols-2 gap-3">
-              <Metric label="Median" value={formatMaybeNumber(insights.baseline.median)} unit="counts / min" />
-              <Metric label="IQR" value={formatMaybeNumber(insights.baseline.iqr)} unit="counts / min" />
-              <Metric label="Lower band" value={formatMaybeNumber(insights.baseline.lower)} unit="counts / min" />
-              <Metric label="Upper band" value={formatMaybeNumber(insights.baseline.upper)} unit="counts / min" />
+              <Metric
+                label="Median"
+                value={formatMaybeNumber(insights.baseline.median)}
+                unit="counts / min"
+              />
+              <Metric
+                label="IQR"
+                value={formatMaybeNumber(insights.baseline.iqr)}
+                unit="counts / min"
+              />
+              <Metric
+                label="Lower band"
+                value={formatMaybeNumber(insights.baseline.lower)}
+                unit="counts / min"
+              />
+              <Metric
+                label="Upper band"
+                value={formatMaybeNumber(insights.baseline.upper)}
+                unit="counts / min"
+              />
             </dl>
           )}
         </InsightBlock>
@@ -424,10 +454,18 @@ function InsightsPanel({
             </p>
           ) : (
             <dl className="grid grid-cols-2 gap-3">
-              <Metric label="Beta" value={formatMaybeNumber(insights.beta.fit.betaPercentPerHpa, 3)} unit="% / hPa" />
+              <Metric
+                label="Beta"
+                value={formatMaybeNumber(insights.beta.fit.betaPercentPerHpa, 3)}
+                unit="% / hPa"
+              />
               <Metric label="r2" value={formatMaybeNumber(insights.beta.fit.rSquared, 3)} unit="" />
               <Metric label="Samples" value={insights.beta.fit.n.toLocaleString("en-US")} unit="" />
-              <Metric label="Range" value={formatDateRange(insights.beta.fromTs, insights.beta.toTs)} unit="" />
+              <Metric
+                label="Range"
+                value={formatDateRange(insights.beta.fromTs, insights.beta.toTs)}
+                unit=""
+              />
             </dl>
           )}
         </InsightBlock>
@@ -459,7 +497,11 @@ function InsightsPanel({
             </ul>
           )}
           <div className="mt-4 flex gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
-            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-[var(--color-warning)]" aria-hidden="true" />
+            <AlertTriangle
+              size={18}
+              className="mt-0.5 shrink-0 text-[var(--color-warning)]"
+              aria-hidden="true"
+            />
             <p className="m-0 text-sm leading-relaxed text-[var(--color-text-secondary)]">
               {ANOMALY_DISCLAIMER}
             </p>
@@ -470,9 +512,10 @@ function InsightsPanel({
   );
 }
 
-function spectrumChartModel(
-  spectrum: SpectrumModel,
-): { readonly data: Data[]; readonly layout: Partial<Layout> } {
+function spectrumChartModel(spectrum: SpectrumModel): {
+  readonly data: Data[];
+  readonly layout: Partial<Layout>;
+} {
   const centers = spectrum.histogram.counts.map((_, index) => {
     return (spectrum.histogram.binEdges[index] ?? 0) + spectrum.histogram.binWidthMv / 2;
   });

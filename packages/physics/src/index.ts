@@ -18,11 +18,7 @@ export {
   deadTimeLossFraction,
 } from "./deadTime.js";
 
-export {
-  fitBarometricBeta,
-  applyBarometricCorrection,
-  betaToPercentPerHpa,
-} from "./barometric.js";
+export { fitBarometricBeta, applyBarometricCorrection, betaToPercentPerHpa } from "./barometric.js";
 export type { BarometricFit, RatePressurePoint } from "./barometric.js";
 
 export {
@@ -44,10 +40,7 @@ export type {
   NoiseThresholdCalibrationOptions,
 } from "./event-science.js";
 
-export {
-  DEFAULT_BETA_MIN_POINTS,
-  buildCorrectedRateInsights,
-} from "./insights.js";
+export { DEFAULT_BETA_MIN_POINTS, buildCorrectedRateInsights } from "./insights.js";
 export type {
   AnomalyFlag,
   BetaReadout,

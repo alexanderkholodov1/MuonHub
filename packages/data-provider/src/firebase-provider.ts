@@ -434,7 +434,10 @@ function parseSignalRecordsFromNdjson(bytes: Uint8Array, path: string): SignalRe
 
     const result = SignalRecordSchema.safeParse(parsed);
     if (!result.success) {
-      warn(`Signal blob ${path} line ${index + 1} failed schema validation; quarantined`, result.error.message);
+      warn(
+        `Signal blob ${path} line ${index + 1} failed schema validation; quarantined`,
+        result.error.message,
+      );
       continue;
     }
     records.push(result.data);
@@ -442,18 +445,17 @@ function parseSignalRecordsFromNdjson(bytes: Uint8Array, path: string): SignalRe
   return records;
 }
 
-async function gzipBytes(target: FirebaseProviderConfig["target"], bytes: Uint8Array): Promise<Uint8Array> {
+async function gzipBytes(
+  target: FirebaseProviderConfig["target"],
+  bytes: Uint8Array,
+): Promise<Uint8Array> {
   if (target === "admin") {
     const { gzipSync } = await runtimeImport<typeof NodeZlib>("node:zlib");
     return new Uint8Array(gzipSync(bytes));
   }
 
   const webGlobal = globalThis as unknown as WebCompressionGlobal;
-  if (
-    webGlobal.Blob == null ||
-    webGlobal.Response == null ||
-    webGlobal.CompressionStream == null
-  ) {
+  if (webGlobal.Blob == null || webGlobal.Response == null || webGlobal.CompressionStream == null) {
     throw new Error("CompressionStream is not available in this runtime.");
   }
   const compressedStream = new webGlobal.Blob([bytes])
@@ -462,7 +464,10 @@ async function gzipBytes(target: FirebaseProviderConfig["target"], bytes: Uint8A
   return new Uint8Array(await new webGlobal.Response(compressedStream).arrayBuffer());
 }
 
-async function gunzipBytes(target: FirebaseProviderConfig["target"], bytes: Uint8Array): Promise<Uint8Array> {
+async function gunzipBytes(
+  target: FirebaseProviderConfig["target"],
+  bytes: Uint8Array,
+): Promise<Uint8Array> {
   if (target === "admin") {
     const { gunzipSync } = await runtimeImport<typeof NodeZlib>("node:zlib");
     return new Uint8Array(gunzipSync(bytes));
@@ -544,9 +549,7 @@ async function buildClientAdapter(
   if (config.appId) appConfig.appId = config.appId;
 
   const app =
-    getApps().length === 0
-      ? initializeApp(appConfig, "muonhub-client")
-      : getApp("muonhub-client");
+    getApps().length === 0 ? initializeApp(appConfig, "muonhub-client") : getApp("muonhub-client");
 
   const db = getDatabase(app);
   const storageInstance = getStorage(app);
@@ -618,7 +621,12 @@ async function buildClientAdapter(
         // For client SDK, build child ref
         const { ref: refFn } = { ref } as { ref: typeof ref };
         // We need the database ref for a child path — use the db
-        return wrapRef(refFn(db, `${(rawRef as { toString(): string }).toString().replace(/.*?\/[^/]+\.[^/]+\//, "/")}/${path}`));
+        return wrapRef(
+          refFn(
+            db,
+            `${(rawRef as { toString(): string }).toString().replace(/.*?\/[^/]+\.[^/]+\//, "/")}/${path}`,
+          ),
+        );
       },
       on(event, callback) {
         if (event === "child_added") {
@@ -668,7 +676,12 @@ async function buildClientAdapter(
     return wrapped;
   }
 
-  function wrapSnap(snap: { val(): unknown; key: string | null; exists(): boolean; forEach(cb: (child: Parameters<typeof wrapSnap>[0]) => boolean | void): void }): RtdbSnapshot {
+  function wrapSnap(snap: {
+    val(): unknown;
+    key: string | null;
+    exists(): boolean;
+    forEach(cb: (child: Parameters<typeof wrapSnap>[0]) => boolean | void): void;
+  }): RtdbSnapshot {
     return {
       val: () => snap.val(),
       key: snap.key,
@@ -778,8 +791,7 @@ async function buildAdminAdapter(
     await runtimeImport<typeof FirebaseAdminApp>("firebase-admin/app");
   const { getDatabase } =
     await runtimeImport<typeof FirebaseAdminDatabase>("firebase-admin/database");
-  const { getStorage } =
-    await runtimeImport<typeof FirebaseAdminStorage>("firebase-admin/storage");
+  const { getStorage } = await runtimeImport<typeof FirebaseAdminStorage>("firebase-admin/storage");
 
   // Against the emulator (emulators:exec sets FIREBASE_DATABASE_EMULATOR_HOST),
   // the admin SDK needs no real credential: initialize with just the databaseURL.
@@ -788,7 +800,8 @@ async function buildAdminAdapter(
     process.env["STORAGE_EMULATOR_HOST"] == null &&
     process.env["FIREBASE_STORAGE_EMULATOR_HOST"] != null
   ) {
-    process.env["STORAGE_EMULATOR_HOST"] = `http://${process.env["FIREBASE_STORAGE_EMULATOR_HOST"]}`;
+    process.env["STORAGE_EMULATOR_HOST"] =
+      `http://${process.env["FIREBASE_STORAGE_EMULATOR_HOST"]}`;
   }
 
   const existing = getApps().find((a: App) => a.name === "muonhub-admin");
@@ -803,9 +816,7 @@ async function buildAdminAdapter(
         }
       : {}),
   };
-  const app: App =
-    existing ??
-    initializeApp(appOptions, "muonhub-admin");
+  const app: App = existing ?? initializeApp(appOptions, "muonhub-admin");
 
   const db = getDatabase(app);
   const bucket =
@@ -851,8 +862,7 @@ async function buildAdminAdapter(
         return wrapAdminRef(rawRef.child(path));
       },
       on(event, callback, errorCallback) {
-        const handler = (snap: DataSnapshot) =>
-          callback(wrapAdminSnap(snap));
+        const handler = (snap: DataSnapshot) => callback(wrapAdminSnap(snap));
         rawRef.on(event as "child_added" | "value", handler, errorCallback);
         return () => rawRef.off(event as "child_added" | "value", handler);
       },
@@ -896,8 +906,7 @@ async function buildAdminAdapter(
         return wrapAdminQuery(q.limitToLast(n));
       },
       on(event, callback, errorCallback) {
-        const handler = (snap: DataSnapshot) =>
-          callback(wrapAdminSnap(snap));
+        const handler = (snap: DataSnapshot) => callback(wrapAdminSnap(snap));
         q.on(event as "child_added" | "value", handler, errorCallback);
         return () => q.off(event as "child_added" | "value", handler);
       },
@@ -1116,9 +1125,7 @@ export async function createFirebaseProvider(
   async function upsertInstitution(institution: Institution): Promise<void> {
     // Validate before writing (FR6).
     InstitutionSchema.parse(institution);
-    await adapter
-      .ref(Paths.institution(institution.id))
-      .set(serializeInstitution(institution));
+    await adapter.ref(Paths.institution(institution.id)).set(serializeInstitution(institution));
   }
 
   async function getInstitution(id: string): Promise<Institution | null> {
@@ -1159,13 +1166,14 @@ export async function createFirebaseProvider(
       if (station == null) return;
 
       // Client-side filters
-      if (
-        filter?.institutionId !== undefined &&
-        station.institutionId !== filter.institutionId
-      )
+      if (filter?.institutionId !== undefined && station.institutionId !== filter.institutionId)
         return;
       if (filter?.country != null && station.country !== filter.country) return;
-      if (filter?.ownerUid != null && filter.visibility == null && station.ownerUid !== filter.ownerUid)
+      if (
+        filter?.ownerUid != null &&
+        filter.visibility == null &&
+        station.ownerUid !== filter.ownerUid
+      )
         return;
       if (filter?.bbox != null) {
         const [west, south, east, north] = filter.bbox;
@@ -1254,10 +1262,7 @@ export async function createFirebaseProvider(
 
   // ── Time-series ───────────────────────────────────────────────────────────
 
-  async function getMinuteRecords(
-    detectorId: string,
-    range: TimeRange,
-  ): Promise<MinuteRecord[]> {
+  async function getMinuteRecords(detectorId: string, range: TimeRange): Promise<MinuteRecord[]> {
     const stationId = await requireStationId(detectorId);
     const fromKey = padTs(range.fromTs);
     const toKey = padTs(range.toTs);
@@ -1278,10 +1283,7 @@ export async function createFirebaseProvider(
     return records;
   }
 
-  async function pushMinuteRecord(
-    detectorId: string,
-    record: MinuteRecord,
-  ): Promise<void> {
+  async function pushMinuteRecord(detectorId: string, record: MinuteRecord): Promise<void> {
     MinuteRecordSchema.parse(record);
     const stationId = await requireStationId(detectorId);
     const key = padTs(record.ts);
@@ -1302,8 +1304,7 @@ export async function createFirebaseProvider(
         return current; // keep existing
       }
       // Also check padded key comparison for safety.
-      const currentKey =
-        typeof currentTs === "number" ? padTs(currentTs) : null;
+      const currentKey = typeof currentTs === "number" ? padTs(currentTs) : null;
       if (currentKey != null && currentKey > key) return current;
       return serializedLatest;
     });
@@ -1327,10 +1328,7 @@ export async function createFirebaseProvider(
       .set(serializeEventSummary(summary));
   }
 
-  async function getEventSummaries(
-    detectorId: string,
-    range: TimeRange,
-  ): Promise<EventSummary[]> {
+  async function getEventSummaries(detectorId: string, range: TimeRange): Promise<EventSummary[]> {
     const stationId = await requireStationId(detectorId);
     const fromKey = padTs(range.fromTs);
     const toKey = padTs(range.toTs);
@@ -1350,10 +1348,7 @@ export async function createFirebaseProvider(
     return summaries;
   }
 
-  async function putSignalBlob(
-    ref: SignalBlobRef,
-    signals: SignalRecord[],
-  ): Promise<void> {
+  async function putSignalBlob(ref: SignalBlobRef, signals: SignalRecord[]): Promise<void> {
     assertSignalBlobRef(ref);
     const path = signalBlobObjectPath(ref);
     const ndjson = serializeSignalRecordsAsNdjson(signals);
@@ -1361,10 +1356,7 @@ export async function createFirebaseProvider(
     await storage.upload(path, compressed);
   }
 
-  async function listSignalBlobs(
-    detectorId: string,
-    range: TimeRange,
-  ): Promise<SignalBlobRef[]> {
+  async function listSignalBlobs(detectorId: string, range: TimeRange): Promise<SignalBlobRef[]> {
     assertSafeStorageSegment("detectorId", detectorId);
     const paths = await storage.list(signalBlobPrefix(detectorId));
     return paths
@@ -1400,10 +1392,7 @@ export async function createFirebaseProvider(
    * A late subscriber does not re-download history; only events after subscription arrive.
    * The returned Unsubscribe is idempotent.
    */
-  function subscribeRealtime(
-    detectorId: string,
-    callback: RealtimeCallback,
-  ): Unsubscribe {
+  function subscribeRealtime(detectorId: string, callback: RealtimeCallback): Unsubscribe {
     let detached = false;
     let offFn: (() => void) | null = null;
 
@@ -1448,10 +1437,7 @@ export async function createFirebaseProvider(
     };
   }
 
-  async function pushRealtimeRecord(
-    detectorId: string,
-    record: RealtimeRecord,
-  ): Promise<void> {
+  async function pushRealtimeRecord(detectorId: string, record: RealtimeRecord): Promise<void> {
     RealtimeRecordSchema.parse(record);
     const stationId = await requireStationId(detectorId);
     const key = padTs(record.ts);
@@ -1482,17 +1468,12 @@ export async function createFirebaseProvider(
    * ordered, bounded queries (`limitToLast(REALTIME_CAP)` + oldest-key batches), avoiding a
    * full-node scan on the hot path.
    */
-  async function pruneRealtimeCap(
-    stationId: string,
-    detectorId: string,
-  ): Promise<void> {
+  async function pruneRealtimeCap(stationId: string, detectorId: string): Promise<void> {
     const countKey = realtimeRecordCountKey(stationId, detectorId);
     try {
       const realtimePath = Paths.realtime(stationId, detectorId);
       const ref = adapter.ref(realtimePath);
-      const retainedKeys = snapshotKeys(
-        await ref.orderByKey().limitToLast(REALTIME_CAP).get(),
-      );
+      const retainedKeys = snapshotKeys(await ref.orderByKey().limitToLast(REALTIME_CAP).get());
 
       if (retainedKeys.length < REALTIME_CAP) {
         realtimeRecordCounts.set(countKey, retainedKeys.length);
@@ -1507,10 +1488,7 @@ export async function createFirebaseProvider(
 
       while (true) {
         const oldestKeys = snapshotKeys(
-          await ref
-            .orderByKey()
-            .limitToFirst(REALTIME_PRUNE_BATCH_SIZE)
-            .get(),
+          await ref.orderByKey().limitToFirst(REALTIME_PRUNE_BATCH_SIZE).get(),
         );
         const toDelete = oldestKeys.filter((oldestKey) => oldestKey < oldestRetainedKey);
         if (toDelete.length === 0) break;
@@ -1573,16 +1551,12 @@ export async function createFirebaseProvider(
       for (const detId of localDetIds) {
         if (detectorIds != null && !detectorIds.includes(detId)) continue;
 
-        const detSnap = await adapter
-          .ref(Paths.detector(stationId, detId))
-          .get();
+        const detSnap = await adapter.ref(Paths.detector(stationId, detId)).get();
         const det = deserializeDetector(detId, stationId, detSnap.val());
         if (det != null) yield { kind: "detector", data: det };
 
         // Sessions
-        const sessionsSnap = await adapter
-          .ref(Paths.sessions(stationId, detId))
-          .get();
+        const sessionsSnap = await adapter.ref(Paths.sessions(stationId, detId)).get();
         sessionsSnap.forEach((child) => {
           if (child.key == null) return;
           const s = deserializeSession(child.key, detId, child.val());
@@ -1679,10 +1653,7 @@ export async function createFirebaseProvider(
     }
   }
 
-  async function* exportRealtimePaged(
-    stationId: string,
-    detId: string,
-  ): AsyncIterable<DataChunk> {
+  async function* exportRealtimePaged(stationId: string, detId: string): AsyncIterable<DataChunk> {
     let lastKey: string | null = null;
 
     while (true) {
@@ -1752,12 +1723,7 @@ export async function createFirebaseProvider(
             // Check for missing mandatory metadata (visibility is always required by zod;
             // check for missing location fields that are optional in migration context).
             const s = result.data;
-            if (
-              s.city === "" ||
-              s.country === "" ||
-              isNaN(s.latitude) ||
-              isNaN(s.longitude)
-            ) {
+            if (s.city === "" || s.country === "" || isNaN(s.latitude) || isNaN(s.longitude)) {
               stationsWithoutMetadata++;
             }
             await upsertStation(result.data);

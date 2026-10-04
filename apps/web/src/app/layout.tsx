@@ -28,11 +28,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html
-      lang="en"
-      data-theme="dark"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
-    >
+    <html lang="en" data-theme="dark" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>

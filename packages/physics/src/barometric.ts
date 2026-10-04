@@ -42,7 +42,8 @@ export function betaToPercentPerHpa(beta: number): number {
  */
 export function fitBarometricBeta(points: ReadonlyArray<RatePressurePoint>): BarometricFit {
   const usable = points.filter(
-    (p) => Number.isFinite(p.rate) && p.rate > 0 && Number.isFinite(p.pressureHpa) && p.pressureHpa > 0,
+    (p) =>
+      Number.isFinite(p.rate) && p.rate > 0 && Number.isFinite(p.pressureHpa) && p.pressureHpa > 0,
   );
   if (usable.length < 2) {
     throw new RangeError(`barometric fit needs ≥ 2 usable points, got ${usable.length}`);

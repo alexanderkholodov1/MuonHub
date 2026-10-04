@@ -20,16 +20,14 @@ describe("cn()", () => {
   });
 
   it("handles falsy values gracefully", () => {
-    expect(cn("text-base", false, null, undefined, "font-mono")).toBe(
-      "text-base font-mono"
-    );
+    expect(cn("text-base", false, null, undefined, "font-mono")).toBe("text-base font-mono");
   });
 
   it("handles conditional classes", () => {
     const isActive = true;
     const isDisabled = false;
     expect(cn("base-class", isActive && "active", isDisabled && "disabled")).toBe(
-      "base-class active"
+      "base-class active",
     );
   });
 });

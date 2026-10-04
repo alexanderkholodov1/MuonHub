@@ -60,12 +60,11 @@ const buttonVariants = cva(
       variant: "primary",
       size: "md",
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   /** Show a spinner and disable the button while true. */
   loading?: boolean;
   /** Optional Lucide icon to render before the label. */
@@ -89,15 +88,7 @@ export function Button({
       aria-busy={loading}
       {...props}
     >
-      {loading ? (
-        <Loader2
-          className="animate-spin"
-          size={16}
-          aria-hidden="true"
-        />
-      ) : (
-        icon
-      )}
+      {loading ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : icon}
       {children}
     </button>
   );

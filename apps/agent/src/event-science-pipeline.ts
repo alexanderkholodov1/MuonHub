@@ -1,4 +1,8 @@
-import { buildEventSummary, calibrateNoiseThreshold, type NoiseThresholdCalibrationOptions } from "@muonhub/physics";
+import {
+  buildEventSummary,
+  calibrateNoiseThreshold,
+  type NoiseThresholdCalibrationOptions,
+} from "@muonhub/physics";
 import {
   NoiseCalibrationSchema,
   SignalRecordSchema,
@@ -86,7 +90,8 @@ function toSignalRecord(reading: RawReading): SignalRecord {
     ts: reading.timestamp,
     sipmMv: reading.sipmMv,
     coincident: reading.coincident > 0,
-    deadtimeUs: reading.deadtimePercent === undefined ? 0 : (reading.deadtimePercent / 100) * 1_000_000,
+    deadtimeUs:
+      reading.deadtimePercent === undefined ? 0 : (reading.deadtimePercent / 100) * 1_000_000,
   };
   const signal: SignalRecord = { ...signalBase };
 
@@ -135,8 +140,10 @@ export class AgentEventSciencePipeline {
     this.storageTier = StorageTierConfigSchema.parse(options.storageTier);
     this.initialCalibrationSampleSize =
       options.initialCalibrationSampleSize ?? DEFAULT_INITIAL_CALIBRATION_SAMPLE_SIZE;
-    this.recalibrationSampleSize = options.recalibrationSampleSize ?? DEFAULT_RECALIBRATION_SAMPLE_SIZE;
-    this.recalibrationIntervalMs = options.recalibrationIntervalMs ?? DEFAULT_RECALIBRATION_INTERVAL_MS;
+    this.recalibrationSampleSize =
+      options.recalibrationSampleSize ?? DEFAULT_RECALIBRATION_SAMPLE_SIZE;
+    this.recalibrationIntervalMs =
+      options.recalibrationIntervalMs ?? DEFAULT_RECALIBRATION_INTERVAL_MS;
     this.noiseThresholdOptions = options.noiseThresholdOptions ?? {};
     this.summaryBinCount = options.summaryBinCount;
     this.summaryEnabled = shouldComputeSummaries(this.storageTier);
@@ -154,7 +161,9 @@ export class AgentEventSciencePipeline {
     }
 
     this.noiseCalibration =
-      options.initialNoiseCalibration === undefined ? null : NoiseCalibrationSchema.parse(options.initialNoiseCalibration);
+      options.initialNoiseCalibration === undefined
+        ? null
+        : NoiseCalibrationSchema.parse(options.initialNoiseCalibration);
     this.noiseCalibrationHistory = [...(options.noiseCalibrationHistory ?? [])].map((entry) =>
       NoiseCalibrationSchema.parse(entry),
     );
@@ -198,7 +207,9 @@ export class AgentEventSciencePipeline {
       return emptyOutput();
     }
 
-    const summary = this.buildCurrentSummary(this.intervalStartTs + this.storageTier.eventSummaryIntervalMs);
+    const summary = this.buildCurrentSummary(
+      this.intervalStartTs + this.storageTier.eventSummaryIntervalMs,
+    );
     this.resetInterval(this.intervalStartTs + this.storageTier.eventSummaryIntervalMs);
     return {
       ...emptyOutput(),
@@ -212,7 +223,10 @@ export class AgentEventSciencePipeline {
     }
 
     this.completeRawStartedAtTs ??= reading.timestamp;
-    if (this.rawAutoStopMs !== null && reading.timestamp - this.completeRawStartedAtTs >= this.rawAutoStopMs) {
+    if (
+      this.rawAutoStopMs !== null &&
+      reading.timestamp - this.completeRawStartedAtTs >= this.rawAutoStopMs
+    ) {
       this.completeRawStopped = true;
       this.completeRawStartedAtTs = null;
       return {
@@ -228,7 +242,10 @@ export class AgentEventSciencePipeline {
   }
 
   private appendCalibration(calibratedAt: number): EventSciencePipelineOutput {
-    const calibration = calibrateNoiseThreshold(this.calibrationAmplitudes, this.noiseThresholdOptions);
+    const calibration = calibrateNoiseThreshold(
+      this.calibrationAmplitudes,
+      this.noiseThresholdOptions,
+    );
     const noiseCalibration = NoiseCalibrationSchema.parse({
       thresholdMv: calibration.thresholdMv,
       method: calibration.method,
@@ -287,7 +304,10 @@ export class AgentEventSciencePipeline {
 
   private advanceSummaryInterval(timestamp: number): EventSciencePipelineOutput {
     if (this.intervalStartTs === null) {
-      this.resetInterval(Math.floor(timestamp / this.storageTier.eventSummaryIntervalMs) * this.storageTier.eventSummaryIntervalMs);
+      this.resetInterval(
+        Math.floor(timestamp / this.storageTier.eventSummaryIntervalMs) *
+          this.storageTier.eventSummaryIntervalMs,
+      );
     }
 
     let output = emptyOutput();

@@ -11,10 +11,7 @@ import {
   type StationDetectorActivity,
 } from "./city-aggregation";
 import { PublicLiveDemo, type PublicDemoDetector } from "./PublicLiveDemo";
-import {
-  getDataProvider,
-  isDataProviderConfigurationError,
-} from "../../lib/data-provider";
+import { getDataProvider, isDataProviderConfigurationError } from "../../lib/data-provider";
 
 const ACTIVE_NOW_WINDOW_MS = 10 * 60 * 1000;
 
@@ -63,9 +60,7 @@ export function PublicLandingNetwork(): React.ReactElement {
         stationContexts.map(async (station): Promise<StationDetectorResult> => {
           const detectors = await provider.listDetectors(station.id);
           const latestRecords = await Promise.all(
-            detectors.map((detector) =>
-              provider.getLatest(detector.id).catch(() => null),
-            ),
+            detectors.map((detector) => provider.getLatest(detector.id).catch(() => null)),
           );
           return { stationId: station.id, detectors, latestRecords };
         }),
@@ -127,8 +122,9 @@ export function PublicLandingNetwork(): React.ReactElement {
             title="Detector coverage, aggregated by city"
             icon={<RadioTower size={22} aria-hidden="true" />}
           >
-            The landing map shows reach without exposing sites: one bubble per city, placed on a city
-            centroid or a coarse fallback, with only detector counts and active-now counts shown.
+            The landing map shows reach without exposing sites: one bubble per city, placed on a
+            city centroid or a coarse fallback, with only detector counts and active-now counts
+            shown.
           </SectionHeader>
           <CityDetectorMap
             cities={cities}
@@ -177,7 +173,8 @@ function selectPublicDemoDetector(
     if (station == null) continue;
 
     const detectorWithData =
-      result.detectors.find((_, index) => result.latestRecords[index] != null) ?? result.detectors[0];
+      result.detectors.find((_, index) => result.latestRecords[index] != null) ??
+      result.detectors[0];
     if (detectorWithData == null) continue;
 
     return {

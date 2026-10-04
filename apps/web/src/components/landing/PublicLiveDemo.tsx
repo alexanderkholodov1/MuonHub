@@ -11,10 +11,7 @@ import {
   correctedRateMetricLabel,
   correctedRateTooltip,
 } from "../charts/CorrectedRateChart";
-import {
-  getDataProvider,
-  isDataProviderConfigurationError,
-} from "../../lib/data-provider";
+import { getDataProvider, isDataProviderConfigurationError } from "../../lib/data-provider";
 
 const DEMO_WINDOW_MS = 24 * 60 * 60 * 1000;
 const REALTIME_REFRESH_THROTTLE_MS = 15_000;
@@ -54,7 +51,10 @@ export function PublicLiveDemo({
       const provider = await getDataProvider();
       const toTs = Date.now();
       const fromTs = toTs - DEMO_WINDOW_MS;
-      const minuteRecords = await provider.getMinuteRecords(activeDetector.detectorId, { fromTs, toTs });
+      const minuteRecords = await provider.getMinuteRecords(activeDetector.detectorId, {
+        fromTs,
+        toTs,
+      });
       if (!active) return;
       setRecords(minuteRecords);
       lastRefresh = Date.now();

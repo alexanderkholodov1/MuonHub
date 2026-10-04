@@ -10,22 +10,7 @@ export {
   parseSerialLine,
   splitSerialBufferLines,
 } from "./parsers/index.js";
-export type {
-  AggregateMinuteOptions,
-} from "./aggregate.js";
-export type {
-  LocalStore,
-  QueuedMinuteRecord,
-  StoredMinuteRecord,
-} from "./local-store.js";
-export type {
-  FlushResult,
-  MinuteRecordUploader,
-  OfflineSyncQueueOptions,
-} from "./sync-queue.js";
-export type {
-  ParseOptions,
-  ParserLogger,
-  RawReading,
-  SerialFormat,
-} from "./parsers/index.js";
+export type { AggregateMinuteOptions } from "./aggregate.js";
+export type { LocalStore, QueuedMinuteRecord, StoredMinuteRecord } from "./local-store.js";
+export type { FlushResult, MinuteRecordUploader, OfflineSyncQueueOptions } from "./sync-queue.js";
+export type { ParseOptions, ParserLogger, RawReading, SerialFormat } from "./parsers/index.js";

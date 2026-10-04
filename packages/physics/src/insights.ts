@@ -95,10 +95,7 @@ export function buildCorrectedRateInsights(
       pressureHpa: record.pr,
     }));
 
-  const beta =
-    fitSamples.length >= betaMinPoints
-      ? buildBetaReadout(fitSamples)
-      : null;
+  const beta = fitSamples.length >= betaMinPoints ? buildBetaReadout(fitSamples) : null;
 
   const preliminaryPoints = deadTimePoints.map(
     ({ record, deadTimeCorrectedRate, rawSigma, deadTimeSigma }) => {
@@ -137,7 +134,9 @@ export function buildCorrectedRateInsights(
 
   const anomalies = points
     .filter((point) => {
-      return point.barometricCorrectedRate != null && point.zScore != null && Math.abs(point.zScore) >= 3;
+      return (
+        point.barometricCorrectedRate != null && point.zScore != null && Math.abs(point.zScore) >= 3
+      );
     })
     .map((point): AnomalyFlag => ({
       ts: point.ts,

@@ -100,7 +100,10 @@ export function estimateMonthlyBytes(
   }
 
   if (tier.completeRaw.enabled) {
-    const rawMinutes = Math.min(tier.completeRaw.autoStopMinutes ?? MINUTES_PER_MONTH, MINUTES_PER_MONTH);
+    const rawMinutes = Math.min(
+      tier.completeRaw.autoStopMinutes ?? MINUTES_PER_MONTH,
+      MINUTES_PER_MONTH,
+    );
     bytes += Math.ceil(signalsPerMinute * rawMinutes * COMPLETE_RAW_LINE_ESTIMATED_BYTES);
   }
 

@@ -25,17 +25,11 @@ export const CANONICAL_SLIM_MINUTE_RECORD_RULES = {
   legacyExtras: "never-stored",
 } as const;
 
-export type CanonicalSlimMinuteRecordField =
-  (typeof CANONICAL_SLIM_MINUTE_RECORD_FIELDS)[number];
+export type CanonicalSlimMinuteRecordField = (typeof CANONICAL_SLIM_MINUTE_RECORD_FIELDS)[number];
 
-export type CanonicalSlimMinuteRecord = Pick<
-  MinuteRecord,
-  CanonicalSlimMinuteRecordField
->;
+export type CanonicalSlimMinuteRecord = Pick<MinuteRecord, CanonicalSlimMinuteRecordField>;
 
-export function toCanonicalSlimMinuteRecord(
-  record: MinuteRecord,
-): CanonicalSlimMinuteRecord {
+export function toCanonicalSlimMinuteRecord(record: MinuteRecord): CanonicalSlimMinuteRecord {
   return {
     ec: record.ec,
     cc: record.cc,

@@ -93,7 +93,9 @@ export default function RegisterPage(): React.ReactElement {
 
   return (
     <AuthGate mode="guest">
-      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "520px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card title="Create your MuonHub account">
           <p
             style={{
@@ -209,7 +211,9 @@ export default function RegisterPage(): React.ReactElement {
             </Button>
           </form>
 
-          <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "var(--text-sm)" }}>
+          <p
+            style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "var(--text-sm)" }}
+          >
             Already registered?{" "}
             <Link href="/login" style={{ color: "var(--color-accent)" }}>
               Sign in

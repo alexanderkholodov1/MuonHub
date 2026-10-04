@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Language, User } from "@muonhub/shared";
 import type { Unsubscribe } from "@muonhub/data-provider";
 import {
@@ -44,8 +37,7 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [backendStatus, setBackendStatus] =
-    useState<AuthContextValue["backendStatus"]>("checking");
+  const [backendStatus, setBackendStatus] = useState<AuthContextValue["backendStatus"]>("checking");
   const [backendMessage, setBackendMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -176,7 +168,17 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
       signOut,
       sendPasswordReset,
     }),
-    [backendMessage, backendStatus, error, loading, register, sendPasswordReset, signIn, signOut, user],
+    [
+      backendMessage,
+      backendStatus,
+      error,
+      loading,
+      register,
+      sendPasswordReset,
+      signIn,
+      signOut,
+      user,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

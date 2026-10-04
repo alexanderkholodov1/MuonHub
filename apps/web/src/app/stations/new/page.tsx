@@ -6,10 +6,7 @@ import type { Detector, Station } from "@muonhub/shared";
 import { Button, Card } from "@muonhub/ui";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../../components/AuthProvider";
-import {
-  DetectorRegistrationForm,
-  StationForm,
-} from "../../../components/stations/StationForms";
+import { DetectorRegistrationForm, StationForm } from "../../../components/stations/StationForms";
 
 export default function NewStationPage(): React.ReactElement {
   const { user } = useAuth();

@@ -41,15 +41,13 @@ export function Card({
         "rounded-lg border border-[var(--color-border)]",
         "bg-[var(--color-surface)]",
         "p-6",
-        className
+        className,
       )}
       role="region"
       aria-label={typeof title === "string" ? title : undefined}
     >
       {title && (
-        <h3
-          className="text-[length:var(--text-h3)] font-semibold text-[var(--color-text)] mb-4 leading-snug"
-        >
+        <h3 className="text-[length:var(--text-h3)] font-semibold text-[var(--color-text)] mb-4 leading-snug">
           {title}
         </h3>
       )}
@@ -68,10 +66,7 @@ export function Card({
 
       {/* Error state */}
       {!loading && error && (
-        <div
-          className="flex items-start gap-3 py-6 text-[var(--color-danger)]"
-          role="alert"
-        >
+        <div className="flex items-start gap-3 py-6 text-[var(--color-danger)]" role="alert">
           <AlertCircle size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium">Error</p>

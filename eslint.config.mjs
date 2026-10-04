@@ -22,7 +22,12 @@ export default tseslint.config(
       "id-match": [
         "error",
         "^[A-Za-z_$][A-Za-z0-9_$]*$",
-        { properties: true, classFields: true, onlyDeclarations: false, ignoreDestructuring: false },
+        {
+          properties: true,
+          classFields: true,
+          onlyDeclarations: false,
+          ignoreDestructuring: false,
+        },
       ],
       "no-irregular-whitespace": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }],

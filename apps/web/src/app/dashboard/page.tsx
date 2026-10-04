@@ -51,10 +51,10 @@ const SAMPLE_STATS = [
 type CardState = "normal" | "loading" | "empty" | "error";
 
 const STATE_LABELS: Record<CardState, string> = {
-  normal:  "Normal",
+  normal: "Normal",
   loading: "Loading",
-  empty:   "Empty",
-  error:   "Error",
+  empty: "Empty",
+  error: "Error",
 };
 
 export default function DashboardPage() {
@@ -162,8 +162,8 @@ export default function DashboardPage() {
             marginBottom: "var(--space-4)",
           }}
         >
-          Every component ships its empty, loading, and error states (§0 / §6 requirement).
-          Toggle to verify:
+          Every component ships its empty, loading, and error states (§0 / §6 requirement). Toggle
+          to verify:
         </p>
 
         {/* State switcher */}
@@ -186,8 +186,8 @@ export default function DashboardPage() {
               {...(state === "loading"
                 ? { icon: <RefreshCw size={14} /> }
                 : state === "error"
-                ? { icon: <AlertTriangle size={14} /> }
-                : {})}
+                  ? { icon: <AlertTriangle size={14} /> }
+                  : {})}
             >
               {STATE_LABELS[state]}
             </Button>
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                       >
                         {col}
                       </th>
-                    )
+                    ),
                   )}
                 </tr>
               </thead>
@@ -315,13 +315,7 @@ export default function DashboardPage() {
             trend="down"
             note="-0.3 hPa vs. prev hour"
           />
-          <Stat
-            label="Neutral"
-            value="3.1"
-            unit="%"
-            trend="neutral"
-            note="dead-time fraction"
-          />
+          <Stat label="Neutral" value="3.1" unit="%" trend="neutral" note="dead-time fraction" />
         </div>
       </section>
     </div>

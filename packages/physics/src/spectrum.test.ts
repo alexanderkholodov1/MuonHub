@@ -51,7 +51,15 @@ describe("estimateMpv", () => {
     // Landau-like shape: sharp rise, MPV near 18 mV, long high-amplitude tail.
     const amplitudes: number[] = [];
     const shape: Array<[number, number]> = [
-      [14, 2], [16, 8], [18, 20], [20, 12], [22, 7], [26, 4], [30, 3], [38, 2], [50, 1],
+      [14, 2],
+      [16, 8],
+      [18, 20],
+      [20, 12],
+      [22, 7],
+      [26, 4],
+      [30, 3],
+      [38, 2],
+      [50, 1],
     ];
     for (const [mv, n] of shape) {
       for (let i = 0; i < n; i++) amplitudes.push(mv + 0.5);

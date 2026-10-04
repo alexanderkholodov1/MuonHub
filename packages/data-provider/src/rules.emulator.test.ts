@@ -80,14 +80,34 @@ describeEmu("database security rules", () => {
   it("lets an editor push a minute record under a shared station", async () => {
     const db = testEnv.authenticatedContext("editorUser").database();
     await assertSucceeds(
-      db.ref(MINUTE).set({ ts: 1_700_000_000_000, ec: 10, cc: 0, sm: 5, sx: 9, sn: 2, tp: 21, pr: 1013, dt: 1 }),
+      db.ref(MINUTE).set({
+        ts: 1_700_000_000_000,
+        ec: 10,
+        cc: 0,
+        sm: 5,
+        sx: 9,
+        sn: 2,
+        tp: 21,
+        pr: 1013,
+        dt: 1,
+      }),
     );
   });
 
   it("denies a stranger pushing a minute record", async () => {
     const db = testEnv.authenticatedContext("stranger").database();
     await assertFails(
-      db.ref(MINUTE).set({ ts: 1_700_000_000_001, ec: 10, cc: 0, sm: 5, sx: 9, sn: 2, tp: 21, pr: 1013, dt: 1 }),
+      db.ref(MINUTE).set({
+        ts: 1_700_000_000_001,
+        ec: 10,
+        cc: 0,
+        sm: 5,
+        sx: 9,
+        sn: 2,
+        tp: 21,
+        pr: 1013,
+        dt: 1,
+      }),
     );
   });
 

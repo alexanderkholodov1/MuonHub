@@ -47,9 +47,15 @@ describe("calibrateNoiseThreshold", () => {
   it("rejects invalid calibration windows and options", () => {
     expect(() => calibrateNoiseThreshold([])).toThrow("at least one");
     expect(() => calibrateNoiseThreshold([1, 2, 3], { noiseFraction: 0 })).toThrow("noiseFraction");
-    expect(() => calibrateNoiseThreshold([1, 2, 3], { minNoiseSamples: 0 })).toThrow("minNoiseSamples");
-    expect(() => calibrateNoiseThreshold([1, 2, 3], { sigmaMultiplier: 0 })).toThrow("sigmaMultiplier");
-    expect(() => calibrateNoiseThreshold([1, 2, 3], { noiseMarginMv: -1 })).toThrow("noiseMarginMv");
+    expect(() => calibrateNoiseThreshold([1, 2, 3], { minNoiseSamples: 0 })).toThrow(
+      "minNoiseSamples",
+    );
+    expect(() => calibrateNoiseThreshold([1, 2, 3], { sigmaMultiplier: 0 })).toThrow(
+      "sigmaMultiplier",
+    );
+    expect(() => calibrateNoiseThreshold([1, 2, 3], { noiseMarginMv: -1 })).toThrow(
+      "noiseMarginMv",
+    );
   });
 });
 
@@ -84,7 +90,9 @@ describe("buildEventSummary", () => {
     expect(summary.aboveThresholdCount).toBe(7);
     expect(summary.tailCount).toBe(1);
     expect(summary.coincidenceCount).toBe(2);
-    expect(summary.histogram.counts.reduce((total: number, count: number) => total + count, 0)).toBe(7);
+    expect(
+      summary.histogram.counts.reduce((total: number, count: number) => total + count, 0),
+    ).toBe(7);
     expect(summary.mpvMv).toBeGreaterThanOrEqual(15);
     expect(summary.mpvMv).toBeLessThan(30);
   });
@@ -151,8 +159,12 @@ describe("buildEventSummary", () => {
     };
 
     expect(() => buildEventSummary([], { ...params, binCount: 0 })).toThrow("binCount");
-    expect(() => buildEventSummary([], { ...params, intervalEndTs: START_TS })).toThrow("intervalEndTs");
-    expect(() => buildEventSummary([], { ...params, noiseThresholdMv: -1 })).toThrow("noiseThresholdMv");
+    expect(() => buildEventSummary([], { ...params, intervalEndTs: START_TS })).toThrow(
+      "intervalEndTs",
+    );
+    expect(() => buildEventSummary([], { ...params, noiseThresholdMv: -1 })).toThrow(
+      "noiseThresholdMv",
+    );
     expect(() => buildEventSummary([], { ...params, signalCount: -1 })).toThrow("signalCount");
     expect(() => buildEventSummary([], { ...params, aboveThresholdCount: 1.5 })).toThrow(
       "aboveThresholdCount",

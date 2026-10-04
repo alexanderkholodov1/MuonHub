@@ -9,13 +9,7 @@
  * - Honors prefers-reduced-motion by setting CSS variables to 0ms (see tokens.css).
  * - Sets `data-theme` attribute on <html> so CSS custom properties apply.
  */
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 export type Theme = "dark" | "light";
 

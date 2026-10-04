@@ -12,8 +12,7 @@ import { AuthProviderError } from "./types.js";
 function createMockProvider(): DataProvider {
   const summaries = new Map<string, EventSummary>();
   const signalBlobs = new Map<string, SignalRecord[]>();
-  const summaryKey = (summary: EventSummary) =>
-    `${summary.detectorId}/${summary.intervalStartTs}`;
+  const summaryKey = (summary: EventSummary) => `${summary.detectorId}/${summary.intervalStartTs}`;
   const blobKey = (ref: SignalBlobRef) =>
     `${ref.detectorId}/${ref.sessionId}/${ref.intervalStartTs}`;
 

@@ -41,15 +41,13 @@ export const Paths = {
   station: (id: string) => `stations/${id}`,
   stationShares: (id: string) => `stations/${id}/shares`,
   detectors: (stationId: string) => `stations/${stationId}/detectors`,
-  detector: (stationId: string, detId: string) =>
-    `stations/${stationId}/detectors/${detId}`,
+  detector: (stationId: string, detId: string) => `stations/${stationId}/detectors/${detId}`,
   detectorIndex: (detId: string) => `detector_index/${detId}`,
   sessions: (stationId: string, detId: string) =>
     `stations/${stationId}/detectors/${detId}/sessions`,
   session: (stationId: string, detId: string, sid: string) =>
     `stations/${stationId}/detectors/${detId}/sessions/${sid}`,
-  minutes: (stationId: string, detId: string) =>
-    `stations/${stationId}/detectors/${detId}/minutes`,
+  minutes: (stationId: string, detId: string) => `stations/${stationId}/detectors/${detId}/minutes`,
   minute: (stationId: string, detId: string, ts: number) =>
     `stations/${stationId}/detectors/${detId}/minutes/${padTs(ts)}`,
   realtime: (stationId: string, detId: string) =>
@@ -58,8 +56,7 @@ export const Paths = {
     `stations/${stationId}/detectors/${detId}/eventSummaries`,
   eventSummary: (stationId: string, detId: string, intervalStartTs: number) =>
     `stations/${stationId}/detectors/${detId}/eventSummaries/${padTs(intervalStartTs)}`,
-  latest: (stationId: string, detId: string) =>
-    `stations/${stationId}/detectors/${detId}/latest`,
+  latest: (stationId: string, detId: string) => `stations/${stationId}/detectors/${detId}/latest`,
 } as const;
 
 export function signalBlobObjectPath(ref: {

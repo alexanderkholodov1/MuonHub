@@ -200,7 +200,10 @@ function correctedRateChartModel(
         tickfont: { color: "var(--color-text-secondary)", family: "var(--font-mono)" },
       },
       yaxis: {
-        title: { text: "Corrected rate (counts / min)", font: { color: "var(--color-text-secondary)" } },
+        title: {
+          text: "Corrected rate (counts / min)",
+          font: { color: "var(--color-text-secondary)" },
+        },
         type: logScale ? "log" : "linear",
         gridcolor: "color-mix(in srgb, var(--color-border) 55%, transparent)",
         zerolinecolor: "var(--color-border)",

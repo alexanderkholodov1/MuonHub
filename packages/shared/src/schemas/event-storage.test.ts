@@ -89,9 +89,9 @@ describe("StorageTierConfigSchema", () => {
   });
 
   it("rejects an invalid realtime mode", () => {
-    expect(StorageTierConfigSchema.safeParse({ ...validStorageTier, realtimeMode: "global" }).success).toBe(
-      false,
-    );
+    expect(
+      StorageTierConfigSchema.safeParse({ ...validStorageTier, realtimeMode: "global" }).success,
+    ).toBe(false);
   });
 });
 
@@ -109,8 +109,12 @@ describe("StorageQuotaSchema", () => {
   });
 
   it("rejects non-positive quotas", () => {
-    expect(StorageQuotaSchema.safeParse({ detectorMaxBytes: 0, accountMaxBytes: 1 }).success).toBe(false);
-    expect(StorageQuotaSchema.safeParse({ detectorMaxBytes: 1, accountMaxBytes: -1 }).success).toBe(false);
+    expect(StorageQuotaSchema.safeParse({ detectorMaxBytes: 0, accountMaxBytes: 1 }).success).toBe(
+      false,
+    );
+    expect(StorageQuotaSchema.safeParse({ detectorMaxBytes: 1, accountMaxBytes: -1 }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -135,7 +139,9 @@ describe("SignalRecordSchema", () => {
   });
 
   it("rejects unknown keys", () => {
-    expect(SignalRecordSchema.safeParse({ ...validSignal, rawLine: "ignored" }).success).toBe(false);
+    expect(SignalRecordSchema.safeParse({ ...validSignal, rawLine: "ignored" }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -161,7 +167,9 @@ describe("EventSummarySchema", () => {
   });
 
   it("rejects negative summary and histogram counts", () => {
-    expect(EventSummarySchema.safeParse({ ...validEventSummary, tailCount: -1 }).success).toBe(false);
+    expect(EventSummarySchema.safeParse({ ...validEventSummary, tailCount: -1 }).success).toBe(
+      false,
+    );
     expect(
       EventSummarySchema.safeParse({
         ...validEventSummary,

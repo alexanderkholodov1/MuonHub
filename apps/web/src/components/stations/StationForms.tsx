@@ -260,7 +260,9 @@ export function StationForm({
   initialStation,
   onSaved,
 }: StationFormProps): React.ReactElement {
-  const [values, setValues] = useState<StationFormValues>(() => initialStationValues(initialStation));
+  const [values, setValues] = useState<StationFormValues>(() =>
+    initialStationValues(initialStation),
+  );
   const [errors, setErrors] = useState<FieldErrors<StationField>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -360,13 +362,19 @@ export function StationForm({
       )}
 
       {formError != null && (
-        <div className="mb-6 rounded-md border border-[var(--color-danger)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]" role="alert">
+        <div
+          className="mb-6 rounded-md border border-[var(--color-danger)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]"
+          role="alert"
+        >
           {formError}
         </div>
       )}
 
       {successMessage != null && (
-        <div className="mb-6 rounded-md border border-[var(--color-success)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]" role="status">
+        <div
+          className="mb-6 rounded-md border border-[var(--color-success)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]"
+          role="status"
+        >
           {successMessage}
         </div>
       )}
@@ -382,7 +390,11 @@ export function StationForm({
             />
           </Field>
 
-          <Field label="Timezone" error={errors.timezone} help="Use an IANA name, for example America/Guayaquil.">
+          <Field
+            label="Timezone"
+            error={errors.timezone}
+            help="Use an IANA name, for example America/Guayaquil."
+          >
             <input
               className={INPUT_CLASS}
               value={values.timezone}
@@ -400,7 +412,11 @@ export function StationForm({
             />
           </Field>
 
-          <Field label="Country code" error={errors.country} help="ISO-3166 alpha-2, for example EC.">
+          <Field
+            label="Country code"
+            error={errors.country}
+            help="ISO-3166 alpha-2, for example EC."
+          >
             <input
               className={INPUT_CLASS}
               value={values.country}
@@ -490,7 +506,9 @@ export function StationForm({
         </fieldset>
 
         <fieldset className="mt-6 rounded-lg border border-[var(--color-border)] p-4">
-          <legend className="px-2 text-sm font-medium text-[var(--color-text)]">Station type</legend>
+          <legend className="px-2 text-sm font-medium text-[var(--color-text)]">
+            Station type
+          </legend>
           {errors.type != null && <p className={ERROR_CLASS}>{errors.type}</p>}
           <div className="grid gap-3 md:grid-cols-2">
             {STATION_TYPE_OPTIONS.map((option) => (
@@ -694,20 +712,28 @@ export function DetectorRegistrationForm({
       )}
 
       {formError != null && (
-        <div className="mb-6 rounded-md border border-[var(--color-danger)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]" role="alert">
+        <div
+          className="mb-6 rounded-md border border-[var(--color-danger)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]"
+          role="alert"
+        >
           {formError}
         </div>
       )}
 
       {successMessage != null && (
-        <div className="mb-6 rounded-md border border-[var(--color-success)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]" role="status">
+        <div
+          className="mb-6 rounded-md border border-[var(--color-success)] bg-[var(--color-surface-2)] p-4 text-sm text-[var(--color-text)]"
+          role="status"
+        >
           {successMessage}
         </div>
       )}
 
       <div className="mb-6 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] p-4">
         <p className="text-sm font-medium text-[var(--color-text)]">Auto-generated device token</p>
-        <p className="mt-2 break-all font-mono text-base text-[var(--color-accent)]">{deviceToken}</p>
+        <p className="mt-2 break-all font-mono text-base text-[var(--color-accent)]">
+          {deviceToken}
+        </p>
         <p className={HELP_CLASS}>
           Token generation is local and non-blocking; it can be regenerated before saving.
         </p>
@@ -898,7 +924,9 @@ function NonBlockingNotice({
         <div>
           <p className="text-base font-medium text-[var(--color-text)]">{title}</p>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{body}</p>
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">This notice does not block saving.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            This notice does not block saving.
+          </p>
         </div>
       </div>
     </div>

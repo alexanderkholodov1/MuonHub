@@ -149,11 +149,7 @@ export function serializeDetector(detector: Detector): Record<string, unknown> {
   return omit(detector, "id", "stationId");
 }
 
-export function deserializeDetector(
-  id: string,
-  stationId: string,
-  raw: unknown,
-): Detector | null {
+export function deserializeDetector(id: string, stationId: string, raw: unknown): Detector | null {
   if (raw == null || typeof raw !== "object") return null;
   const result = DetectorSchema.safeParse({ id, stationId, ...(raw as object) });
   if (!result.success) {
@@ -169,11 +165,7 @@ export function serializeSession(session: Session): Record<string, unknown> {
   return omit(session, "id", "detectorId");
 }
 
-export function deserializeSession(
-  id: string,
-  detectorId: string,
-  raw: unknown,
-): Session | null {
+export function deserializeSession(id: string, detectorId: string, raw: unknown): Session | null {
   if (raw == null || typeof raw !== "object") return null;
   const result = SessionSchema.safeParse({ id, detectorId, ...(raw as object) });
   if (!result.success) {
@@ -186,9 +178,7 @@ export function deserializeSession(
 // ── MinuteRecord ──────────────────────────────────────────────────────────────
 
 /** Store only the canonical raw fields; `ts` is the padded RTDB key. */
-export function serializeMinuteRecord(
-  record: MinuteRecord,
-): CanonicalSlimMinuteRecord {
+export function serializeMinuteRecord(record: MinuteRecord): CanonicalSlimMinuteRecord {
   return toCanonicalSlimMinuteRecord(record);
 }
 
@@ -205,10 +195,7 @@ export function serializeLatestMinuteRecord(
   };
 }
 
-export function deserializeMinuteRecord(
-  key: string,
-  raw: unknown,
-): MinuteRecord | null {
+export function deserializeMinuteRecord(key: string, raw: unknown): MinuteRecord | null {
   if (raw == null || typeof raw !== "object") return null;
   const rawObj = raw as Record<string, unknown>;
   const result = MinuteRecordSchema.safeParse({
@@ -277,16 +264,11 @@ export function deserializeEventSummary(
 
 // ── RealtimeRecord ────────────────────────────────────────────────────────────
 
-export function serializeRealtimeRecord(
-  record: RealtimeRecord,
-): Record<string, unknown> {
+export function serializeRealtimeRecord(record: RealtimeRecord): Record<string, unknown> {
   return record as unknown as Record<string, unknown>;
 }
 
-export function deserializeRealtimeRecord(
-  key: string,
-  raw: unknown,
-): RealtimeRecord | null {
+export function deserializeRealtimeRecord(key: string, raw: unknown): RealtimeRecord | null {
   if (raw == null || typeof raw !== "object") return null;
   const rawObj = raw as Record<string, unknown>;
   const ts = rawObj["ts"] ?? unpadTs(key);

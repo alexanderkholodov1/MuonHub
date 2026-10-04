@@ -78,7 +78,9 @@ export default function LoginPage(): React.ReactElement {
 
   return (
     <AuthGate mode="guest">
-      <div style={{ maxWidth: "480px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}>
+      <div
+        style={{ maxWidth: "480px", margin: "0 auto", padding: "var(--space-12) var(--space-6)" }}
+      >
         <Card title="Sign in to MuonHub">
           <p
             style={{

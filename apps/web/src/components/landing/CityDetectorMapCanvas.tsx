@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import type {
-  LngLatBounds,
-  Map as MapLibreMap,
-  Marker,
-  StyleSpecification,
-} from "maplibre-gl";
+import type { LngLatBounds, Map as MapLibreMap, Marker, StyleSpecification } from "maplibre-gl";
 import type { CityDetectorAggregate } from "./city-aggregation";
 
 export function CityDetectorMapCanvas({
@@ -148,9 +143,7 @@ function observatoryDarkMapStyle(element: HTMLElement): StyleSpecification {
     sources: {
       "carto-dark": {
         type: "raster",
-        tiles: [
-          "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        ],
+        tiles: ["https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"],
         tileSize: 256,
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',

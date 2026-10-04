@@ -118,7 +118,9 @@ function StationListItem({ station }: { station: Station }): React.ReactElement 
             Metadata
           </dt>
           <dd className="mt-1 text-[var(--color-text)]">
-            {missingOptional.length === 0 ? "Complete optional set" : `${missingOptional.length} optional fields missing`}
+            {missingOptional.length === 0
+              ? "Complete optional set"
+              : `${missingOptional.length} optional fields missing`}
           </dd>
         </div>
       </dl>

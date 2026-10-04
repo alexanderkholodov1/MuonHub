@@ -38,7 +38,9 @@ describe("measureClockOffset", () => {
   it("raises a clock skew warning past the configured threshold", async () => {
     const source = new MockTimeSource([10_000, 10_000], 191_000);
 
-    await expect(measureClockOffset(source, { skewWarningThresholdMs: 180_000 })).resolves.toMatchObject({
+    await expect(
+      measureClockOffset(source, { skewWarningThresholdMs: 180_000 }),
+    ).resolves.toMatchObject({
       offsetMs: 181_000,
       clockSkewWarning: true,
     });

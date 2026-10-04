@@ -14,61 +14,61 @@
 /* ─── Dark palette (default) ─────────────────────────────────────────────── */
 :root {
   /* Backgrounds */
-  --color-bg:        #0B0E14;
-  --color-surface:   #131722;
-  --color-surface-2: #1A2030;
+  --color-bg: #0b0e14;
+  --color-surface: #131722;
+  --color-surface-2: #1a2030;
 
   /* Borders */
-  --color-border:    #252C3B;
+  --color-border: #252c3b;
 
   /* Text */
-  --color-text:           #E6EAF2;
-  --color-text-secondary: #9AA4B2;
-  --color-text-muted:     #6B7480;
+  --color-text: #e6eaf2;
+  --color-text-secondary: #9aa4b2;
+  --color-text-muted: #6b7480;
 
   /* Accents (max 2 on any screen) */
-  --color-accent:      #4CC9F0;
-  --color-accent-warm: #F5B544;
+  --color-accent: #4cc9f0;
+  --color-accent-warm: #f5b544;
 
   /* Status */
-  --color-success: #3FB950;
-  --color-warning: #D29922;
-  --color-danger:  #F85149;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
 
   /* Data-viz categorical (colorblind-aware, tuned for dark) */
-  --color-data-1: #4CC9F0;
-  --color-data-2: #F5B544;
-  --color-data-3: #5BD6A0;
-  --color-data-4: #C792EA;
-  --color-data-5: #FF7A85;
-  --color-data-6: #7AA2F7;
-  --color-data-7: #E0AF68;
-  --color-data-8: #8BD450;
+  --color-data-1: #4cc9f0;
+  --color-data-2: #f5b544;
+  --color-data-3: #5bd6a0;
+  --color-data-4: #c792ea;
+  --color-data-5: #ff7a85;
+  --color-data-6: #7aa2f7;
+  --color-data-7: #e0af68;
+  --color-data-8: #8bd450;
 
   /* Typography */
-  --font-ui:   "Geist Sans", Inter, system-ui, sans-serif;
+  --font-ui: "Geist Sans", Inter, system-ui, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", "Fira Code", monospace;
 
   /* Type scale (rem, base = 16px) */
-  --text-display: 3.75rem;  /* 60px — landing hero only */
-  --text-h1:      2.375rem; /* 38px */
-  --text-h2:      1.875rem; /* 30px */
-  --text-h3:      1.5rem;   /* 24px */
-  --text-h4:      1.25rem;  /* 20px */
-  --text-lg:      1.125rem; /* 18px */
-  --text-base:    1rem;     /* 16px — body */
-  --text-sm:      0.875rem; /* 14px */
-  --text-xs:      0.8125rem;/* 13px — micro-labels only */
+  --text-display: 3.75rem; /* 60px — landing hero only */
+  --text-h1: 2.375rem; /* 38px */
+  --text-h2: 1.875rem; /* 30px */
+  --text-h3: 1.5rem; /* 24px */
+  --text-h4: 1.25rem; /* 20px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-base: 1rem; /* 16px — body */
+  --text-sm: 0.875rem; /* 14px */
+  --text-xs: 0.8125rem; /* 13px — micro-labels only */
 
   /* Spacing (8-pt grid) */
-  --space-1: 0.25rem;  /* 4px  */
-  --space-2: 0.5rem;   /* 8px  */
-  --space-3: 0.75rem;  /* 12px */
-  --space-4: 1rem;     /* 16px */
-  --space-6: 1.5rem;   /* 24px */
-  --space-8: 2rem;     /* 32px */
-  --space-12: 3rem;    /* 48px */
-  --space-16: 4rem;    /* 64px */
+  --space-1: 0.25rem; /* 4px  */
+  --space-2: 0.5rem; /* 8px  */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
 
   /* Radii */
   --radius-sm: 6px;
@@ -80,29 +80,29 @@
   --shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.48);
 
   /* Motion (honors prefers-reduced-motion — see ThemeProvider) */
-  --duration-fast:   150ms;
+  --duration-fast: 150ms;
   --duration-normal: 200ms;
-  --duration-slow:   250ms;
-  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-slow: 250ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ─── Light palette mirror ────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --color-bg:        #FBFCFD;
-  --color-surface:   #FFFFFF;
-  --color-surface-2: #F3F5F8;
-  --color-border:    #E3E7EC;
+  --color-bg: #fbfcfd;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f5f8;
+  --color-border: #e3e7ec;
 
-  --color-text:           #0A0C10;
-  --color-text-secondary: #4B5563;
-  --color-text-muted:     #8A93A2;
+  --color-text: #0a0c10;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #8a93a2;
 
-  --color-accent:      #0E9FCF;
-  --color-accent-warm: #C77A12;
+  --color-accent: #0e9fcf;
+  --color-accent-warm: #c77a12;
 
-  --color-success: #1A7F37;
-  --color-warning: #9A6700;
-  --color-danger:  #CF222E;
+  --color-success: #1a7f37;
+  --color-warning: #9a6700;
+  --color-danger: #cf222e;
 
   --shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
@@ -110,46 +110,46 @@
 /* ─── Reduced-motion override ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --duration-fast:   0ms;
+    --duration-fast: 0ms;
     --duration-normal: 0ms;
-    --duration-slow:   0ms;
+    --duration-slow: 0ms;
   }
 }
 
 /* ─── Tailwind v4 @theme — semantic utility class mapping ────────────────── */
 @theme {
   /* Colors map to CSS variables so Tailwind generates bg-*, text-*, border-* utilities */
-  --color-bg:             var(--color-bg);
-  --color-surface:        var(--color-surface);
-  --color-surface-2:      var(--color-surface-2);
-  --color-border:         var(--color-border);
-  --color-text:           var(--color-text);
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-border: var(--color-border);
+  --color-text: var(--color-text);
   --color-text-secondary: var(--color-text-secondary);
-  --color-text-muted:     var(--color-text-muted);
-  --color-accent:         var(--color-accent);
-  --color-accent-warm:    var(--color-accent-warm);
-  --color-success:        var(--color-success);
-  --color-warning:        var(--color-warning);
-  --color-danger:         var(--color-danger);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-warm: var(--color-accent-warm);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
 
   /* Fonts */
   --font-sans: var(--font-ui);
   --font-mono: var(--font-mono);
 
   /* Spacing */
-  --spacing-1:  var(--space-1);
-  --spacing-2:  var(--space-2);
-  --spacing-3:  var(--space-3);
-  --spacing-4:  var(--space-4);
-  --spacing-6:  var(--space-6);
-  --spacing-8:  var(--space-8);
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-6: var(--space-6);
+  --spacing-8: var(--space-8);
   --spacing-12: var(--space-12);
   --spacing-16: var(--space-16);
 
   /* Radii */
-  --radius-sm:   var(--radius-sm);
-  --radius-md:   var(--radius-md);
-  --radius-lg:   var(--radius-lg);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
   --radius-full: var(--radius-full);
 }
 
