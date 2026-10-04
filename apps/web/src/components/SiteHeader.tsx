@@ -3,7 +3,7 @@
 /**
  * SiteHeader — top navigation bar.
  *
- * - MunHub wordmark (logotype, not an image — consistent rendering).
+ * - MuonHub wordmark (logotype, not an image — consistent rendering).
  * - Nav link placeholders (Stations, Dashboard, About) for future routes.
  * - Working light/dark theme toggle via useTheme().
  * - Observatory Dark tokens only — no raw hex.
@@ -12,7 +12,7 @@
 import React from "react";
 import Link from "next/link";
 import { Sun, Moon, Radio, LogOut, UserCircle } from "lucide-react";
-import { useTheme, Button } from "@munhub/ui";
+import { useTheme, Button } from "@muonhub/ui";
 import { useAuth } from "./AuthProvider";
 
 const navLinks = [
@@ -68,7 +68,7 @@ export function SiteHeader(): React.ReactElement {
             textDecoration: "none",
             color: "var(--color-text)",
           }}
-          aria-label="MunHub Lab — home"
+          aria-label="MuonHub — home"
         >
           <Radio
             size={22}
@@ -84,8 +84,7 @@ export function SiteHeader(): React.ReactElement {
               color: "var(--color-text)",
             }}
           >
-            MunHub
-            <span style={{ color: "var(--color-accent)", marginLeft: "2px" }}>Lab</span>
+            MuonHub
           </span>
         </Link>
 

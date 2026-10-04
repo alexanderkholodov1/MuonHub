@@ -1,3 +1,3 @@
 fn main() {
-    munhub_agent_lib::run();
+    muonhub_agent_lib::run();
 }

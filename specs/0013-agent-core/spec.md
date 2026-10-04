@@ -1,5 +1,8 @@
 # 0013 — Agent acquisition core: serial parsing + per-minute aggregation + offline sync queue
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** done
 - **Responsible:** Adjutant (spec) → Cursor (implementation, Claude model) → Gemini (cross-provider review, D35) → Adjutant (verification + macro + PR)
 - **Depends on:** 0003 (`MinuteRecord`/`RealtimeRecord` schemas + constants), 0007 (`DataProvider.pushMinuteRecord`/`pushRealtimeRecord`). Branches from a linear `main`.

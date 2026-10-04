@@ -59,6 +59,12 @@ is a valid outcome; do not manufacture noise.
 
 ## Project specializations (footer — filled by the adopting repo)
 
-<!-- Name the project's realtime/subscription layer and its known swallow points. Example,
-     a realtime app: DB listeners must register error callbacks; data-layer implementations
-     must propagate backend errors, never return empty datasets on failure. -->
+MuonHub:
+- **Realtime layer:** Realtime Database listeners in `packages/data-provider` must register error
+  callbacks and surface them; a dead subscription must never look like a quiet detector.
+- **Data layer:** backend errors propagate; invalid records are quarantined **and counted** for the
+  caller, never silently dropped (a silent drop is data loss).
+- **Agent:** serial disconnects are detected and reported; rejected cloud writes (e.g. an expired
+  session after a reboot) are detected and shown; the offline queue never swallows errors.
+- **UI status:** "database connection" and "data freshness" are distinct states; status is
+  recomputed on a timer so it cannot freeze; "no data" and "stale" are explicit states.

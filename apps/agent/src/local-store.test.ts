@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { InMemoryLocalStore } from "./local-store.js";
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 
 function record(ts: number, ec: number): MinuteRecord {
   return {

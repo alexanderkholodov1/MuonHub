@@ -1,4 +1,4 @@
-import { MinuteRecordSchema } from "@munhub/shared";
+import { MinuteRecordSchema } from "@muonhub/shared";
 import { describe, expect, it } from "vitest";
 import { aggregateMinuteReadings } from "./aggregate.js";
 import type { RawReading } from "./parsers/index.js";

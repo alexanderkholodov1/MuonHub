@@ -1,5 +1,8 @@
 # 0003 — Shared contracts: domain types and Zod schemas
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** in-progress
 - **Responsible:** Adjutant (Opus) — decisive contract spec
 - **Depends on:** 0001 (scaffold); D4, D7, D9, D21, D23 (master plan); `planning/02-DATA-MODEL.md`

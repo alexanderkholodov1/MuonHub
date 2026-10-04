@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Card } from "@munhub/ui";
+import { Card } from "@muonhub/ui";
 import { useAuth } from "./AuthProvider";
 
 type AuthGateMode = "protected" | "guest";
@@ -48,7 +48,7 @@ export function AuthGate({ mode, children }: AuthGateProps): React.ReactElement 
           title="Backend not configured"
           error={
             backendMessage ??
-            "Set the NEXT_PUBLIC_FIREBASE_* variables documented in .env.example to connect the MunHub data provider."
+            "Set the NEXT_PUBLIC_FIREBASE_* variables documented in .env.example to connect the MuonHub data provider."
           }
         />
       </div>

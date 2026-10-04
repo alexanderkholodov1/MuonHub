@@ -1,5 +1,5 @@
 /**
- * @munhub/ui — Observatory Dark design system.
+ * @muonhub/ui — Observatory Dark design system.
  *
  * Exports:
  * - ThemeProvider + useTheme (dark/light toggle, prefers-reduced-motion aware)
@@ -8,7 +8,7 @@
  * - Stat (KPI tile; mono tabular-nums readout; loading/error states)
  *
  * CSS tokens (Observatory Dark):
- *   import "@munhub/ui/styles";   ← in apps/web global stylesheet
+ *   import "@muonhub/ui/styles";   ← in apps/web global stylesheet
  *
  * All colors via CSS custom properties (never raw hex in components).
  * Tailwind v4 @theme maps tokens to utility classes (bg-surface, text-secondary, etc.)

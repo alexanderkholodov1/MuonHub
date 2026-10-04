@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Detector, MinuteRecord, Station } from "@munhub/shared";
+import type { Detector, MinuteRecord, Station } from "@muonhub/shared";
 import { RadioTower, SatelliteDish } from "lucide-react";
 import { CityDetectorMap } from "./CityDetectorMap";
 import {

@@ -4,10 +4,10 @@ import React, { useMemo } from "react";
 import dynamic from "next/dynamic";
 import type { Config, Data, Layout } from "plotly.js";
 import type { PlotParams } from "react-plotly.js";
-import type { Station } from "@munhub/shared";
-import { GAP_THRESHOLD_MS } from "@munhub/shared";
-import type { CorrectedRateInsights } from "@munhub/physics";
-import { Card } from "@munhub/ui";
+import type { Station } from "@muonhub/shared";
+import { GAP_THRESHOLD_MS } from "@muonhub/shared";
+import type { CorrectedRateInsights } from "@muonhub/physics";
+import { Card } from "@muonhub/ui";
 
 const Plot = dynamic<PlotParams>(
   async () => {

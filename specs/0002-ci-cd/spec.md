@@ -1,5 +1,8 @@
 # 0002 — CI quality gate (build/test/lint/typecheck + secret scan)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented (2026-06-07)
 - **Responsible agent:** Software architect
 - **Depends on:** 0001 (monorepo scaffold); D32, D34 (planning/18)

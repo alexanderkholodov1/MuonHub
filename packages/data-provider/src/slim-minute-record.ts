@@ -1,4 +1,4 @@
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 
 /**
  * Canonical Firebase RTDB storage shape for minute records.
@@ -6,7 +6,7 @@ import type { MinuteRecord } from "@munhub/shared";
  * The minute timestamp is not stored in the value: it is the zero-padded RTDB
  * node key at `minutes/{ts}`. Derived fields (`ecDt`, `ecCorr`, `flux`) and
  * legacy extras such as `ts_iso` are never persisted; consumers recompute them
- * from the canonical raw observables via `@munhub/physics`.
+ * from the canonical raw observables via `@muonhub/physics`.
  */
 export const CANONICAL_SLIM_MINUTE_RECORD_FIELDS = [
   "ec",

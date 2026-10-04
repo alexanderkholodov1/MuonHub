@@ -1,5 +1,5 @@
 /**
- * FirebaseProvider — the Phase A concrete DataProvider over munhub-1 Firebase Realtime Database.
+ * FirebaseProvider — the Phase A concrete DataProvider over muonhub Firebase Realtime Database.
  *
  * Supports two SDK targets (FR1):
  *   - "client": uses `firebase/database` + `firebase/auth` + `firebase/storage`.
@@ -25,7 +25,7 @@ import type {
   RealtimeRecord,
   EventSummary,
   SignalRecord,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import {
   UserSchema,
   InstitutionSchema,
@@ -36,7 +36,7 @@ import {
   RealtimeRecordSchema,
   EventSummarySchema,
   SignalRecordSchema,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import type { DataProvider } from "./provider.js";
 import type {
   TimeRange,
@@ -238,7 +238,7 @@ function authErrorMessage(code: AuthErrorCode): string {
     case "auth/user-disabled":
       return "This account has been disabled.";
     case "auth/user-record-not-found":
-      return "The authenticated account is missing its MunHub user profile.";
+      return "The authenticated account is missing its MuonHub user profile.";
     case "auth/weak-password":
       return "Choose a stronger password.";
     case "auth/internal":
@@ -545,8 +545,8 @@ async function buildClientAdapter(
 
   const app =
     getApps().length === 0
-      ? initializeApp(appConfig, "munhub-client")
-      : getApp("munhub-client");
+      ? initializeApp(appConfig, "muonhub-client")
+      : getApp("muonhub-client");
 
   const db = getDatabase(app);
   const storageInstance = getStorage(app);
@@ -791,7 +791,7 @@ async function buildAdminAdapter(
     process.env["STORAGE_EMULATOR_HOST"] = `http://${process.env["FIREBASE_STORAGE_EMULATOR_HOST"]}`;
   }
 
-  const existing = getApps().find((a: App) => a.name === "munhub-admin");
+  const existing = getApps().find((a: App) => a.name === "muonhub-admin");
   const appOptions = {
     databaseURL: config.databaseURL,
     ...(config.storageBucket != null ? { storageBucket: config.storageBucket } : {}),
@@ -805,7 +805,7 @@ async function buildAdminAdapter(
   };
   const app: App =
     existing ??
-    initializeApp(appOptions, "munhub-admin");
+    initializeApp(appOptions, "muonhub-admin");
 
   const db = getDatabase(app);
   const bucket =

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import type { Detector, MinuteRecord, Station } from "@munhub/shared";
-import { DEFAULT_BETA_MIN_POINTS, buildCorrectedRateInsights } from "@munhub/physics";
-import type { CorrectedRateInsights } from "@munhub/physics";
-import { Button, Card, Stat } from "@munhub/ui";
+import type { Detector, MinuteRecord, Station } from "@muonhub/shared";
+import { DEFAULT_BETA_MIN_POINTS, buildCorrectedRateInsights } from "@muonhub/physics";
+import type { CorrectedRateInsights } from "@muonhub/physics";
+import { Button, Card, Stat } from "@muonhub/ui";
 import { Activity, Gauge } from "lucide-react";
 import {
   CorrectedRateChart,
@@ -124,7 +124,7 @@ export function PublicLiveDemo({
             <p className="m-0 max-w-[820px] text-base leading-relaxed text-[var(--color-text-secondary)]">
               Recent public data from {detector.city}, {detector.country}. The chart shows{" "}
               {primaryMetricLabel.toLocaleLowerCase("en-US")} with dead-time and local barometric
-              corrections computed by <span className="font-mono">@munhub/physics</span>.
+              corrections computed by <span className="font-mono">@muonhub/physics</span>.
             </p>
             <p className="mt-3 max-w-[820px] text-sm leading-relaxed text-[var(--color-text-muted)]">
               {correctedRateTooltip(detector.stationType)}

@@ -32,7 +32,7 @@ describeEmu("database security rules", () => {
 
   beforeAll(async () => {
     testEnv = await initializeTestEnvironment({
-      projectId: "demo-munhub",
+      projectId: "demo-muonhub",
       database: { rules: readFileSync(rulesPath, "utf8") },
     });
 

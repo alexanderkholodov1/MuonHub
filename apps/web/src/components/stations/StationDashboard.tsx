@@ -4,15 +4,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Config, Data, Layout, Shape } from "plotly.js";
 import type { PlotParams } from "react-plotly.js";
-import type { Detector, MinuteRecord, Station } from "@munhub/shared";
+import type { Detector, MinuteRecord, Station } from "@muonhub/shared";
 import {
   DEFAULT_BETA_MIN_POINTS,
   buildAmplitudeHistogram,
   buildCorrectedRateInsights,
   estimateMpv,
   type CorrectedRateInsights,
-} from "@munhub/physics";
-import { Button, Card, Stat } from "@munhub/ui";
+} from "@muonhub/physics";
+import { Button, Card, Stat } from "@muonhub/ui";
 import { Activity, AlertTriangle, BarChart3, Gauge, Sigma } from "lucide-react";
 import {
   CorrectedRateChart,

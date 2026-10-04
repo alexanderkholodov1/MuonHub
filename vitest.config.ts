@@ -6,7 +6,6 @@ export default defineConfig({
     workspace: [
       "packages/*/vitest.config.ts",
       "apps/*/vitest.config.ts",
-      "services/*/vitest.config.ts",
     ],
   },
 });

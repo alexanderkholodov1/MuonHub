@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Card, Stat } from "@munhub/ui";
+import { Card, Stat } from "@muonhub/ui";
 import { MapPinned, RadioTower } from "lucide-react";
 import type { CityDetectorAggregate } from "./city-aggregation";
 

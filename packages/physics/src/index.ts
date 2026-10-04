@@ -1,9 +1,9 @@
 /**
- * @munhub/physics
+ * @muonhub/physics
  *
  * Pure scientific calculations for cosmic-ray / MIP-type particle data.
  * NO I/O dependencies — every function is a pure transformation testable in isolation.
- * Scientific basis: docs/research/THEORETICAL-FOUNDATION.md (binding). Spec: specs/0005-physics.
+ * Scientific basis: docs/science/THEORETICAL-FOUNDATION.md (binding). Spec: specs/0005-physics.
  *
  *   Dead-time correction : R_real = R_measured / (1 − R_measured × τ_DT)        (§4)
  *   Barometric correction: I(P) = I₀ · e^(β · (P − P₀)), β fitted per station   (§8A)

@@ -1,10 +1,10 @@
 /**
- * Route-level loading state for the MunHub Lab web app.
+ * Route-level loading state for the MuonHub web app.
  *
  * Mirrors the Card loading state so App Router transitions stay aligned with
  * the Observatory Dark design system.
  */
-import { Card } from "@munhub/ui";
+import { Card } from "@muonhub/ui";
 
 export default function Loading() {
   return (

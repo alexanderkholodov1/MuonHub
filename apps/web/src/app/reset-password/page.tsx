@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Mail } from "lucide-react";
-import { Button, Card } from "@munhub/ui";
+import { Button, Card } from "@muonhub/ui";
 import { useAuth } from "../../components/AuthProvider";
 import { authErrorToMessage } from "../../lib/auth-errors";
 
@@ -41,7 +41,7 @@ export default function ResetPasswordPage(): React.ReactElement {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
     if (!isValidEmail(normalizedEmail)) {
-      setError("Enter the email address linked to your MunHub account.");
+      setError("Enter the email address linked to your MuonHub account.");
       return;
     }
 
@@ -50,7 +50,7 @@ export default function ResetPasswordPage(): React.ReactElement {
     setSuccess(null);
     try {
       await sendPasswordReset(normalizedEmail);
-      setSuccess("If that email is registered, MunHub has sent password reset instructions.");
+      setSuccess("If that email is registered, MuonHub has sent password reset instructions.");
     } catch (err) {
       setError(authErrorToMessage(err));
     } finally {
@@ -72,7 +72,7 @@ export default function ResetPasswordPage(): React.ReactElement {
             lineHeight: 1.6,
           }}
         >
-          Enter your account email and MunHub will send a secure reset link through the active auth
+          Enter your account email and MuonHub will send a secure reset link through the active auth
           provider.
         </p>
 

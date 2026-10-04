@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MinuteRecord } from "@munhub/shared";
+import type { MinuteRecord } from "@muonhub/shared";
 import {
   CANONICAL_SLIM_MINUTE_RECORD_FIELDS,
   toCanonicalSlimMinuteRecord,

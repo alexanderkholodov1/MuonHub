@@ -1,4 +1,4 @@
-import { EventSummarySchema, type SignalRecord } from "@munhub/shared";
+import { EventSummarySchema, type SignalRecord } from "@muonhub/shared";
 import { describe, expect, it } from "vitest";
 import { buildEventSummary, calibrateNoiseThreshold } from "./event-science.js";
 

@@ -1,4 +1,4 @@
-import type { HardwareVersion, MinuteRecord } from "@munhub/shared";
+import type { HardwareVersion, MinuteRecord } from "@muonhub/shared";
 import { applyBarometricCorrection, fitBarometricBeta, type BarometricFit } from "./barometric.js";
 import { correctDeadTimeForHardware } from "./deadTime.js";
 import { countsZScore, poissonSigma, robustBaseline, type RobustBaseline } from "./statistics.js";

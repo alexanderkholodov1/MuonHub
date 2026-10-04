@@ -13,7 +13,7 @@
  */
 import React, { useState } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
-import { Card, Stat, Button } from "@munhub/ui";
+import { Card, Stat, Button } from "@muonhub/ui";
 
 // Realistic sample data for a USFQ (Quito, altitude 2850 m) CosmicWatch station.
 // Clearly marked as sample; never presented as live.
@@ -199,7 +199,7 @@ export default function DashboardPage() {
           title="Charged-particle rate · last 60 min"
           loading={cardState === "loading"}
           {...(cardState === "error"
-            ? { error: "Connection to munhub-1 RTDB lost. Retrying in 30 s." }
+            ? { error: "Connection to muonhub RTDB lost. Retrying in 30 s." }
             : {})}
           empty={cardState === "empty"}
           emptyMessage="No records in this time window. Detector may be offline."

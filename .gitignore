@@ -68,3 +68,6 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+# Personal Claude Code settings (machine-local permissions; never shared)
+.claude/settings.local.json

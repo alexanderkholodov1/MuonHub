@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Station } from "@munhub/shared";
+import type { Station } from "@muonhub/shared";
 import {
   aggregatePublicStationsByCity,
   cityKey,

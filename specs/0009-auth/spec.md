@@ -1,5 +1,8 @@
 # 0009 — Authentication (Firebase Auth behind DataProvider) + auth UI
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec) → Cursor (implementation, Claude model) → Gemini (cross-provider review, D35) → Adjutant (final review + PR)
 - **Depends on:** 0007 (FirebaseProvider — client SDK + `/users` access), 0008 (`@munhub/ui` primitives + web shell), 0003 (shared `User`/`Language` schemas). Stacks on PRs #42 + #43; rebase onto `main` once they merge.

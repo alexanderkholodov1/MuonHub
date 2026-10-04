@@ -1,184 +1,138 @@
 <div align="center">
 
-# MunHub Lab
+# MuonHub
 
 ### Turning cosmic-ray detectors across Latin America into one open, living observatory.
 
-<img src="https://img.shields.io/badge/status-building%20v6-5BD6A0" alt="Status: building v6">
-<img src="https://img.shields.io/badge/version-6.0.0--alpha.1-4CC9F0" alt="Version">
+<img src="https://img.shields.io/badge/status-v6%20rebuild-5BD6A0" alt="Status: v6 rebuild">
+<img src="https://img.shields.io/badge/version-6.0.0--alpha.0-4CC9F0" alt="Version">
 <img src="https://img.shields.io/badge/license-MIT-3FB950" alt="License: MIT">
 <img src="https://img.shields.io/badge/data-CC--BY%204.0-3FB950" alt="Data: CC-BY 4.0">
-<img src="https://img.shields.io/badge/i18n-EN%20%7C%20ES%20%7C%20PT--BR-9AA4B2" alt="Languages">
-<img src="https://img.shields.io/badge/architecture-clean%20%C2%B7%20provider--agnostic-C792EA" alt="Architecture">
 
 </div>
 
 ---
 
-**MunHub Lab is the platform that lets any university, lab, or student connect a particle detector
-and turn it into a node of a continental scientific network** — recording the cosmic radiation that
-rains on the Andes every second, correcting it to research grade, visualizing it live, and
-correlating it with the activity of the Sun. One detector is an experiment. A hundred, synchronized
-and open, are an observatory that **has never existed in this region before.**
+**MuonHub lets any university, lab, or student connect a particle detector and turn it into a node
+of a shared scientific network** — recording the cosmic radiation that reaches the ground every
+second, correcting it with documented physics, visualizing it live, and comparing it across devices,
+places, and external references such as neutron monitors and space-weather data.
+
+> ### Production vs. this branch
+> - **Production today is MuonHub v5**, served at
+>   **[munhub-lab.web.app](https://munhub-lab.web.app)** from the
+>   [`v5-production`](https://github.com/alexanderkholodov1/MuonHub/tree/v5-production) branch.
+>   It is frozen while a detector records with it.
+> - **`main` is the v6 rebuild.** v6 will be published at **muonhub.web.app** when its milestones are
+>   complete. Nothing on `main` deploys automatically.
 
 ---
 
-> ### 🚀 Live production vs. this branch
-> - **The platform running in production today is the stable v5 app**, served at
->   **[munhub-lab.web.app](https://munhub-lab.web.app)** from the **[`v5-production`](https://github.com/alexanderkholodov1/MunHub/tree/v5-production)**
->   branch. Fixes for the live site are applied there.
-> - **`main` is the in-progress v6 reconstruction** described below. It does **not** auto-deploy —
->   the production site is never redeployed from `main`. v6 will ship to its own URL when ready.
+## Why it matters
+
+- **A strong site for galactic cosmic rays.** The Ecuadorian Andes have a geomagnetic cutoff rigidity
+  of about 12–13 GV, among the highest on Earth: low-energy particles are shielded out, so the signal
+  is dominated by galactic cosmic rays (see the
+  [theoretical foundation](docs/science/THEORETICAL-FOUNDATION.md)).
+- **A network, not a lonely detector.** Stations in different cities and altitudes that measure at the
+  same time can confirm events that one detector alone cannot — for example a Forbush decrease seen
+  in several places and in neutron-monitor data.
+- **Honest, reproducible science.** Rates are corrected for detector dead time and local atmospheric
+  pressure with documented methods. Single-SiPM detectors report a **charged-particle (MIP-type)
+  rate**, not "muons". Raw data is never altered; every filtered or calibrated view records how it was
+  produced.
+- **Open by principle.** Code under MIT, public data under CC-BY 4.0.
 
 ---
 
-## 🌌 Why this matters to science
-
-Cosmic rays are messengers from the galaxy and from solar storms. Measuring them well, in the right
-place, is genuinely valuable — and **Ecuador sits in one of the best places on Earth to do it.**
-
-- **One of the cleanest galactic signals on Earth.** Ecuador lies under **some of the highest
-  geomagnetic cutoff rigidities on the planet**. Only the most energetic, purely *galactic*
-  cosmic rays make it through the magnetic shield — the local noise that contaminates
-  high-latitude stations is filtered out by the Earth itself.
-- **A continental network, not a lonely detector.** When stations from different cities and
-  altitudes measure *at the same time*, a simultaneous dip becomes a confirmed scientific event —
-  a **Forbush decrease**, the fingerprint of a solar storm sweeping past Earth. MunHub is built to
-  catch exactly that, and to correlate it with neutron monitors (NMDB) and space-weather feeds
-  (NOAA, NASA).
-- **Research-grade by construction.** Every rate is corrected for detector **dead time** and for
-  **local atmospheric pressure** (a β coefficient measured per station, not assumed). MunHub
-  reports the observables the physics actually supports — the **charged-particle flux** and the
-  **Landau amplitude spectrum** — so the data is trustworthy enough to publish and cite.
-- **Open by principle.** Public data under CC-BY, a reproducible correction pipeline, and a path to
-  a DOI per release. Science that anyone can verify, reuse, and build on.
-
-**The bottom line for a researcher:** an instrument-grade, real-time, openly shared cosmic-ray
-network — with per-station calibration and built-in space-weather correlation.
-
----
-
-## 🛰️ What it does
+## What v6 delivers
 
 | | |
 |---|---|
-| **Never loses data** | An installable agent reads the detector, backs up to local SQLite, and syncs when online — surviving reboots and outages. |
-| **Live, corrected science** | Real-time charged-particle rate and pressure, dead-time and barometric corrected, plus the amplitude spectrum — as the detector breathes. |
-| **A real network** | Institutions → stations → detectors, with public/shared/private visibility, station networks, and joint multi-station analysis. |
-| **Space-weather aware** | Correlation with NMDB neutron monitors, NOAA SWPC, NASA DONKI, and geomagnetic indices. |
-| **Built to grow** | Its own ML layer (anomaly & Forbush detection, barometric regression) is designed in from day one. |
+| **Never loses data** | A headless agent next to the detector reads the serial port 24/7, keeps everything in local SQLite, and syncs when online. |
+| **Live, corrected science** | Live charged-particle rate, pressure, and amplitude spectrum, with dead-time and barometric corrections. |
+| **Bring Your Own Detector** | Configure any device type (columns, units, channels, geometry) and share it with the community, with review states. |
+| **Comparison and coincidences** | Deterministic tools to compare streams and processing views, including stacked devices in coincidence. |
+| **Controllable calibration** | Versioned calibrations and recipes defined by the user; automatic routines only propose. |
+| **Free by design** | Runs entirely on Firebase's no-cost plan, engineered around its quotas. |
+
+Plan and status: [roadmap](docs/product/ROADMAP.md) · [status](docs/STATUS.md).
 
 ---
 
-## ⚙️ Engineering, built to a standard
-
-- **Clean, provider-agnostic architecture.** The app never talks to a database directly; it talks to
-  a `DataProvider` interface. The same product runs on a **free cloud tier today** and on a
-  **self-hosted server tomorrow** by swapping one implementation — **zero vendor lock-in.**
-- **Typed monorepo.** TypeScript (strict) across shared contracts, a pure scientific core, the data
-  layer, the design system, the web app, and the device agent — one source of truth.
-- **Offline-first at the edge.** Heavy work runs on the detector's machine, keeping the platform
-  light enough to run indefinitely on free infrastructure.
-- **Quality-gated.** Every change ships through a pull request that must pass CI (build · test ·
-  lint · typecheck), secret scanning, and cross-review before it can touch a protected `main`.
-- **Spec-driven & documented.** No code without a spec; a design system ("Observatory Dark"); a
-  living changelog; full internationalization (EN · ES · PT-BR).
+## Repository structure
 
 ```
-[USB detector] ──serial──▶ agent (Tauri)              web (Next.js)
-                           ├ reads + validates         ├ public landing
-                           ├ per-minute averages        ├ station dashboards
-                           ├ SQLite local backup        └ admin console
-                           └ offline sync queue ─┐           ▲
-                                                 ▼            │
-                                    data-provider (agnostic) ─┘
-                                                 ▲
-        ┌──────────── pure core (no I/O, fully tested) ───────┐
-        shared (contracts)   physics (corrections, spectra)   ui (design system)
+apps/web               Next.js static export — public site and dashboards
+apps/agent             Device agent (headless Node.js daemon from milestone M1)
+packages/shared        zod contracts and types
+packages/physics       Pure scientific functions (no I/O, numerically tested)
+packages/data-provider Data-access interface + Firebase implementation
+packages/ui            Design system "Observatory Dark"
+infra/firebase         Firebase configuration and security rules
+specs/                 Specifications (one per unit of work)
+docs/                  Product, decisions, architecture, science, operations, process, archive
 ```
 
----
+## Tech stack
 
-## 📦 Repository structure
+**TypeScript** (strict) · **pnpm + Turborepo** · **Next.js** (static export) · **Tailwind** ·
+**MapLibre** · **uPlot** (charts, from M2) · **Node.js daemon + SQLite** (agent, from M1) ·
+**Firebase** (Realtime Database, Firestore, Authentication, Hosting, App Check, Cloud Messaging) ·
+**Vitest · ESLint · gitleaks · GitHub Actions**
 
-```
-apps/web            Next.js — landing, dashboards, admin (static export, Phase A)
-apps/agent          Tauri — serial reading, SQLite backup, sync queue
-services/api        Backend / edge functions (Phase B)
-services/ai         ML pipeline — anomaly & Forbush detection, barometric β (Phase B)
-packages/shared     Types, zod schemas, constants, i18n keys — the contracts
-packages/physics    Pure scientific calculations (no I/O, fully testable)
-packages/data-provider  DataProvider interface + Firebase/Supabase implementations
-packages/ui         Design system (Tailwind + shadcn/ui + Plotly) — "Observatory Dark"
-specs/              Spec-Driven Development — one spec per unit of work
-docs/               Technical docs, user manual, design language, scientific foundation
-planning/           Master plan, architecture, data model, decision log
-infra/              CI, fleet tooling, deployment
-```
+## Development
 
-## 🧰 Tech stack
-
-**TypeScript** (strict) · **pnpm + Turborepo** · **Next.js · Tailwind · shadcn/ui · Plotly ·
-MapLibre** · **Tauri + SQLite** · **Firebase** (Phase A) → **Supabase + TimescaleDB** (Phase B) ·
-**Cloudflare R2** · **Vitest · ESLint · gitleaks · GitHub Actions**
-
----
-
-## 🚀 Getting started (development)
-
-> Requires Node ≥ 20 and pnpm ≥ 9.
+Requires Node.js ≥ 22.13 and pnpm 11 (via corepack).
 
 ```bash
 pnpm install
-pnpm build       # build all packages (Turborepo)
+pnpm build       # build all packages
 pnpm test        # run the test suites
 pnpm lint        # lint
 pnpm typecheck   # strict type checking
 ```
 
-## 🗺️ Roadmap
+---
 
-The plan of reconstruction is being executed phase by phase, each gated by tests
-and review.
+## History
 
-| Phase | Scope | Status |
+| Version | Name | What it was |
 |---|---|---|
-| **F0** | Engineering foundation: CI, protected `main`, multi-agent workflow | ✅ done |
-| **F1** | Core: typed contracts, scientific engine, app skeletons | 🔄 in progress |
-| **F2** | Migrate the full historical dataset into v6 | ⏳ |
-| **F3** | Public landing + live demo | ⏳ |
-| **F4+** | Network features, space-weather correlation, ML layer, admin console | ⏳ |
-
-Live progress: [`docs/STATUS.md`](docs/STATUS.md) · full plan: [`planning/`](planning/).
+| 1.0 | MuNRa | A Python desktop application that read the detector and stored data in a local SQLite database. |
+| 2.0 | MuNRa | The move to a web platform with a shared Firebase database. |
+| 3.0 – 3.2 | MuNRa | Accounts with roles, recording sessions, and an administration panel. |
+| 4.0 – 4.8 | MuNRa | Reading the detector directly from the browser (Web Serial), security hardening, a modular codebase, translations, fast downsampled charts, shared profiles, and custom time ranges. |
+| 5.x | MunHub · MunHub Lab | A full rewrite under a new name: bandwidth-efficient live data, a bridge for browsers without Web Serial, a standalone data terminal, session upload with duplicate detection, migration tools, organizations, and six chart types. Revived in production in 2026 on a new Firebase project. |
+| 6.0 | **MuonHub** | A ground-up rebuild as a typed monorepo: a headless agent, Bring Your Own Detector, user-controlled calibration and comparison, and a free-tier-only Firebase architecture. **In progress.** |
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | | |
 |---|---|
-| [Technical docs](docs/technical/) | Architecture (C4), data model, serial formats, engineering standards |
-| [User manual](docs/user-manual/) | Concepts & terminology — institutions, stations, detectors, sessions |
-| [Design language](docs/design/DESIGN-LANGUAGE.md) | "Observatory Dark" visual system |
-| [Scientific foundation](docs/research/THEORETICAL-FOUNDATION.md) | The physics MunHub is built on |
-| [Changelog](CHANGELOG.md) | Every notable change, release by release |
-| [How it's built](AGENTS.md) | Spec-driven, multi-agent development workflow |
+| [Agent and contributor contract](AGENTS.md) | How work is done in this repository |
+| [Product](docs/product/) | Vision, roadmap, backlog, public site plan |
+| [Decisions](docs/decisions/) | Architecture decision records and the historical decision log |
+| [Science](docs/science/) | Theoretical foundation, serial formats, research notes |
+| [Operations](docs/operations/) | Environments, Firebase setup, remote access |
+| [Design language](docs/design/DESIGN-LANGUAGE.md) | The "Observatory Dark" visual system |
+| [Changelog](CHANGELOG.md) | Notable changes |
 
 ---
 
-## 👤 Author & acknowledgments
+## Author and acknowledgments
 
-Created and led by **Alexander Kholodov** (researcher, USFQ), under the supervision of **Dennis
-Cazar**, in the **LEOPARD** laboratory at Universidad San Francisco de Quito, within the
-**EL-BONGO / Erasmus+ CBHE** project. Detector firmware: **MuNRa** (CosmicWatch-derived).
+Created and led by **Alexander Kholodov** (USFQ), under the supervision of **Dennis Cazar**, in the
+**LEOPARD** laboratory at Universidad San Francisco de Quito, within the **EL-BONGO / Erasmus+ CBHE**
+project. Detector firmware: **MuNRa** (derived from CosmicWatch v3X).
 
-## 📄 License & citation
+## License
 
-Code under the [MIT License](LICENSE); data under **CC-BY 4.0**. A `CITATION.cff` and a Zenodo DOI
-accompany tagged releases.
-
----
+Code under the [MIT License](LICENSE); public data under **CC-BY 4.0**. Citation metadata and dataset
+DOIs are planned for the launch milestone.
 
 <div align="center">
-<sub>Built in the Andes, under one of the cleanest cosmic-ray skies on Earth. 🏔️</sub>
+<sub>Built in the Andes.</sub>
 </div>

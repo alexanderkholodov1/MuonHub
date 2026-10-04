@@ -1,5 +1,8 @@
 # 0004 — DataProvider interface (backend-agnostic data access)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** in-progress
 - **Responsible:** Adjutant (Opus) — keystone abstraction
 - **Depends on:** 0003 (shared contracts); D4 (master plan); `planning/01-ARCHITECTURE.md` §3

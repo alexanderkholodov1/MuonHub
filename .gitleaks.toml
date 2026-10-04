@@ -1,7 +1,7 @@
-# MunHub Lab v6.0 — gitleaks config (CI secret scan).
+# MuonHub — gitleaks config (CI secret scan).
 # Extends the default ruleset; adds allowlist for paths that are gitignored or intentionally public.
 
-title = "MunHub gitleaks"
+title = "MuonHub gitleaks"
 
 [extend]
 useDefault = true

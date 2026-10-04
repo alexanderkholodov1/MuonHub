@@ -1,5 +1,8 @@
 # 0007 — FirebaseProvider (concrete DataProvider over munhub-1)
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** ready for implementation
 - **Responsible:** Adjutant (spec) → Sonnet executor (implementation) → cross-provider review (D35)
 - **Depends on:** 0003 (shared contracts + zod schemas), 0004 (`DataProvider` interface),

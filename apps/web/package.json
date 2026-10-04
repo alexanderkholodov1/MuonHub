@@ -1,8 +1,8 @@
 {
-  "name": "@munhub/web",
-  "version": "0.1.0",
+  "name": "@muonhub/web",
+  "version": "6.0.0-alpha.0.4.3",
   "private": true,
-  "description": "MunHub Lab web app (Next.js static export): public landing, station dashboards, admin console",
+  "description": "MuonHub web app (Next.js static export): public landing, station dashboards, admin console",
   "license": "MIT",
   "scripts": {
     "build": "next build",
@@ -26,10 +26,10 @@
     "vitest": "*"
   },
   "dependencies": {
-    "@munhub/data-provider": "workspace:*",
-    "@munhub/physics": "workspace:*",
-    "@munhub/shared": "workspace:*",
-    "@munhub/ui": "workspace:*",
+    "@muonhub/data-provider": "workspace:*",
+    "@muonhub/physics": "workspace:*",
+    "@muonhub/shared": "workspace:*",
+    "@muonhub/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.3.1",
     "geist": "^1.7.2",
     "lucide-react": "^0.511.0",

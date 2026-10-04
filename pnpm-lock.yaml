@@ -32,13 +32,13 @@ importers:
 
   apps/agent:
     dependencies:
-      '@munhub/data-provider':
+      '@muonhub/data-provider':
         specifier: workspace:*
         version: link:../../packages/data-provider
-      '@munhub/physics':
+      '@muonhub/physics':
         specifier: workspace:*
         version: link:../../packages/physics
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
     devDependencies:
@@ -51,16 +51,16 @@ importers:
 
   apps/web:
     dependencies:
-      '@munhub/data-provider':
+      '@muonhub/data-provider':
         specifier: workspace:*
         version: link:../../packages/data-provider
-      '@munhub/physics':
+      '@muonhub/physics':
         specifier: workspace:*
         version: link:../../packages/physics
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@munhub/ui':
+      '@muonhub/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@tailwindcss/postcss':
@@ -130,7 +130,7 @@ importers:
 
   packages/data-provider:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
       firebase:
@@ -155,7 +155,7 @@ importers:
 
   packages/physics:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -184,7 +184,7 @@ importers:
 
   packages/ui:
     dependencies:
-      '@munhub/shared':
+      '@muonhub/shared':
         specifier: workspace:*
         version: link:../shared
       class-variance-authority:
@@ -215,27 +215,6 @@ importers:
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
-      typescript:
-        specifier: '*'
-        version: 5.9.3
-      vitest:
-        specifier: '*'
-        version: 3.2.6(@types/node@22.19.21)(jiti@2.7.0)(jsdom@29.1.1)(lightningcss@1.32.0)(yaml@2.9.0)
-
-  services/ai: {}
-
-  services/api:
-    dependencies:
-      '@munhub/data-provider':
-        specifier: workspace:*
-        version: link:../../packages/data-provider
-      '@munhub/physics':
-        specifier: workspace:*
-        version: link:../../packages/physics
-      '@munhub/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-    devDependencies:
       typescript:
         specifier: '*'
         version: 5.9.3
@@ -1399,6 +1378,7 @@ packages:
   '@plotly/mapbox-gl@1.13.4':
     resolution: {integrity: sha512-sR3/Pe5LqT/fhYgp4rT4aSFf1rTsxMbGiH6Hojc7PH36ny5Bn17iVFUjpzycafETURuFbLZUfjODO8LvSI+5zQ==}
     engines: {node: '>=6.4.0'}
+    deprecated: This package is deprecated as of August 2026. plotly.js v4 uses MapLibre for map traces — see https://github.com/maplibre/maplibre-gl-js.
 
   '@plotly/point-cluster@3.1.9':
     resolution: {integrity: sha512-MwaI6g9scKf68Orpr1pHZ597pYx9uP8UEFXLPbsCmuw3a84obwz6pnMXGc90VhgDNeNiLEdlmuK7CPo+5PIxXw==}
@@ -3124,6 +3104,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'

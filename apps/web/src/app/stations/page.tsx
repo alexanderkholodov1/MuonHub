@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import type { Station } from "@munhub/shared";
-import { Button, Card } from "@munhub/ui";
+import type { Station } from "@muonhub/shared";
+import { Button, Card } from "@muonhub/ui";
 import { Plus } from "lucide-react";
 import { useAuth } from "../../components/AuthProvider";
 import { getDataProvider } from "../../lib/data-provider";

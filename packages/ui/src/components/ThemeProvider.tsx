@@ -27,7 +27,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "munhub-theme";
+const STORAGE_KEY = "muonhub-theme";
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "dark";

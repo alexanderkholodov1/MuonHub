@@ -1,7 +1,7 @@
 /**
- * MunHub Lab — global stylesheet.
+ * MuonHub — global stylesheet.
  *
- * Imports the Observatory Dark token system from @munhub/ui.
+ * Imports the Observatory Dark token system from @muonhub/ui.
  * The @theme block in tokens.css configures Tailwind v4 with semantic tokens,
  * so all components use `bg-surface`, `text-secondary`, etc.
  *
@@ -10,7 +10,7 @@
  */
 
 /* Observatory Dark design tokens + Tailwind v4 base */
-@import "../../node_modules/@munhub/ui/src/styles/tokens.css";
+@import "../../node_modules/@muonhub/ui/src/styles/tokens.css";
 @import "../../node_modules/maplibre-gl/dist/maplibre-gl.css";
 
 /* Scan workspace UI package for Tailwind class names */

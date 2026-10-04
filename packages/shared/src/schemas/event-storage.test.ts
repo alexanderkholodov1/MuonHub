@@ -181,7 +181,7 @@ describe("noise calibration fields", () => {
       stationId: "st_1",
       deviceToken: "tok_abc",
       hardwareModel: "CosmicWatch v3X",
-      firmwareVersion: "MunHub Agent 0.1",
+      firmwareVersion: "MuonHub Agent 0.1",
       hwVersion: "v3X",
       calibration: {
         triggerAdcMin: 120,
@@ -215,7 +215,7 @@ describe("noise calibration fields", () => {
         stationId: "st_1",
         deviceToken: "tok_abc",
         hardwareModel: "CosmicWatch v3X",
-        firmwareVersion: "MunHub Agent 0.1",
+        firmwareVersion: "MuonHub Agent 0.1",
         hwVersion: "v3X",
         calibration: {
           noiseCalibration: {

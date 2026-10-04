@@ -129,5 +129,5 @@ pub fn run() {
             close_serial_port
         ])
         .run(tauri::generate_context!())
-        .expect("MunHub Agent Tauri runtime failed");
+        .expect("MuonHub Agent Tauri runtime failed");
 }

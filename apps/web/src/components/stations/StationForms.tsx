@@ -9,10 +9,10 @@ import type {
   StationPlacement,
   StationType,
   Visibility,
-} from "@munhub/shared";
-import { DetectorSchema, StationSchema } from "@munhub/shared";
+} from "@muonhub/shared";
+import { DetectorSchema, StationSchema } from "@muonhub/shared";
 import { AlertTriangle, RotateCcw, Wand2 } from "lucide-react";
-import { Button, Card } from "@munhub/ui";
+import { Button, Card } from "@muonhub/ui";
 import { getDataProvider } from "../../lib/data-provider";
 import {
   HARDWARE_VERSION_OPTIONS,

@@ -1,10 +1,10 @@
 [package]
-name = "munhub-agent"
+name = "muonhub-agent"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "munhub_agent_lib"
+name = "muonhub_agent_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

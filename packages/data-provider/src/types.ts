@@ -1,6 +1,6 @@
 /**
  * Supporting types for the {@link DataProvider} interface.
- * Entity types come from `@munhub/shared`; these are the query/streaming shapes around them.
+ * Entity types come from `@muonhub/shared`; these are the query/streaming shapes around them.
  */
 import type {
   Station,
@@ -10,7 +10,7 @@ import type {
   MinuteRecord,
   RealtimeRecord,
   Visibility,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 
 /** Inclusive time window in epoch milliseconds (UTC). */
 export interface TimeRange {

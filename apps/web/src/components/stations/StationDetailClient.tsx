@@ -3,8 +3,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import type { Detector, Station } from "@munhub/shared";
-import { Button, Card } from "@munhub/ui";
+import type { Detector, Station } from "@muonhub/shared";
+import { Button, Card } from "@muonhub/ui";
 import { ArrowLeft, Edit3, Plus } from "lucide-react";
 import { useAuth } from "../AuthProvider";
 import { getDataProvider } from "../../lib/data-provider";

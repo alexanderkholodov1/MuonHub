@@ -1,4 +1,4 @@
-import { MinuteRecordSchema, type MinuteRecord } from "@munhub/shared";
+import { MinuteRecordSchema, type MinuteRecord } from "@muonhub/shared";
 import type { RawReading } from "./parsers/index.js";
 
 const MINUTE_MS = 60_000;

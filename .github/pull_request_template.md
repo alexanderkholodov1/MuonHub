@@ -1,40 +1,34 @@
-<!-- MunHub Lab v6.0 — Pull Request. Fill every section. PRs that skip this are not reviewable. -->
+<!-- MuonHub — Milestone pull request. A PR opens only when its milestone is planned, tested,
+     validated in real practice, and corrected (ADR-008). Fill every section. -->
 
-## Spec & scope
-- **Spec:** specs/NNNN-<slug>/spec.md
-- **Issue:** #
-- **Phase / Epic:** F? · EPIC-?
-- **Lane (package(s) touched):**
-- **Authoring agent / provider:**
+## Milestone
+- **Milestone:** M? — <name> (see `docs/product/ROADMAP.md`)
+- **Version at PR time:** `6.0.0-alpha.?.?.?`
+- **Approved step plan:** `docs/product/plans/M<n>-<slug>.md`
+- **Specs delivered:** `specs/NNNN-…`
 
-## What changed & why
-<!-- One paragraph. What this PR delivers and the reasoning. -->
+## What this milestone delivers
+<!-- What the project gains, in product/engineering terms (CONTRIBUTING.md). -->
 
-## Acceptance criteria (copy from the spec, check what is met)
-- [ ] CA1:
-- [ ] CA2:
-- [ ] CA3:
+## Validation
+- [ ] `pnpm typecheck && pnpm lint && pnpm build && pnpm test` green locally
+- [ ] Firebase emulator tests green (`pnpm --filter @muonhub/data-provider test:emulator`)
+- [ ] Real-practice validation done (describe: hardware, duration, conditions, results)
+- [ ] Reviewer subagents run (author ≠ reviewer): code-reviewer · security-reviewer (rules/auth) ·
+      silent-failure-hunter · docs-auditor · physicist (science) — findings resolved or recorded
+<!-- Paste evidence: outputs, measurements, screenshots. -->
 
-## Tests & evidence
-- [ ] Unit/integration tests added or updated
-- [ ] Numeric tests vs. THEORETICAL-FOUNDATION values (physics PRs only)
-- [ ] `pnpm build && pnpm test && pnpm lint && pnpm typecheck` green locally
-<!-- Paste relevant output / coverage notes. -->
+## Guardrails (AGENTS.md)
+- [ ] Data integrity: raw data never overwritten; derived data labelled with provenance (ADR-006)
+- [ ] Scientific honesty: single-SiPM = charged-particle / MIP-type rate, never "muons"
+- [ ] Free tier only; quota impact assessed (ADR-005)
+- [ ] Backend SDKs only inside `packages/data-provider`
+- [ ] Security baseline respected; no secrets in code or logs (ADR-009)
+- [ ] English everywhere; terminology per ADR-004
+- [ ] Docs updated per the AGENTS.md matrix; `docs/STATUS.md` updated; changelog fragment added
 
-## Self-review checklist (D28 / D32 / D42 / D44 / guardrails)
-- [ ] All code in **English** (identifiers, comments, commits, i18n keys)
-- [ ] **Docs updated** in this PR (README/roadmap/stack, `docs/`, this spec) — D42
-- [ ] **Changelog fragment** added in `changelog.d/` — D42
-- [ ] This description states **what the change delivers** (no process narration / "as requested" / apologies) — D44
-- [ ] Stayed in lane — did **not** edit shared contracts unless this is a contracts spec
-- [ ] No direct Firebase/Supabase SDK calls outside `packages/data-provider`
-- [ ] No `private/` access, no secrets in code or logs
-- [ ] Scientific honesty respected (no "muons" for single-SiPM)
-- [ ] Branch is `spec/NNNN-*` (or `chore/*`/`feat/*`); **not** targeting a direct push to main
-
-## Risks / follow-ups
-<!-- Known limitations, anything reviewers should scrutinize, deferred work. -->
+## Known limitations and follow-ups
+<!-- Deferred work, open questions, anything reviewers should scrutinize. -->
 
 ---
-> Reviewers: CI + Cursor Bugbot + Copilot review run automatically. Claude personas
-> (Physicist / Security / Architect) review per CODEOWNERS. **Only Alexander merges to `main`.**
+> Only the maintainer merges to `main`.

@@ -1,4 +1,8 @@
-# MunHub Agent
+# MuonHub Agent
+
+> **First-attempt code.** This package is rebuilt in milestone M1 as a headless Node.js daemon
+> (ADR-007, [`docs/decisions/`](../../docs/decisions/)); the Tauri scaffold below is replaced. Known
+> defects are listed in [`docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md`](../../docs/audit/2026-10-02-V6-RESET-SESSION-RECORD.md).
 
 The agent is the standard ingestion path for physical detectors. Spec 0013 delivers the pure
 TypeScript acquisition core:
@@ -12,7 +16,7 @@ TypeScript acquisition core:
 
 ## CI scope
 
-`pnpm --filter @munhub/agent test`, `lint`, and `typecheck` validate the TypeScript core without
+`pnpm --filter @muonhub/agent test`, `lint`, and `typecheck` validate the TypeScript core without
 requiring Tauri, Rust, or a connected detector. The package build script remains a stub until the
 packaging milestone.
 

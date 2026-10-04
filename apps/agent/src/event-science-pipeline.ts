@@ -1,4 +1,4 @@
-import { buildEventSummary, calibrateNoiseThreshold, type NoiseThresholdCalibrationOptions } from "@munhub/physics";
+import { buildEventSummary, calibrateNoiseThreshold, type NoiseThresholdCalibrationOptions } from "@muonhub/physics";
 import {
   NoiseCalibrationSchema,
   SignalRecordSchema,
@@ -7,7 +7,7 @@ import {
   type NoiseCalibration,
   type SignalRecord,
   type StorageTierConfig,
-} from "@munhub/shared";
+} from "@muonhub/shared";
 import type { RawReading } from "./parsers/index.js";
 
 const DEFAULT_INITIAL_CALIBRATION_SAMPLE_SIZE = 64;

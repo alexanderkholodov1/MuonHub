@@ -1,7 +1,7 @@
 name: CI
 
 # Quality gate for every PR (and pushes to main). Must be green before a PR is mergeable.
-# Defense-in-depth per the AFLEK kit (doctrine rule 7) and specs/0002-ci-cd.
+# The author of a change is never its only reviewer: CI is the shared referee (docs/process/WORKFLOW.md).
 
 on:
   pull_request:
@@ -78,7 +78,7 @@ jobs:
         run: pnpm build
 
       - name: FirebaseProvider integration + rules tests (emulator)
-        run: pnpm --filter @munhub/data-provider test:emulator
+        run: pnpm --filter @muonhub/data-provider test:emulator
 
   secret-scan:
     name: gitleaks (secret scan)

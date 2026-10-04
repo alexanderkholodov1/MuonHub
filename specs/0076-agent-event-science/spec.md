@@ -1,5 +1,8 @@
 # 0076 — Agent event science: noise auto-calibration + EventSummary + NTP clock sync
 
+> **Superseded (2026-10-03):** first v6 attempt, kept as a historical record. The v6 rebuild
+> replaces this work — see [`specs/README.md`](../README.md) and [`docs/product/ROADMAP.md`](../../docs/product/ROADMAP.md).
+
 - **Status:** implemented
 - **Responsible:** Adjutant (spec) → Cursor (impl) → independent review (Cursor review-only / Gemini
   when quota returns) → Adjutant (verify + macro + PR)

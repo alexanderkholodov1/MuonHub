@@ -4,7 +4,7 @@ import {
   createFirebaseProvider,
   type DataProvider,
   type FirebaseClientConfig,
-} from "@munhub/data-provider";
+} from "@muonhub/data-provider";
 
 let providerPromise: Promise<DataProvider> | null = null;
 
@@ -70,7 +70,7 @@ export function getDataProviderConfigState(): DataProviderConfigState {
       status: "missing-config",
       missing,
       message:
-        "Backend not configured. Set the NEXT_PUBLIC_FIREBASE_* variables documented in .env.example to connect the MunHub data provider.",
+        "Backend not configured. Set the NEXT_PUBLIC_FIREBASE_* variables documented in .env.example to connect the MuonHub data provider.",
     };
   }
 
