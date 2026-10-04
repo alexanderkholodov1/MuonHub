@@ -10,9 +10,8 @@ acquires, stores, visualizes, compares, and analyzes data from low-cost detector
 plastic scintillators with SiPMs today; other particle detectors, a muograph, and a seismic sensor
 tomorrow), and aims to grow into a **multi-university network across Latin America**.
 
-It was born as Alexander Kholodov's contribution to Dennis Cazar's research at the LEOPARD
-laboratory (USFQ, Quito, Ecuador), within the EL-BONGO / Erasmus+ CBHE project
-(source: [`../archive/planning/00-MASTER-PLAN.md`](../archive/planning/00-MASTER-PLAN.md)).
+It was created by Alexander Kholodov (USFQ, Quito, Ecuador); its first detector is used by
+LEOPARD LAB, USFQ.
 Its first station is on the USFQ campus in Cumbayá (Quito metropolitan area) at roughly 2,400 m —
 the station's barometer reads ≈ 768 hPa [verified by running, 2026-10-03], consistent with about
 2.4 km in a tropical atmosphere (the USFQ weather station EMA is reported at 2,391 m), not with

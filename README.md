@@ -124,9 +124,8 @@ pnpm typecheck   # strict type checking
 
 ## Author and acknowledgments
 
-Created and led by **Alexander Kholodov** (USFQ), under the supervision of **Dennis Cazar**, in the
-**LEOPARD** laboratory at Universidad San Francisco de Quito, within the **EL-BONGO / Erasmus+ CBHE**
-project. Detector firmware: **MuNRa** (derived from CosmicWatch v3X).
+Created and led by **Alexander Kholodov** (USFQ). The detector is used by **LEOPARD LAB, USFQ**.
+Detector firmware: **MuNRa** (derived from CosmicWatch v3X).
 
 ## License
 

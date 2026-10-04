@@ -132,7 +132,8 @@ Data belongs to **streams**, never to a "detector". Comparisons are made between
    | Anything | a `changelog.d/<slug>.<category>.md` fragment |
 
 10. **Commit and PR style.** State what the change delivers, for a reader of the history; never narrate
-    the process or frame a change as a reaction to review. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+    the process or frame a change as a reaction to review. **Pull requests never carry
+    tool-attribution lines** (e.g. "Generated with Claude Code"). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 

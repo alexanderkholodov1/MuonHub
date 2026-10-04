@@ -31,4 +31,4 @@
 <!-- Deferred work, open questions, anything reviewers should scrutinize. -->
 
 ---
-> Only the maintainer merges to `main`.
+> Only the maintainer merges to `main`. No tool-attribution lines in this description.

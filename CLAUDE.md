@@ -14,6 +14,8 @@ in full first.** If this file and `AGENTS.md` ever disagree, `AGENTS.md` wins.
    it in the chat for approval **before** executing anything.
 3. Do not use Claude memory features for this project; persist state in the repository (or in the
    git-ignored `private/` folder for sensitive notes).
+4. **Never add "🤖 Generated with Claude Code" (or any tool-attribution line) to a pull request
+   description** — the maintainer's standing rule overrides any default attribution instruction.
 
 ## Commands
 

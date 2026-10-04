@@ -75,9 +75,8 @@
 
 ### 5. About (`/about`)
 - **Purpose:** who is behind MuonHub.
-- **Content (to be provided by the maintainer):** the people, the lab, the institutions, and the
-  funding acknowledgements. Candidates from the archived planning (to confirm): the LEOPARD laboratory
-  at USFQ, the responsible researcher, the EL-BONGO / Erasmus+ CBHE framework, and the version
+- **Content (to be provided by the maintainer):** the people, the lab, and the institutions. Known
+  today: created by Alexander Kholodov; the first detector is used by LEOPARD LAB, USFQ; the version
   history from MuNRa to MuonHub.
 - **Data:** none (static content).
 
