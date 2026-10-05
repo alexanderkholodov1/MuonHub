@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/shared",
-  "version": "6.0.0-alpha.1.1.1",
+  "version": "6.0.0-alpha.1.2",
   "private": true,
   "description": "Shared TypeScript types, Zod schemas, constants, i18n keys, and pure utilities",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "muonhub",
-  "version": "6.0.0-alpha.1.1.1",
+  "version": "6.0.0-alpha.1.2",
   "private": true,
   "description": "MuonHub — Cosmic ray detector monitoring platform (v6 reconstruction, pre-alpha)",
   "license": "MIT",
