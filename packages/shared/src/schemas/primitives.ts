@@ -1,8 +1,9 @@
+// first-attempt contract, removed in M1 step 7.
 /**
  * Reusable primitive schemas (identifiers, timestamps, geographic ranges).
  * Keeping these in one place keeps every entity consistent.
  */
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /** A non-empty identifier string (Firebase key / UUID / token). */
 export const IdSchema = z.string().min(1);

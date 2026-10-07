@@ -112,3 +112,4 @@ data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seis
 | 6.0.0-alpha.1.1.1 | 1 — fix | vitest 5 no longer excludes `dist/` by default, so compiled tests ran twice (246 instead of 145); `dist/` excluded in every vitest config. |
 | 6.0.0-alpha.1.2 | 2 — specs drafted | 0083–0087 written and reviewed (physicist, security-reviewer, silent-failure-hunter); findings applied; awaiting the maintainer's spec gate. |
 | — | spec gate | specs 0083–0087 approved 2026-10-07 with the recommendations: dedicated per-machine agent account as station editor; first-attempt web moved to `legacy/` (option b); proposed numeric defaults accepted. |
+| 6.0.0-alpha.1.3 | 3 — contracts v2 | `packages/shared/src/v2` (zod 4, `v2` namespace), built-in device types, compact minute serializer (10 000-record round trip), `docs/architecture/DATA-MODEL.md`; v1 kept on `zod/v3` until step 7; shared tests 41 → 68. |

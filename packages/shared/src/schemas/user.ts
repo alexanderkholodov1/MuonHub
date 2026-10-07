@@ -1,5 +1,6 @@
+// first-attempt contract, removed in M1 step 7.
 /** User — a person's account (D25: unique email + username + display name). */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { IdSchema, UsernameSchema, CountryCodeSchema } from "./primitives.js";
 import { RoleSchema, LanguageSchema } from "./enums.js";
 

@@ -1,0 +1,1 @@
+- zod 4; the first-attempt contracts compile on its `zod/v3` compatibility layer until M1 step 7.

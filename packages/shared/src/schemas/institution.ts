@@ -1,5 +1,6 @@
+// first-attempt contract, removed in M1 step 7.
 /** Institution — a university/organization grouping users and stations (D8). */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { IdSchema, CountryCodeSchema } from "./primitives.js";
 import { VisibilitySchema } from "./enums.js";
 

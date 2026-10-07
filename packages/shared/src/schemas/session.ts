@@ -1,5 +1,6 @@
+// first-attempt contract, removed in M1 step 7.
 /** Session — one continuous data-taking run of a detector. */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { IdSchema, EpochMsSchema } from "./primitives.js";
 import { StorageTierConfigSchema } from "./storage.js";
 

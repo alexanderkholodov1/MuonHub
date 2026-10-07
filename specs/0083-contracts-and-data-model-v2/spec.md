@@ -1,6 +1,6 @@
 # 0083 — Domain contracts and data model v2
 
-- **Status:** approved (2026-10-07)
+- **Status:** done (2026-10-07, `6.0.0-alpha.1.3`)
 - **Milestone:** M1 — Core + Agent (version range `6.0.0-alpha.1.x`)
 - **Owner:** Adjutant (spec and implementation of `packages/shared`); data-layer implementation in
   spec 0084/step 6; reviewers: physicist (data semantics), security-reviewer (personal data, rules
@@ -192,9 +192,9 @@ multichannel events, or sampled data (M4/6.x); migration tooling (M5).
 
 ## Tasks
 
-- [ ] T1: upgrade zod to 4 in the catalog; write v2 schemas with tests first.
-- [ ] T2: compact serializer + property test.
-- [ ] T3: built-in device types.
-- [ ] T4: apply the approved legacy option.
-- [ ] T5: `docs/architecture/DATA-MODEL.md`; update `docs/architecture/ARCHITECTURE.md` links.
-- [ ] T6: changelog fragment in `changelog.d/`.
+- [x] T1: upgrade zod to 4 in the catalog; write v2 schemas with tests first.
+- [x] T2: compact serializer + property test.
+- [x] T3: built-in device types.
+- [x] T4: apply the approved legacy option.
+- [x] T5: `docs/architecture/DATA-MODEL.md`; update `docs/architecture/ARCHITECTURE.md` links.
+- [x] T6: changelog fragment in `changelog.d/`.

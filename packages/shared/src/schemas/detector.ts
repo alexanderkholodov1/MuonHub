@@ -1,8 +1,9 @@
+// first-attempt contract, removed in M1 step 7.
 /**
  * Detector — the physical CosmicWatch device inside a station (D21). Data belongs to the detector
  * because calibration is per-device.
  */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { IdSchema, EpochMsSchema } from "./primitives.js";
 import { HardwareVersionSchema, DetectorStatusSchema } from "./enums.js";
 

@@ -1,4 +1,5 @@
-import { z } from "zod";
+// first-attempt contract, removed in M1 step 7.
+import { z } from "zod/v3";
 import { IdSchema, EpochMsSchema } from "./primitives.js";
 
 const NonNegative = z.number().nonnegative();

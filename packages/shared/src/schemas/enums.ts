@@ -1,10 +1,11 @@
+// first-attempt contract, removed in M1 step 7.
 /**
  * Closed vocabularies shared across the MuonHub domain.
  *
  * Each is a Zod enum so it validates at runtime and yields a literal union type at compile time.
  * See `docs/archive/planning/02-DATA-MODEL.md` and `docs/science/THEORETICAL-FOUNDATION.md`.
  */
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /** Station visibility (D22: an explicit choice with NO default at creation). */
 export const VisibilitySchema = z.enum(["public", "institution", "private"]);

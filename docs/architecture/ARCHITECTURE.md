@@ -2,7 +2,8 @@
 
 > **Status:** target architecture of the v6 rebuild, as decided in ADR-004 to ADR-009
 > ([`docs/decisions/`](../decisions/)). The code on `main` is still the first v6 attempt; milestones
-> M1 (core + agent) and M2 (web) replace it. Detailed data contracts are specified in M1. The
+> M1 (core + agent) and M2 (web) replace it. The data contracts and storage paths are in
+> [`DATA-MODEL.md`](DATA-MODEL.md) (spec 0083). The
 > first-attempt architecture is kept in [`docs/archive/first-attempt/`](../archive/first-attempt/).
 
 ---
@@ -75,7 +76,8 @@ framework or an SDK.
 
 ## 5. What is decided later
 
-- The detailed Realtime Database / Firestore layout, security rules, and indexes — specified in M1.
+- The security rules and indexes — spec 0084 (the Realtime Database / Firestore layout is in
+  [`DATA-MODEL.md`](DATA-MODEL.md)).
 - The public live page mechanism — proposed in ADR-005, measured in M1 before it is built in M2.
 - The staging environment (a dedicated project vs. preview channels plus the emulator; preview
   channels still use the production databases) — proposed in the M1 plan.

@@ -1,8 +1,9 @@
+// first-attempt contract, removed in M1 step 7.
 /**
  * Station — the registered profile/site (D21). What appears on the map; has an owner and a
  * visibility. The physical device is the Detector, not the Station.
  */
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   IdSchema,
   LatitudeSchema,

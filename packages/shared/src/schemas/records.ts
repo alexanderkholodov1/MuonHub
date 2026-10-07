@@ -1,3 +1,4 @@
+// first-attempt contract, removed in M1 step 7.
 /**
  * Time-series records — the scientific core (per detector).
  *
@@ -10,7 +11,7 @@
  *
  * See `docs/archive/planning/02-DATA-MODEL.md` and `docs/science/THEORETICAL-FOUNDATION.md` §4, §8.
  */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { EpochMsSchema } from "./primitives.js";
 
 /** Non-negative finite number (rates, amplitudes, pressure). */

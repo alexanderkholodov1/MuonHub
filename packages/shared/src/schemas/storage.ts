@@ -1,4 +1,5 @@
-import { z } from "zod";
+// first-attempt contract, removed in M1 step 7.
+import { z } from "zod/v3";
 
 const MONTH_DAYS = 30;
 const MINUTES_PER_DAY = 1_440;
