@@ -1,6 +1,6 @@
 # 0084 — Security rules v2 (Firestore + Realtime Database) and the rules test matrix
 
-- **Status:** draft
+- **Status:** approved (2026-10-07)
 - **Milestone:** M1 — Core + Agent (version range `6.0.0-alpha.1.x`)
 - **Owner:** Adjutant (spec and implementation in `infra/firebase/` and the emulator tests in
   `packages/data-provider`); reviewer: **security-reviewer (mandatory)**, code-reviewer.

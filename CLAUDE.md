@@ -36,7 +36,7 @@ protected and only the maintainer merges.
 ## Monorepo map
 
 ```
-apps/web               Next.js static export — public site, dashboards (rebuilt in M2)
+legacy/web-first-attempt first-attempt web app, outside the build (reference for the M2 rebuild)
 apps/agent             device agent (rebuilt in M1 as a headless Node daemon — ADR-007)
 packages/shared        zod contracts and inferred types
 packages/physics       pure scientific functions (no I/O; numeric tests mandatory)

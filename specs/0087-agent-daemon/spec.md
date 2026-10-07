@@ -1,6 +1,6 @@
 # 0087 — Agent daemon (headless, Node 24)
 
-- **Status:** draft
+- **Status:** approved (2026-10-07)
 - **Milestone:** M1 — Core + Agent (version range `6.0.0-alpha.1.x`)
 - **Owner:** Adjutant (spec and implementation of `apps/agent`); reviewers: code-reviewer,
   silent-failure-hunter (serial, sync, listeners), security-reviewer (sign-in, session storage,

@@ -5,7 +5,7 @@ pnpm-lock.yaml
 **/.next/**
 **/coverage/**
 **/node_modules/**
-apps/web/next-env.d.ts
+legacy/
 
 # Prose is formatted by hand (tables, line breaks); historical records stay as they were
 **/*.md

@@ -1,6 +1,6 @@
 // @ts-check
 // Root ESLint configuration for the TypeScript packages and the agent. The first-attempt web app
-// (apps/web) keeps its own `next lint` setup until it is rebuilt in milestone M2.
+// (legacy/web-first-attempt) is outside the workspace until the M2 rebuild.
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 

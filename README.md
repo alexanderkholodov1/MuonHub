@@ -63,7 +63,7 @@ Plan and status: [roadmap](docs/product/ROADMAP.md) · [status](docs/STATUS.md).
 ## Repository structure
 
 ```
-apps/web               Next.js static export — public site and dashboards
+legacy/                First-attempt web app kept as reference (rebuilt in M2)
 apps/agent             Device agent (headless Node.js daemon from milestone M1)
 packages/shared        zod contracts and types
 packages/physics       Pure scientific functions (no I/O, numerically tested)

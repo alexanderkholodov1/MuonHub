@@ -111,3 +111,4 @@ data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seis
 | 6.0.0-alpha.1.1 | 1 — tooling and upgrades | Node 24, pnpm 11.28, TypeScript 6.0 (7 not yet supported by typescript-eslint), vitest 5, ESLint 10 (web keeps ESLint 9 until M2), Prettier check, Turbo fixes and `agentGuidance: false`, Tauri shell removed. zod 4 moves to step 3 with the new contracts. |
 | 6.0.0-alpha.1.1.1 | 1 — fix | vitest 5 no longer excludes `dist/` by default, so compiled tests ran twice (246 instead of 145); `dist/` excluded in every vitest config. |
 | 6.0.0-alpha.1.2 | 2 — specs drafted | 0083–0087 written and reviewed (physicist, security-reviewer, silent-failure-hunter); findings applied; awaiting the maintainer's spec gate. |
+| — | spec gate | specs 0083–0087 approved 2026-10-07 with the recommendations: dedicated per-machine agent account as station editor; first-attempt web moved to `legacy/` (option b); proposed numeric defaults accepted. |

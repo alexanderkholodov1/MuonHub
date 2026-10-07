@@ -1,6 +1,6 @@
 # 0086 — Simulator tier 1 (`@muonhub/simulator`): synthetic event streams and a virtual detector
 
-- **Status:** draft
+- **Status:** approved (2026-10-07)
 - **Milestone:** M1 — Core + Agent (version range `6.0.0-alpha.1.x`)
 - **Owner:** Adjutant (spec) · implementation lane: `packages/simulator` · review: `physicist`
   (science), `code-reviewer`

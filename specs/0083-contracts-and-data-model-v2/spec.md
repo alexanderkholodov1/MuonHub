@@ -1,6 +1,6 @@
 # 0083 — Domain contracts and data model v2
 
-- **Status:** draft
+- **Status:** approved (2026-10-07)
 - **Milestone:** M1 — Core + Agent (version range `6.0.0-alpha.1.x`)
 - **Owner:** Adjutant (spec and implementation of `packages/shared`); data-layer implementation in
   spec 0084/step 6; reviewers: physicist (data semantics), security-reviewer (personal data, rules
