@@ -21,11 +21,13 @@
    **speculation**. → The correct wording: **"Integral rate of charged particles" / "MIP-type event rate"**.
 2. **Muons dominate statistically** (~75–80% of the charged flux at sea level), so the *aggregate
    curve* is indeed driven by muons — but that dominance **decreases at altitude**
-   (Quito/Andes), where the soft and hadronic component is 5–9× larger.
+   (Quito/Andes), where the soft and hadronic component is larger — per station: ≈ 5–9× the
+   sea-level value at 730 hPa (central Quito), ≈ 4.0–6.7× at 768 hPa (USFQ campus; see §8D).
 3. **Mandatory corrections before speaking of "cosmic signal":** dead time +
    barometric (**local** coefficient, not universal) + thermal.
-4. **One minute is too noisy** (Poisson: error ~1.6% per minute). Anomalies
-   require integration over **many hours** (N≥100k) and **≥3σ persistent** thresholds.
+4. **One minute is too noisy** (Poisson: a 25 cm² device at ≈ 2.4 s⁻¹ gives ≈ 144 counts/min,
+   an error of ≈ 8.3 % per minute, ≈ 1.08 % per hour). Anomalies require integration over
+   **many hours** (≈ 11.6 h for 100k counts) and **≥3σ persistent** thresholds.
 5. **Ecuador's unique advantage:** geomagnetic cutoff rigidity **≈12–13 GV** (among the highest
    on Earth; the global maximum ≈17 GV lies over Southeast Asia) → filters low-energy solar
    noise; Andean data is pure galactic signal, scarce globally.
@@ -88,17 +90,24 @@ document this in tooltips. The amplitude spectrum is the rich physical observabl
 
 ## 4. Dead time and rate correction (MANDATORY)
 
-- **Dead time per event:** v2 ≈ **50 ms** (very large!), v3X ≈ **400 µs** (Axani 2025,
-  arXiv:2508.12111).
-- The measured rate **underestimates** the true rate. Non-paralyzable correction:
+- **Measured dead fraction (preferred):** devices that report a cumulative dead-time counter give
+  the dead fraction directly, `f = Δdead / Δt` between two lines (counter increment over the
+  device-clock span), and the corrected rate is `R_true = R_measured / (1 − f) = N / T_live`.
+  A decrease of the counter or of the device clock is a reset, never a fraction.
+- **τ model (fallback only):** when no counter exists but a documented dead time per event does —
+  v2 ≈ **50 ms** (very large!), v3X ≈ **400 µs** (Axani 2025, arXiv:2508.12111) — the
+  non-paralyzable correction is
 
   `R_real = R_measured / (1 − R_measured · τ_DT)`
 
-- Ignoring it causes fatal systematic underestimates (especially at high-rate Andean sites)
+  (undefined for `R·τ ≥ 1`: reported as invalid, never as a number).
+- Unknown hardware: no correction is applied and the rate is labelled *uncorrected*; assuming 50 ms
+  at ≈ 2.4 s⁻¹ for a true ≈ 0.4 ms device would inflate its rate by ≈ 13.5 %.
+- Ignoring dead time causes systematic underestimates (especially at high-rate Andean sites)
   and ruins the barometric calculation.
 
-→ **MuonHub implication:** `packages/physics` MUST apply this correction; τ_DT depends on the
-hardware version (device-type metadata). The `dt` field (% dead time) feeds into this.
+→ **MuonHub implication:** `packages/physics` MUST apply this correction, preferring the measured
+dead fraction (`liveSource: "counter"`) over the τ model (`"tau"`); τ_DT is device-type metadata.
 
 ---
 
@@ -155,16 +164,14 @@ with log scale and the MPV marked. It is the closest to honest "energy physics".
 ## 8. Flux modulations and corrections
 
 ### (A) Barometric — the dominant one at surface
-`I(P) = I₀·e^(β(P−P₀))` ⇒ linear: `−ln(I/I₀) = β(P−P₀)`. **β is NOT universal:**
-
-> ⚠️ **Erratum pending (backlog B-M1-35, physicist review 2026-10-03):** with the negative β values
-> below, the linear form must read `ln(I/I₀) = β(P−P₀)` (no leading minus). The correction is made
-> with the M1 physics spec.
+`I(P) = I₀·e^(β(P−P₀))` ⇒ linear: `ln(I/I₀) = β(P−P₀)` (β negative: higher pressure, lower
+rate). In MuonHub β is expressed in **%/hPa**, so the model is written
+`I = I₀·exp((β/100)(P − P₀))`. **β is NOT universal:**
 
 | Station | β (%/hPa) | Reference |
 |---|---|---|
-| Equatorial (Jeddah, surface) | ≈ −0.24 ± 0.18 | Maghrabi et al. |
-| South Pole (Marambio, WCD) | ≈ −0.20 ± 0.03 | LAGO / Santos (2021) |
+| Low latitude (Jeddah, 21.5° N, surface) | ≈ −0.24 ± 0.18 | Maghrabi et al. |
+| Antarctic Peninsula (Marambio, 64° S, WCD) | ≈ −0.20 ± 0.03 | LAGO / Santos (2021) |
 | Global Muon Detector Network | ≈ −0.12 to −0.17 | De Mendonça et al. (2016) |
 | Low latitude/high rigidity (Hong Kong) | ≈ −0.085 | Wang & Lee (1967) |
 
@@ -183,8 +190,9 @@ historical data of each node; never assume a fixed β. (See also capability C2 o
   cycle** (anticorrelation: solar maximum → fewer GCR).
 
 ### (D) Altitude
-- Quito ~2850 m → ~730 hPa; hadronic/neutronic flux **5–9× larger** than at sea level.
-  Normalize multi-station analyses by the native reference isobar.
+- Altitude-dependent factors are stated **per station**: central Quito (~2850 m, ~730 hPa):
+  hadronic/neutronic flux **≈ 5–9×** the sea-level value; USFQ campus (≈ 768 hPa): scaled to
+  **≈ 4.0–6.7×**. Normalize multi-station analyses by the native reference isobar.
 
 ### (E) Geomagnetic cutoff rigidity — Ecuador's context
 - `R = pc/(ze)` [GV]. Only particles with `R > R_c` (local cutoff rigidity) penetrate.
@@ -219,9 +227,10 @@ muon↔neutron correlation views.
 
 - **Poisson:** events are independent; for N counts, `σ ≈ √N`. Relative error
   `√N/N`.
-- **One minute is noisy:** N≈3600/min → σ≈60 → error **~1.6%**. A weak Forbush (~1%) is
-  buried in the per-minute noise.
-- **Best practices:** integrate over **hours** (N≥100k) → error <0.3%. Define anomaly with
+- **One minute is noisy:** for this hardware (25 cm² device at ≈ 2.4 s⁻¹) N ≈ 144/min →
+  σ ≈ 12 → error **≈ 8.3 %** per minute, **≈ 1.08 %** per hour (N ≈ 8 640). A weak Forbush (~1%)
+  is buried in the per-minute noise.
+- **Best practices:** integrate over **hours** (≈ 11.6 h to reach N = 100k) → error ≈ 0.32 %. Define anomaly with
   **≥3σ persistent** thresholds, over an already-corrected rate (dead time + barometric + thermal).
 - **Per-stream baseline:** build the "normal" empirically from a solar-quiet historical
   record, after removing thermal-barometric deltas. Do not use a priori formulas.
@@ -263,7 +272,7 @@ agent adapts them to es/en/pt-BR for the educational texts.
 - Heitler, *The Quantum Theory of Radiation* (EM cascade model).
 - LAGO Collaboration; Santos (2021) — barometric coefficient, WCD.
 - De Mendonça et al. (2016) — Global Muon Detector Network.
-- Maghrabi et al. (KAAU) — equatorial station; Wang & Lee (1967) — Hong Kong.
+- Maghrabi et al. (KAAU) — low-latitude station (Jeddah, 21.5° N); Wang & Lee (1967) — Hong Kong.
 - IGRF (International Geomagnetic Reference Field) — cutoff rigidity.
 - Gerontidou et al. (2021), "World grid of cosmic ray vertical cut-off rigidity for the last
   decade," *Adv. Space Res.* 67, 2231–2240. https://doi.org/10.1016/j.asr.2021.01.011

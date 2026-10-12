@@ -1,0 +1,2 @@
+- Physics corrections rewritten per spec 0085: live time from the measured dead-time counter (τ model only as a fallback, never a negative or infinite rate), a barometric β fitted per station with a significance gate and propagated uncertainty, hour-scale persistent anomaly detection, an event-level amplitude spectrum with a saturation bin and Moyal MPV fit, and a noise-threshold suggestion that never removes events.
+- `THEORETICAL-FOUNDATION.md` erratum and amendments applied (barometric sign, dead fraction, noise figures for this hardware, per-station altitude factors).

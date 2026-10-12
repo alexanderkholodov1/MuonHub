@@ -187,13 +187,13 @@ source yet); ML corrections (after 6.0.0); UI for recipes (M3); simulator (spec 
 
 ## Tasks
 
-- [ ] T1: write the known-answer tests first (table above).
-- [ ] T2: `live-time.ts`, remove `deadTime.ts`.
-- [ ] T3: rewrite `barometric.ts` (covariate, effective sample size, gate, P₀).
-- [ ] T4: `anomalies.ts`; rebuild `insights.ts`.
-- [ ] T5: rewrite `spectrum.ts` (fixed binning, saturation bin, Moyal fit).
-- [ ] T6: `noise.ts` (suggestion only); remove filtering from `event-science.ts`.
-- [ ] T7: `provenance.ts` and `status` on every result.
-- [ ] T8: foundation erratum and amendments (FR8); physicist review.
-- [ ] T9: update the affected documentation (documentation matrix in `AGENTS.md`).
-- [ ] T10: changelog fragment in `changelog.d/`.
+- [x] T1: write the known-answer tests first (table above).
+- [x] T2: `live-time.ts`, remove `deadTime.ts`.
+- [x] T3: rewrite `barometric.ts` (covariate, effective sample size, gate, P₀).
+- [x] T4: `anomalies.ts`; rebuild `insights.ts`.
+- [x] T5: rewrite `spectrum.ts` (fixed binning, saturation bin, Moyal fit).
+- [x] T6: `noise.ts` (suggestion only); remove filtering from `event-science.ts`.
+- [x] T7: `provenance.ts` and `status` on every result.
+- [x] T8: foundation erratum and amendments (FR8); physicist review.
+- [x] T9: update the affected documentation (documentation matrix in `AGENTS.md`).
+- [x] T10: changelog fragment in `changelog.d/`.
