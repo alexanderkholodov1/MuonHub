@@ -26,9 +26,9 @@
 | User | `UserSchema` | email private (owner-readable only) |
 | Username claim | `UsernameClaimSchema` | one username per user |
 | Institution | `InstitutionSchema` | optional grouping |
-| Station | `StationSchema` | exact `location` private; `visibility` required, no default; `publicPrecision` |
+| Station | `StationSchema` | id `<ownerUid>_<random>` (creator's uid); exact `location` private; `visibility` required, no default; `publicPrecision` |
 | Station member | `StationMemberSchema` | `editor` / `viewer` |
-| Ownership transfer | `OwnershipTransferSchema` | id `{stationId}_{nonce}`, immutable |
+| Ownership transfer | `OwnershipTransferSchema` | id `{stationId}_{nonce}`, immutable; the station id itself contains `_` |
 | Public station | `PublicStationSchema` | projection for anonymous visitors; fields follow the precision; no personal data |
 | Device type | `DeviceTypeSchema` | declarative format definition; built-ins `cosmicwatch-v2`, `cosmicwatch-v3x`, `munra` |
 | Device | `DeviceSchema` | physical unit; carries `stationId`, geometry, saturation with unit |
@@ -42,7 +42,7 @@
 | Channel event / sample block | `ChannelEventSchema`, `SampleBlockSchema` | muograph / seismometer; not stored in M1 |
 | Raw line | `RawLineSchema` | agent-local only |
 | Access mirror | `StationAccessSchema`, `StreamStationSchema` | RTDB authorization mirror (spec 0084) |
-| Admin, audit | `AdminEntrySchema`, `AuditEntrySchema` | audit append-only, defined action types |
+| Admin, audit | `AdminEntrySchema`, `AuditEntrySchema` | audit append-only, defined action types; per-action `details` checked against the target's state (spec 0084 FR14; otherwise self-asserted) |
 
 ## 3. Paths
 
@@ -74,8 +74,13 @@
 | `live/{streamId}/events/{pushKey}` | Live event, kept 10 minutes, pruned by time |
 | `status/{streamId}` | Stream status |
 | `statusPublic/{streamId}` | Public status (`lastSeenAt`, `agentOnline`) |
-| `stationAccess/{stationId}` | Access mirror |
-| `streamStation/{streamId}` | Station id of the stream, create-once |
+| `stationAccess/{stationId}` | Access mirror; `pendingOwner` cleared only by the recipient's claim, which also drops `editors`/`viewers` |
+| `streamStation/{streamId}` | `{stationId, since}`, create-once; minutes with `ts < since` are rejected |
+
+Deleting a station: the mirror stays (its id must not be re-claimable), so the data layer first
+removes the mirror's `editors`/`viewers` and sets `public: false`, then deletes the Firestore
+station. List queries on `publicStations` and non-member lists of public day summaries carry
+`limit <= 100`.
 
 The public live "showcase" path is pending the M1 step-10 measurement (ADR-005 §6). No Cloud Storage.
 

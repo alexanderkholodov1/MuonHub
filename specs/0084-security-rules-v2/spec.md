@@ -38,9 +38,15 @@ query with real client identities. It does **not** deploy anything by itself: th
   other documents. `usernames/{username}`: create-once by the claiming user (`uid == auth.uid`) **and
   only in a batch where `getAfter(users/{auth.uid}).data.username == username`** (one name per user);
   readable by signed-in users (for sharing by username), never updatable; delete only by the owner of
-  the name, together with clearing the username in the user document.
+  the name, together with clearing the username in the user document. Deleting `users/{uid}`
+  requires the username claim to be deleted in the same batch (`!existsAfter(usernames/…)`), so no
+  orphaned claim remains.
 - **FR7 — `stations/{stationId}`:** create by a signed-in user with `ownerUid == auth.uid` and an
-  explicit `visibility` (no default); read by owner, members, admins, and (for `visibility ==
+  explicit `visibility` (no default). **Station ids are `<ownerUid>_<random>`** (the creator's uid,
+  then 8–64 alphanumerics — the same scheme as stream ids), enforced on the Firestore create and on
+  the RTDB mirror create (FR15), so nobody can squat an id another user's client will pick. The id
+  keeps the creator's uid after a transfer, and it appears in the public projection's id (like stream
+  ids in day-summary paths; a uid is not personal data under FR5); read by owner, members, admins, and (for `visibility ==
   institution`) members of the institution — *(institution membership check: Proposed, may be
   deferred to M2 if no institution exists yet)*; update metadata by owner and editors **except**
   `ownerUid`, `visibility`, and `publicPrecision`, which only the owner changes; delete only by the
@@ -49,14 +55,15 @@ query with real client identities. It does **not** deploy anything by itself: th
   (role `editor` | `viewer`); a member can delete their own membership (leave). A collection-group
   rule `match /{path=**}/members/{uid}` allows reading a membership only when `uid == auth.uid`
   (so "stations I belong to" is a constrained collection-group query).
-  **Transfer:** the transfer id is `{stationId}_{nonce}`. The current owner creates
+  **Transfer:** the transfer id is `{stationId}_{nonce}` (so it contains two `_`). The current owner creates
   `ownershipTransfers/{stationId}_{nonce}` = `{stationId, from: auth.uid, to, createdAt}` and, in the
   same batch, updates the station with `ownerUid: to` and `transferId: "{stationId}_{nonce}"`. The
   station update is allowed only if `getAfter(ownershipTransfers/$(transferId))` has
   `from == resource.data.ownerUid`, `to == request.resource.data.ownerUid`, `stationId == stationId`,
   and `exists(users/$(to))`. Transfer documents are **immutable** (no update, no delete) — they are
-  the auditable record required by ADR-009 rule 3. The same batch updates the RTDB mirror first
-  (FR15) so the new owner can claim it. *(Whether the recipient must accept first is decided in M2 —
+  the auditable record required by ADR-009 rule 3. The RTDB mirror is updated first (FR15:
+  `pendingOwner`) so the new owner can claim it; once set, `pendingOwner` cannot be cleared or
+  re-pointed by the owner, only cleared by the recipient's claim. *(Whether the recipient must accept first is decided in M2 —
   Proposed default for M1: the owner's write completes it and the recipient is notified.)* After the
   transfer the former owner loses owner rights.
   *(Proposed, deferred to M2: shared ownership / co-owners, which ADR-009 allows, is not modelled in
@@ -73,10 +80,12 @@ query with real client identities. It does **not** deploy anything by itself: th
   station's `ownerUid`, the referenced device's `stationId` equals the stream's station, and the
   device belongs to the station owner. Calibrations are append-only (a new version is a new document; no update/delete).
   Sessions: created and closed (set `endedAt` once) by owner/editor; fields otherwise immutable.
-- **FR12 — `streams/{id}/days/{date}`:** written by owner/editor (the agent identity, FR23);
+- **FR12 — `streams/{id}/days/{date}`:** written by owner/editor (the agent identity, FR23), only
+  for a UTC day that has started (`date <= today`, 2-minute clock tolerance);
   readable by members and admins, and by anyone when the station is public *(Proposed: public day
   summaries are the **only** anonymously readable series, so M2 charts need no personal data and raw
-  minute ranges cannot be scraped)*. Rule cost: stream → station → membership is up to 3 `get()`
+  minute ranges cannot be scraped)*. Public (non-member) list queries must carry `limit <= 100`;
+  members' range queries are not limited by the rules. Rule cost: stream → station → membership is up to 3 `get()`
   calls per evaluation; the data layer reads day summaries in batches to keep this within the
   50k reads/day budget.
 - **FR13 — `publicStations/{id}`:** readable by anyone; written only by the station owner (or admin)
@@ -86,30 +95,61 @@ query with real client identities. It does **not** deploy anything by itself: th
   changes `location`, `publicPrecision`, or `name` must update the projection in the same batch
   (checked with `getAfter`); editors therefore cannot change `location` alone (owner-only, like
   `publicPrecision`). When `visibility` leaves `public`, the batch must delete the projection
-  (`!existsAfter(publicStations/$(id))`).
+  (`!existsAfter(publicStations/$(id))`). List queries on `publicStations` (anonymous or signed in)
+  must carry `limit <= 100` (paged reads; no single-query scrape).
 - **FR14 — `audit/{id}`:** create-only (append), by a signed-in user for their own actions
-  (`actorUid == auth.uid`, server timestamp), **only for a defined list of action types**
-  (membership change, visibility change, transfer, admin change, device-type status change) with a
-  bounded payload; no update, no delete; readable by admins.
+  (`actorUid == auth.uid`, server timestamp), **only for a defined list of action types**, each with
+  a fixed `details` shape (bounded values) tied with `getAfter()` to the state of its target after
+  the batch; no update, no delete; readable by admins:
+
+  | Action | `targetId` | `details` | Checked against the state after the batch |
+  |---|---|---|---|
+  | `membershipChange` | station id | `{memberUid, role}`, role `editor`/`viewer`/`removed` | actor is the station owner (or the member itself); the membership has that role, or is gone for `removed` |
+  | `visibilityChange` | station id | `{visibility}` | actor owns the station; the station has that visibility |
+  | `ownershipTransfer` | transfer id | `{stationId, to}` | the transfer record exists with `from == actor` and these fields |
+  | `adminChange` | uid | `{change}`, `added`/`removed` | actor is an admin; the admin entry exists / is gone |
+  | `deviceTypeStatusChange` | device-type id | `{status}` | actor is an admin or the author; the type has that status |
+
+  **Limit:** an entry proves that the stated outcome holds after the batch, not that the actor's
+  batch caused it (an entry may restate a state that already held). That part of the audit content
+  is self-asserted by the actor.
 
 ### Realtime Database (`infra/firebase/database.rules.json`)
 
 - **FR15 — Station access mirror (Proposed):** RTDB rules cannot read Firestore, so a small mirror
   per **station** authorizes RTDB access: `stationAccess/{stationId}` = `{ownerUid, editors: {uid:
   true}, viewers: {uid: true}, public: bool, pendingOwner?}` and `streamStation/{streamId}` =
-  stationId (create-once). Rules:
+  `{stationId, since}` (create-once; `since` = epoch ms of the stream's creation). Rules:
   - `streamStation/$streamId` create-once only when `$streamId.beginsWith(auth.uid + '_')` and
     `stationAccess/{stationId}.ownerUid == auth.uid` — nobody can claim another user's stream id.
-  - `stationAccess/$stationId` create-once by `ownerUid == auth.uid`; updated only by its owner;
-    `pendingOwner` set by the owner during a transfer, and the new owner may then write
-    `ownerUid := auth.uid` when `pendingOwner == auth.uid` (clearing `pendingOwner`).
+  - `stationAccess/$stationId` create-once by `ownerUid == auth.uid`, only when `$stationId` starts
+    with `auth.uid + '_'` (FR7 id scheme); updated only by its owner, and only while no
+    `pendingOwner` exists (station-level rewrites, `public`, `editors`, `viewers`); a member may
+    always remove its own entry.
+  - `pendingOwner` is set by the owner during a transfer (re-sending the same value is allowed, so a
+    retry is idempotent). Once it exists, **only the pending owner may clear it, and only by
+    claiming:** one write that sets `ownerUid := auth.uid`, removes `pendingOwner`, and leaves
+    `editors` and `viewers` absent — the new owner rebuilds them from the Firestore `members`. RTDB
+    cannot see whether the Firestore transfer committed, so the owner cannot cancel in the mirror
+    (that would let a former owner keep the mirror after a committed transfer). If the Firestore
+    batch failed (no transfer record exists), the owner retries the transfer to the same recipient;
+    to abandon it, the recipient claims and hands the mirror back with a new transfer, or an operator
+    clears `pendingOwner` with the Admin SDK.
   - **Update mirror first:** removing a member or downgrading visibility updates the mirror *before*
     Firestore (the data layer does it in that order), so a desync can only leave rights *removed*,
     never granted; transfers set `pendingOwner` in the mirror in the same operation as FR8.
   - A transfer is one write per station (not per stream).
+  - `streamStation/$streamId.since` is an integer within `[now − 7 days, now + 2 min]` (the agent
+    may buffer up to 7 days offline before registering a stream); minutes below it are rejected
+    (FR16).
+  - **Deleting a station (cleanup step):** the mirror is never deleted (its id could otherwise be
+    re-claimed), so the data layer first removes every `editors`/`viewers` entry and sets
+    `public: false` in the mirror, then deletes the Firestore station; otherwise former members keep
+    RTDB rights on the station's streams.
 - **FR16 — `minutes/{streamId}/{ts}`:** write-once (`!data.exists()`), only by the owner or an
   editor of the stream's station (via `streamStation` → `stationAccess`), key equal to the record's
-  `ts`, `ts` a multiple of 60 000 and `ts <= now + 120000` (no future minutes), `liveMs` in
+  `ts`, `ts` a multiple of 60 000, `ts <= now + 120000` (no future minutes) and
+  `ts >= streamStation/{streamId}.since` (no backfill before the stream existed), `liveMs` in
   (0, 60000] when present, `n` integer ≥ 0, only the compact keys of 0083 FR17; read by the owner,
   editors, and viewers of the station. **No anonymous reads of minutes** (public charts use day
   summaries, FR12). **No `.write` rule exists at `minutes/$streamId` or any ancestor** — RTDB rules
