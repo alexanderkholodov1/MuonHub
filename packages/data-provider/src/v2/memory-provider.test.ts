@@ -71,13 +71,14 @@ describe("memory provider — stations", () => {
   it("transfers ownership with an immutable transfer record", async () => {
     const { provider, store } = setup();
     const me = await provider.createAccount("a@example.org", "secret1");
-    await provider.createStation(station({ ownerUid: me.uid }));
-    const id = await provider.transferOwnership(STATION_ID, "newOwner1");
-    expect((await provider.getStation(STATION_ID))?.ownerUid).toBe("newOwner1");
-    expect((await provider.getStation(STATION_ID))?.transferId).toBe(id);
+    const sid = `${me.uid}_station12345`;
+    await provider.createStation(station({ id: sid, ownerUid: me.uid }));
+    const id = await provider.transferOwnership(sid, "newOwner1");
+    expect((await provider.getStation(sid))?.ownerUid).toBe("newOwner1");
+    expect((await provider.getStation(sid))?.transferId).toBe(id);
     expect((await provider.getTransfer(id))?.from).toBe(me.uid);
     expect(store.docs.has(`ownershipTransfers/${id}`)).toBe(true);
-    await expect(provider.transferOwnership(STATION_ID, "x1")).rejects.toMatchObject({
+    await expect(provider.transferOwnership(sid, "x1")).rejects.toMatchObject({
       code: "permission-denied",
     });
   });
@@ -88,18 +89,19 @@ describe("memory provider — stations", () => {
     const guest = createMemoryProviderV2({ store, now: () => T0 });
     const o = await owner.createAccount("o@example.org", "secret1");
     const g = await guest.createAccount("g@example.org", "secret1");
-    await owner.createStation(station({ ownerUid: o.uid, visibility: "private" }));
-    await owner.addMember(STATION_ID, g.uid, "viewer");
-    await expect(owner.addMember(STATION_ID, g.uid, "editor")).rejects.toMatchObject({
+    const sid = `${o.uid}_station12345`;
+    await owner.createStation(station({ id: sid, ownerUid: o.uid, visibility: "private" }));
+    await owner.addMember(sid, g.uid, "viewer");
+    await expect(owner.addMember(sid, g.uid, "editor")).rejects.toMatchObject({
       code: "already-exists",
     });
     const shared = await guest.listSharedWithMe();
     expect(shared.items).toEqual([
-      { station: expect.objectContaining({ id: STATION_ID }), role: "viewer" },
+      { station: expect.objectContaining({ id: sid }), role: "viewer" },
     ]);
-    await owner.changeMemberRole(STATION_ID, g.uid, "editor");
-    expect((await owner.listMembers(STATION_ID)).items[0]?.role).toBe("editor");
-    await owner.removeMember(STATION_ID, g.uid);
+    await owner.changeMemberRole(sid, g.uid, "editor");
+    expect((await owner.listMembers(sid)).items[0]?.role).toBe("editor");
+    await owner.removeMember(sid, g.uid);
     expect((await guest.listSharedWithMe()).items).toEqual([]);
   });
 });
@@ -199,14 +201,62 @@ describe("memory provider — minutes", () => {
   it("is write-once: existing minutes are reported and left untouched", async () => {
     const { provider } = setup();
     const first = await provider.writeMinutes(STREAM_ID, [minute(0), minute(1)]);
-    expect(first).toEqual({ written: 2, alreadyExisted: [] });
+    expect(first).toEqual({ written: 2, alreadyExisted: [], existing: [] });
     const again = await provider.writeMinutes(STREAM_ID, [
       minute(1, { n: 999, amplitude: { mean: 1, min: 1, max: 1, unit: "mV" } }),
       minute(2),
     ]);
-    expect(again).toEqual({ written: 1, alreadyExisted: [T0 + 60_000] });
+    expect(again).toEqual({
+      written: 1,
+      alreadyExisted: [T0 + 60_000],
+      existing: [{ ts: T0 + 60_000, sessionId: "session-1" }],
+    });
     const page = await provider.readMinutes(STREAM_ID, { fromTs: T0, toTs: T0 + 3 * 60_000 });
     expect(page.items[1]?.n).toBe(12);
+  });
+
+  it("retries once with only the missing keys when another writer wins a race", async () => {
+    const { provider, store } = setup();
+    let raced = false;
+    store.beforeMinuteWrite = (streamId, keys) => {
+      if (raced) return;
+      raced = true;
+      store.plantRt(`minutes/${streamId}/${keys[1] as string}`, {
+        v: 2,
+        s: "other-session",
+        n: 1,
+        l: 0,
+        qg: 0,
+        qc: 0,
+      });
+    };
+    const r = await provider.writeMinutes(STREAM_ID, [minute(0), minute(1), minute(2)]);
+    expect(r.written).toBe(2);
+    expect(r.existing).toEqual([{ ts: T0 + 60_000, sessionId: "other-session" }]);
+  });
+
+  it("reports what was written and what is pending when a later chunk keeps failing", async () => {
+    const { provider, store } = setup();
+    // Two chunks (more than one chunk span apart); the second chunk is denied twice.
+    store.injectFault({ op: "writeMinutes.chunk", kind: "permission-denied", times: 2, skip: 1 });
+    const records = [minute(0), minute(1), minute(5000), minute(5001)];
+    const error = await provider.writeMinutes(STREAM_ID, records).catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "permission-denied" });
+    expect((error as { partial: unknown }).partial).toEqual({
+      writtenSoFar: [T0, T0 + 60_000],
+      pending: [T0 + 5000 * 60_000, T0 + 5001 * 60_000],
+    });
+  });
+
+  it("marks a timed-out chunk as pending with outcome-unknown", async () => {
+    const { provider, store } = setup();
+    store.injectFault({ op: "writeMinutes.chunk", kind: "timeout" });
+    const error = await provider.writeMinutes(STREAM_ID, [minute(0)]).catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "outcome-unknown" });
+    expect((error as { partial: unknown }).partial).toEqual({
+      writtenSoFar: [],
+      pending: [T0],
+    });
   });
 
   it("refuses invalid minutes", async () => {
@@ -280,8 +330,8 @@ describe("memory provider — day summaries", () => {
 
 describe("memory provider — live window", () => {
   it("keeps same-millisecond events, prunes by time, and keeps recent ones", async () => {
-    const { provider } = setup();
     const nowMs = T0 + 3_600_000;
+    const provider = createMemoryProviderV2({ now: () => nowMs });
     await provider.pushLiveEvents(STREAM_ID, [
       { t: nowMs, amplitude: 1 },
       { t: nowMs, amplitude: 2 },
@@ -372,5 +422,37 @@ describe("memory provider — auth", () => {
       code: "already-exists",
     });
     expect(await provider.findUidByUsername("ana")).toBe("u1");
+  });
+});
+
+describe("memory provider — failure injection", () => {
+  it("fails matching calls with the injected kind, then recovers", async () => {
+    const { provider, store } = setup();
+    store.injectFault({ op: "getStation", kind: "offline" });
+    await expect(provider.getStation(STATION_ID)).rejects.toMatchObject({ code: "unavailable" });
+    await expect(provider.getStation(STATION_ID)).resolves.toBeNull();
+  });
+
+  it("supports a permanent outage for every method", async () => {
+    const { provider, store } = setup();
+    store.injectFault({ op: "*", kind: "unavailable", times: Infinity });
+    await expect(provider.getStation(STATION_ID)).rejects.toMatchObject({ code: "unavailable" });
+    await expect(provider.listPublicStations()).rejects.toMatchObject({ code: "unavailable" });
+    store.clearFaults();
+    await expect(provider.listPublicStations()).resolves.toBeDefined();
+  });
+
+  it("clamps pruneLive's nowMs so a far-future value cannot delete live data", async () => {
+    const { provider } = setup();
+    await provider.pushLiveEvents(STREAM_ID, [{ t: T0 + 4_000, amplitude: 10 }]);
+    const r = await provider.pruneLive(STREAM_ID, T0 + 10 * 365 * 86_400_000);
+    expect(r.removed).toBe(0);
+  });
+
+  it("requires a station id of the form <ownerUid>_<random>", async () => {
+    const { provider } = setup();
+    await expect(provider.createStation(station({ id: "station-1" }))).rejects.toMatchObject({
+      code: "invalid-argument",
+    });
   });
 });

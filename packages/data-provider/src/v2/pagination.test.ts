@@ -23,13 +23,10 @@ describe("planMinuteRange", () => {
     expect(plan).toMatchObject({ startKey: cursor, startExclusive: true });
   });
 
-  it("ignores a cursor before the range start", () => {
-    const plan = planMinuteRange({
-      fromTs: T0,
-      toTs: T0 + 600_000,
-      cursor: v2.minuteKey(T0 - 60_000),
-    });
-    expect(plan.startExclusive).toBe(false);
+  it("rejects a cursor before the range start", () => {
+    expect(() =>
+      planMinuteRange({ fromTs: T0, toTs: T0 + 600_000, cursor: v2.minuteKey(T0 - 60_000) }),
+    ).toThrowError(expect.objectContaining({ code: "invalid-argument" }) as Error);
   });
 
   it.each([

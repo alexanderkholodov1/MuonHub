@@ -51,8 +51,8 @@ export const StationMemberSchema = z.strictObject({
   addedAt: EpochMsSchema,
 });
 
-/** Transfer id `{stationId}_{nonce}`. */
-export const TransferIdSchema = z.string().regex(/^[A-Za-z0-9-]+_[A-Za-z0-9]{6,64}$/);
+/** Transfer id `{stationId}_{nonce}`; the station id itself is `<ownerUid>_<random>`. */
+export const TransferIdSchema = z.string().regex(/^[A-Za-z0-9_-]+_[A-Za-z0-9]{6,64}$/);
 
 /** `ownershipTransfers/{id}` — immutable audit record of a transfer (ADR-009 rule 3). */
 export const OwnershipTransferSchema = z.strictObject({

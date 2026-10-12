@@ -69,8 +69,11 @@ export interface StationOwnerPatch extends StationMetadataPatch {
 
 export interface StationsApi {
   /**
-   * Creates a station: mirror first, then station (+ projection when public). Fails with
-   * `already-exists` when the id is taken.
+   * Creates a station: mirror first, then station (+ projection when public). The id must be
+   * `<ownerUid>_<random>` (see `newStationId`). Fails with `already-exists` when the id is taken.
+   * Ordering: grants (addMember, role upgrade, visibility to public) write Firestore first and then
+   * the mirror; revocations write the mirror first; the first write is rolled back if the second
+   * fails.
    */
   createStation(station: v2.Station): Promise<void>;
   getStation(stationId: string): Promise<v2.Station | null>;
@@ -92,8 +95,8 @@ export interface StationsApi {
   changeMemberRole(stationId: string, uid: string, role: v2.MemberRole): Promise<void>;
   removeMember(stationId: string, uid: string): Promise<void>;
   /**
-   * The signed-in member leaves. Only Firestore can be changed by a member; the owner's next
-   * membership update refreshes the mirror (documented limitation of spec 0084 FR15).
+   * The signed-in member leaves: their own mirror entries are removed first (the rules allow
+   * self-removal), then the membership document.
    */
   leaveStation(stationId: string): Promise<void>;
 
@@ -171,10 +174,21 @@ export interface WriteMinutesResult {
   written: number;
   /** Timestamps that already existed; they were left untouched (write-once). */
   alreadyExisted: number[];
+  /**
+   * For every skipped minute, the session id stored there, so the caller can tell its own earlier
+   * write (same session: a harmless replay) from a conflicting one (different session). `null` when
+   * the stored value has no readable session id.
+   */
+  existing: { ts: number; sessionId: string | null }[];
 }
 
 export interface MinutesApi {
-  /** Write-once. Existing minutes are reported in `alreadyExisted`, never overwritten. */
+  /**
+   * Write-once. Existing minutes are reported in `alreadyExisted`/`existing`, never overwritten.
+   * Not atomic across chunks: when a chunk fails (after one re-read and retry of only the missing
+   * keys) the thrown {@link DataProviderError} carries `partial: { writtenSoFar, pending }`; a
+   * timeout leaves that chunk in `pending` with code `outcome-unknown`.
+   */
   writeMinutes(streamId: string, records: readonly v2.MinuteRecord[]): Promise<WriteMinutesResult>;
   /** Cursor-paginated range read, `fromTs` inclusive and `toTs` exclusive, oldest first. */
   readMinutes(streamId: string, query: MinuteRangeQuery): Promise<Page<v2.MinuteRecord>>;
@@ -205,7 +219,11 @@ export interface PruneResult {
 export interface LiveApi {
   /** Batched push with unique, time-ordered keys. */
   pushLiveEvents(streamId: string, events: readonly v2.LiveEvent[]): Promise<{ pushed: number }>;
-  /** Deletes entries older than the retention window, downloading only the expired ones. */
+  /**
+   * Deletes entries older than the retention window, downloading only the expired ones. `nowMs` is
+   * clamped to the local clock plus a small skew allowance, so a bad argument cannot delete live
+   * data. On a partial failure the error carries `partial: { removed }`.
+   */
   pruneLive(streamId: string, nowMs?: number): Promise<PruneResult>;
   /** Delivers the current window once, then only new events. */
   subscribeLive(streamId: string, handlers: SubscriptionHandlers<v2.LiveEvent>): Unsubscribe;

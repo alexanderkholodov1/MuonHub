@@ -117,3 +117,15 @@ export function newTransferId(stationId: string): string {
 export function newStreamId(ownerUid: string): string {
   return `${ownerUid}_${randomToken(16)}`;
 }
+
+/** New station id `<ownerUid>_<random>`, same shape as stream ids (spec 0084: binds the id to its owner). */
+export function newStationId(ownerUid: string): string {
+  return `${ownerUid}_${randomToken(16)}`;
+}
+
+const STATION_ID_RANDOM = /^[A-Za-z0-9]{8,64}$/;
+
+/** True when `id` is `<ownerUid>_<random>` for exactly this owner. */
+export function isOwnedStationId(id: string, ownerUid: string): boolean {
+  return id.startsWith(`${ownerUid}_`) && STATION_ID_RANDOM.test(id.slice(ownerUid.length + 1));
+}

@@ -9,7 +9,7 @@
  * Several providers can share one {@link MemoryStore} to model several identities.
  */
 import { v2 } from "@muonhub/shared";
-import { DataProviderError } from "./errors.js";
+import { DataProviderError, mapError } from "./errors.js";
 import type {
   AuthUser,
   DataProviderV2,
@@ -18,6 +18,7 @@ import type {
   Unsubscribe,
 } from "./interface.js";
 import {
+  MAX_CLOCK_SKEW_MS,
   chunk,
   createNonceSource,
   fromLiveValue,
@@ -28,11 +29,50 @@ import {
   windowStartKey,
   LIVE_BATCH_SIZE,
 } from "./live-window.js";
+import { writeMinutesChunked } from "./minute-writer.js";
 import { buildMinutePage, planMinuteRange } from "./pagination.js";
-import { buildPublicStation, isPublic, newTransferId } from "./public-station.js";
+import { buildPublicStation, isOwnedStationId, isPublic, newTransferId } from "./public-station.js";
 import { describeFailure, parseEntries, type ListResult, type Page } from "./quarantine.js";
 
 type Listener = () => void;
+
+/** What an injected fault looks like to the caller. */
+export type FaultKind =
+  | "permission-denied"
+  | "unauthenticated"
+  | "unavailable"
+  /** RTDB's "Client is offline" (maps to `unavailable`). */
+  | "offline"
+  /** A deadline expiry: the operation may or may not have been applied (`outcome-unknown`). */
+  | "timeout";
+
+export interface MemoryFault {
+  /**
+   * Provider method name (`"writeMinutes"`, `"addMember"`, ...), `"writeMinutes.chunk"` for the
+   * write of one minute chunk, or `"*"` for every method.
+   */
+  op: string;
+  kind: FaultKind;
+  /** How many matching calls fail (default 1; `Infinity` for a permanent outage). */
+  times?: number;
+  /** Matching calls that succeed first (default 0). */
+  skip?: number;
+}
+
+function faultError(kind: FaultKind): DataProviderError {
+  switch (kind) {
+    case "permission-denied":
+      return new DataProviderError("permission-denied");
+    case "unauthenticated":
+      return new DataProviderError("unauthenticated");
+    case "unavailable":
+      return new DataProviderError("unavailable");
+    case "offline":
+      return mapError(new Error("Client is offline."));
+    case "timeout":
+      return new DataProviderError("outcome-unknown");
+  }
+}
 
 /** Shared state; create one per test and hand it to every provider that should see the same data. */
 export class MemoryStore {
@@ -54,6 +94,38 @@ export class MemoryStore {
 
   notify(): void {
     for (const listener of [...this.listeners]) listener();
+  }
+
+  private faults: { fault: MemoryFault; skip: number; left: number }[] = [];
+
+  /** Failure injection: makes matching provider calls fail as a real backend would. */
+  injectFault(fault: MemoryFault): void {
+    this.faults.push({ fault, skip: fault.skip ?? 0, left: fault.times ?? 1 });
+  }
+
+  clearFaults(): void {
+    this.faults = [];
+  }
+
+  /**
+   * Write-once race hook: runs just before each minute chunk is written, after its existence read,
+   * so a test can plant a minute "written by another client" in between (the write is then denied,
+   * as the rules would, and the provider re-reads and retries).
+   */
+  beforeMinuteWrite: ((streamId: string, keys: readonly string[]) => void) | undefined;
+
+  /** Throws the injected error for `op`, if one is armed. Used by the in-memory provider. */
+  checkFault(op: string): void {
+    for (const entry of this.faults) {
+      if (entry.fault.op !== "*" && entry.fault.op !== op) continue;
+      if (entry.left <= 0) continue;
+      if (entry.skip > 0) {
+        entry.skip -= 1;
+        continue;
+      }
+      entry.left -= 1;
+      throw faultError(entry.fault.kind);
+    }
   }
 
   /** Direct test hook: plants a raw (possibly invalid) Firestore-like document. */
@@ -229,6 +301,9 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
 
     async createStation(input) {
       const station = validate(v2.StationSchema, input, "station");
+      if (!isOwnedStationId(station.id, station.ownerUid)) {
+        fail("Station id must be <ownerUid>_<random> (use newStationId).");
+      }
       createDoc(`stations/${station.id}`, station);
       if (isPublic(station)) {
         createDoc(
@@ -457,18 +532,32 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const prepared = records.map((r) => ({ ts: r.ts, ...v2.serializeMinute(r) }));
       if (new Set(prepared.map((p) => p.key)).size !== prepared.length)
         fail("Two records share the same minute.");
-      const alreadyExisted: number[] = [];
-      let written = 0;
-      for (const p of prepared) {
-        const path = `minutes/${streamId}/${p.key}`;
-        if (store.rtdb.has(path)) alreadyExisted.push(p.ts);
-        else {
-          store.rtdb.set(path, clone(p.value));
-          written += 1;
-        }
-      }
+      if (prepared.length === 0) return { written: 0, alreadyExisted: [], existing: [] };
+      const result = await writeMinutesChunked(prepared, {
+        async readExisting(firstKey, lastKey) {
+          const found = new Map<string, string | null>();
+          for (const [k, v] of rtOf(`minutes/${streamId}`)) {
+            if (k < firstKey || k > lastKey) continue;
+            const s = (v as { s?: unknown } | null)?.s;
+            found.set(k, typeof s === "string" ? s : null);
+          }
+          return found;
+        },
+        async writeChunk(entries) {
+          store.beforeMinuteWrite?.(
+            streamId,
+            entries.map((e) => e.key),
+          );
+          store.checkFault("writeMinutes.chunk");
+          // The real rules deny an overwrite; so does this.
+          if (entries.some((e) => store.rtdb.has(`minutes/${streamId}/${e.key}`))) {
+            throw new DataProviderError("permission-denied");
+          }
+          for (const e of entries) store.rtdb.set(`minutes/${streamId}/${e.key}`, clone(e.value));
+        },
+      });
       store.notify();
-      return { written, alreadyExisted };
+      return result;
     },
     async readMinutes(streamId, query): Promise<Page<v2.MinuteRecord>> {
       const plan = planMinuteRange(query);
@@ -523,7 +612,9 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       store.notify();
       return { pushed: entries.length };
     },
-    async pruneLive(streamId, nowMs = now()): Promise<PruneResult> {
+    async pruneLive(streamId, requestedNowMs = now()): Promise<PruneResult> {
+      if (!Number.isFinite(requestedNowMs)) fail("nowMs must be a finite number.");
+      const nowMs = Math.min(requestedNowMs, now() + MAX_CLOCK_SKEW_MS);
       const end = pruneEndKey(nowMs);
       const expired = rtOf(`live/${streamId}/events`).filter(([k]) => k < end);
       const { remove, skipped } = selectPrunable(expired, nowMs);
@@ -582,5 +673,15 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       authListeners.clear();
     },
   };
+  // Failure injection: every async method first consults the store's armed faults.
+  const passthrough = new Set(["currentUser", "onAuthChange", "close"]);
+  for (const [name, fn] of Object.entries(provider)) {
+    if (passthrough.has(name) || name.startsWith("subscribe")) continue;
+    const original = fn as (...args: unknown[]) => Promise<unknown>;
+    (provider as unknown as Record<string, unknown>)[name] = async (...args: unknown[]) => {
+      store.checkFault(name);
+      return original(...args);
+    };
+  }
   return provider;
 }

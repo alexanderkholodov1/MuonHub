@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DataProviderError, guard, mapError } from "./errors.js";
+import { DataProviderError, guard, mapError, withDeadline } from "./errors.js";
 
 describe("mapError", () => {
   it.each([
@@ -48,5 +48,33 @@ describe("mapError", () => {
         throw { code: "not-found" };
       }),
     ).rejects.toMatchObject({ name: "DataProviderError", code: "not-found" });
+  });
+});
+
+describe("offline and deadlines", () => {
+  it("maps the RTDB 'Client is offline' message to unavailable", () => {
+    expect(mapError(new Error("Client is offline.")).code).toBe("unavailable");
+    expect(mapError(new Error("Error: Client is offline")).retryable).toBe(true);
+  });
+
+  it("withDeadline rejects with outcome-unknown, which is not blindly retryable", async () => {
+    const never = new Promise<number>(() => undefined);
+    const error = await withDeadline(never, 5).catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "outcome-unknown" });
+    expect((error as DataProviderError).retryable).toBe(false);
+  });
+
+  it("withDeadline passes values and errors through, and 0 disables it", async () => {
+    await expect(withDeadline(Promise.resolve(3), 50)).resolves.toBe(3);
+    await expect(withDeadline(Promise.reject(new Error("x")), 50)).rejects.toThrow("x");
+    await expect(withDeadline(new Promise((r) => setTimeout(() => r(1), 10)), 0)).resolves.toBe(1);
+  });
+
+  it("withPartial keeps the code and the cause", () => {
+    const base = new DataProviderError("permission-denied");
+    const e = base.withPartial({ removed: 3 });
+    expect(e.code).toBe("permission-denied");
+    expect(e.partial).toEqual({ removed: 3 });
+    expect(e.cause).toBe(base);
   });
 });

@@ -10,6 +10,8 @@ export const LIVE_RETENTION_MS = 600_000;
 /** Pruning stays this far behind the retention bound so client/server clock skew cannot trip the rule. */
 export const PRUNE_MARGIN_MS = 30_000;
 export const LIVE_BATCH_SIZE = 500;
+/** How far ahead of the local clock a caller-supplied `nowMs` may be (pruning clamps to this). */
+export const MAX_CLOCK_SKEW_MS = 60_000;
 
 const NONCE_LENGTH = 4;
 const NONCE_SPACE = 36 ** NONCE_LENGTH;

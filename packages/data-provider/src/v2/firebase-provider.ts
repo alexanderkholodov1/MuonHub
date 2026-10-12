@@ -22,6 +22,7 @@ import {
   collectionGroup,
   connectFirestoreEmulator,
   deleteDoc,
+  deleteField,
   doc,
   documentId,
   getCountFromServer,
@@ -59,7 +60,13 @@ import {
   type Database,
 } from "firebase/database";
 import { v2 } from "@muonhub/shared";
-import { DataProviderError, guard, mapError } from "./errors.js";
+import {
+  DEFAULT_TIMEOUT_MS,
+  DataProviderError,
+  guard as baseGuard,
+  mapError,
+  withDeadline,
+} from "./errors.js";
 import type {
   AuthUser,
   DataProviderV2,
@@ -73,6 +80,7 @@ import type {
 } from "./interface.js";
 import {
   LIVE_BATCH_SIZE,
+  MAX_CLOCK_SKEW_MS,
   chunk,
   createNonceSource,
   fromLiveValue,
@@ -82,10 +90,12 @@ import {
   toLiveValue,
   windowStartKey,
 } from "./live-window.js";
+import { writeMinutesChunked } from "./minute-writer.js";
 import { buildMinutePage, planMinuteRange, type MinuteRangeQuery } from "./pagination.js";
 import {
   buildPublicStation,
   buildStationAccess,
+  isOwnedStationId,
   isPublic,
   newTransferId,
   stripUndefined,
@@ -111,6 +121,11 @@ export interface FirebaseV2Config {
   appId?: string;
   /** Distinct names let one process hold several identities (tests). Default `"muonhub-v2"`. */
   appName?: string;
+  /**
+   * Deadline for one provider operation (one chunk for chunked writes), in ms; default 15000.
+   * On expiry the call fails with `outcome-unknown` (the write may still land). `0` disables it.
+   */
+  timeoutMs?: number;
   /** Local emulators; never set in production. */
   emulators?: { auth?: string; firestore?: HostPort; database?: HostPort };
 }
@@ -167,6 +182,13 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     if (d !== undefined) connectDatabaseEmulator(rt, d.host, d.port);
   }
 
+  const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  /** Every provider operation runs under the deadline and rethrows as a DataProviderError. */
+  const guard = <T>(operation: () => Promise<T>): Promise<T> =>
+    baseGuard(() => withDeadline(operation(), timeoutMs));
+  /** One I/O step with its own deadline (for chunked operations that report partial progress). */
+  const io = <T>(operation: () => Promise<T>): Promise<T> => withDeadline(operation(), timeoutMs);
+
   const nextNonce = createNonceSource();
   const now = (): number => Date.now();
 
@@ -195,17 +217,72 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     }
   }
 
-  /** Create-only write of one or more documents in one atomic batch; `already-exists` if the first exists. */
+  /**
+   * Create-only write of one or more documents, atomic; `already-exists` if the first exists.
+   *
+   * A transaction (read, then set) closes the check-then-set race. The rules, however, answer a
+   * read of a missing document with `permission-denied` (they read `resource.data`), so a denied
+   * READ inside the transaction cannot tell "absent" from "hidden". Only in that case do we fall
+   * back to a plain batch: the rules still decide the write (a create over an existing document
+   * is an update, which they deny), and its denial, if any, is thrown as is. Any other failure,
+   * and any denial of the write itself, is never swallowed.
+   */
   async function createStrict(
     writes: readonly [ref: ReturnType<typeof docRef>, data: object][],
   ): Promise<void> {
     const first = writes[0];
     if (first === undefined) return;
-    if (await probeExists(first[0])) throw new DataProviderError("already-exists");
+    let readDenied = false;
+    try {
+      await fsRunTransaction(fs, async (tx) => {
+        try {
+          if ((await tx.get(first[0])).exists()) throw new DataProviderError("already-exists");
+        } catch (error) {
+          if (mapError(error).code === "permission-denied") readDenied = true;
+          throw error;
+        }
+        for (const [ref, data] of writes) tx.set(ref, stripUndefined(data));
+      });
+      return;
+    } catch (error) {
+      if (!readDenied) throw mapError(error);
+    }
     const batch = writeBatch(fs);
     for (const [ref, data] of writes) batch.set(ref, stripUndefined(data));
     await batch.commit();
   }
+
+  /**
+   * Runs `first`, then `second`; if `second` fails, undoes `first` and rethrows the original error.
+   * If the undo fails too, the failure says so (the desync is then the caller's to repair).
+   */
+  async function ordered(
+    first: () => Promise<void>,
+    second: () => Promise<void>,
+    undoFirst: () => Promise<void>,
+  ): Promise<void> {
+    await first();
+    try {
+      await second();
+    } catch (error) {
+      try {
+        await undoFirst();
+      } catch (undoError) {
+        throw new DataProviderError("internal", {
+          message: "A two-step write failed and the first step could not be rolled back.",
+          cause: new AggregateError([error, undoError]),
+        });
+      }
+      throw mapError(error);
+    }
+  }
+
+  const memberMirror = (stationId: string, uid: string, role: v2.MemberRole | null) => async () => {
+    await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
+      [`editors/${uid}`]: role === "editor" ? true : null,
+      [`viewers/${uid}`]: role === "viewer" ? true : null,
+    });
+  };
 
   async function getParsed<T>(
     ref: ReturnType<typeof docRef>,
@@ -236,7 +313,8 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
   /**
    * Creates a create-once mirror node. If the create is denied because the node already exists
    * with the expected value (a retry after a later step failed), that is success; anything else
-   * is the original error.
+   * is the original error. (RTDB rules make the set itself the atomic create-once check; the read
+   * only disambiguates a retry, so no transaction is needed here.)
    */
   async function createMirrorNode(
     path: string,
@@ -322,6 +400,9 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     createStation: (input) =>
       guard(async () => {
         const station = parseOrInvalid(stationSchema, input, "station");
+        if (!isOwnedStationId(station.id, station.ownerUid)) {
+          throw invalid("Station id must be <ownerUid>_<random> (use newStationId).");
+        }
         const access = buildStationAccess(station, []);
         await createMirrorNode(
           `stationAccess/${station.id}`,
@@ -367,9 +448,16 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
               (error: unknown) => {
                 const mapped = mapError(error);
                 if (mapped.code === "invalid-data") return undefined;
+                if (mapped.code === "permission-denied") return "denied" as const;
                 throw mapped;
               },
             );
+            if (station === "denied") {
+              return {
+                key: stationId,
+                error: "access denied (the access mirror may be out of sync)",
+              };
+            }
             if (station === undefined) return { key: stationId, error: "invalid station record" };
             if (station === null) return { key: stationId, error: "station not found" };
             return { station, role: parsedMember.data.role };
@@ -401,10 +489,6 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           { ...current, ...changed, updatedAt: nextAt },
           "station update",
         );
-        // Mirror first: rights must never be granted by a lagging mirror.
-        if ("visibility" in changed) {
-          await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), { public: isPublic(next) });
-        }
         const batch = writeBatch(fs);
         batch.update(
           docRef("stations", stationId),
@@ -422,7 +506,34 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         } else if (isPublic(current)) {
           batch.delete(projectionRef);
         }
-        await batch.commit();
+        const commit = async (): Promise<void> => {
+          await batch.commit();
+        };
+        const wasPublic = isPublic(current);
+        const willBePublic = isPublic(next);
+        const setMirror = (value: boolean) => async (): Promise<void> => {
+          await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), { public: value });
+        };
+        if (wasPublic === willBePublic) {
+          await commit();
+        } else if (willBePublic) {
+          // Grant (becoming public): Firestore first, then the mirror; undo Firestore on failure.
+          const undo = async (): Promise<void> => {
+            const back = writeBatch(fs);
+            const previous: Record<string, unknown> = { updatedAt: current.updatedAt };
+            for (const key of Object.keys(changed)) {
+              const old = current[key as keyof v2.Station];
+              previous[key] = old === undefined ? deleteField() : old;
+            }
+            back.update(docRef("stations", stationId), previous);
+            back.delete(projectionRef);
+            await back.commit();
+          };
+          await ordered(commit, setMirror(true), undo);
+        } else {
+          // Revocation (leaving public): mirror first, then Firestore; restore the mirror on failure.
+          await ordered(setMirror(false), commit, setMirror(true));
+        }
       }),
     refreshPublicProjection: (stationId) =>
       guard(async () => {
@@ -452,34 +563,67 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           "member",
         );
         const memberRef = docRef("stations", stationId, "members", uid);
-        if ((await getDoc(memberRef)).exists()) throw new DataProviderError("already-exists");
-        await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
-          [`editors/${uid}`]: role === "editor" ? true : null,
-          [`viewers/${uid}`]: role === "viewer" ? true : null,
-        });
-        await createStrict([[memberRef, member]]);
+        // Grant: Firestore first (create-only; the rules decide who may), then the mirror; the
+        // member document is removed again if the mirror cannot be written.
+        await ordered(
+          () => createStrict([[memberRef, member]]),
+          memberMirror(stationId, uid, role),
+          async () => {
+            await deleteDoc(memberRef);
+          },
+        );
       }),
     changeMemberRole: (stationId, uid, role) =>
       guard(async () => {
         parseOrInvalid(v2.MemberRoleSchema, role, "role");
         const memberRef = docRef("stations", stationId, "members", uid);
-        if (!(await getDoc(memberRef)).exists()) throw new DataProviderError("not-found");
-        await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
-          [`editors/${uid}`]: role === "editor" ? true : null,
-          [`viewers/${uid}`]: role === "viewer" ? true : null,
-        });
-        await updateDoc(memberRef, { role });
+        // A plain read: a denied read is a real `permission-denied` (the owner may read members),
+        // and only a readable-but-missing document is `not-found`.
+        const snap = await getDoc(memberRef);
+        if (!snap.exists()) throw new DataProviderError("not-found");
+        const previous = v2.StationMemberSchema.parse(snap.data()).role;
+        if (previous === role) return;
+        const writeDoc = async (value: v2.MemberRole): Promise<void> => {
+          await updateDoc(memberRef, { role: value });
+        };
+        if (role === "editor") {
+          // Upgrade is a grant: Firestore first, then the mirror.
+          await ordered(
+            () => writeDoc(role),
+            memberMirror(stationId, uid, role),
+            () => writeDoc(previous),
+          );
+        } else {
+          // Downgrade is a revocation: mirror first, then Firestore.
+          await ordered(
+            memberMirror(stationId, uid, role),
+            () => writeDoc(role),
+            memberMirror(stationId, uid, previous),
+          );
+        }
       }),
     removeMember: (stationId, uid) =>
       guard(async () => {
-        await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
-          [`editors/${uid}`]: null,
-          [`viewers/${uid}`]: null,
-        });
-        await deleteDoc(docRef("stations", stationId, "members", uid));
+        const memberRef = docRef("stations", stationId, "members", uid);
+        const snap = await getDoc(memberRef);
+        const previous = snap.exists() ? v2.StationMemberSchema.parse(snap.data()).role : null;
+        // Revocation: mirror first, then Firestore; the mirror is restored if the delete fails.
+        await ordered(
+          memberMirror(stationId, uid, null),
+          async () => {
+            await deleteDoc(memberRef);
+          },
+          memberMirror(stationId, uid, previous),
+        );
       }),
     leaveStation: (stationId) =>
-      guard(() => deleteDoc(docRef("stations", stationId, "members", requireUid()))),
+      guard(async () => {
+        const me = requireUid();
+        // Own mirror entries first (the rules allow self-removal). No rollback: a member cannot
+        // re-grant themselves, and a lost right is the safe direction; the owner can repair it.
+        await memberMirror(stationId, me, null)();
+        await deleteDoc(docRef("stations", stationId, "members", me));
+      }),
     transferOwnership: (stationId, toUid) =>
       guard(async () => {
         const me = requireUid();
@@ -691,8 +835,10 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       }),
 
     // Minutes -------------------------------------------------------------------------------
+    // Chunked, with a deadline per I/O step (so a timeout reports which chunks are done).
     writeMinutes: (streamId, records) =>
-      guard(async (): Promise<WriteMinutesResult> => {
+      baseGuard(async (): Promise<WriteMinutesResult> => {
+        requireUid();
         const prepared = records.map((r) => ({
           ts: r.ts,
           ...v2.serializeMinute(r),
@@ -700,34 +846,32 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         if (new Set(prepared.map((p) => p.key)).size !== prepared.length) {
           throw invalid("Two records share the same minute.");
         }
-        if (prepared.length === 0) return { written: 0, alreadyExisted: [] };
-        // Write-once: the rules deny any overwrite, so existing minutes are found first (one ranged
-        // read) and left out of the write. A race with another writer surfaces as the rules' denial.
-        const keys = prepared.map((p) => p.key).sort();
+        if (prepared.length === 0) return { written: 0, alreadyExisted: [], existing: [] };
         const base = rtRef(rt, `minutes/${streamId}`);
-        const snap = await rtGet(
-          rtQuery(
-            base,
-            orderByKey(),
-            startAt(keys[0] as string),
-            endAt(keys[keys.length - 1] as string),
-          ),
-        );
-        const existing = new Set<string>();
-        snap.forEach((child) => {
-          if (child.key !== null) existing.add(child.key);
+        return writeMinutesChunked(prepared, {
+          // Write-once: the rules deny any overwrite, so existing minutes are found first (one
+          // bounded ranged read per chunk) and left out of the write.
+          readExisting: (firstKey, lastKey) =>
+            io(async () => {
+              const snap = await rtGet(
+                rtQuery(base, orderByKey(), startAt(firstKey), endAt(lastKey)),
+              );
+              const found = new Map<string, string | null>();
+              snap.forEach((child) => {
+                if (child.key === null) return;
+                const s = (child.val() as { s?: unknown } | null)?.s;
+                found.set(child.key, typeof s === "string" ? s : null);
+              });
+              return found;
+            }),
+          writeChunk: (entries) =>
+            io(() =>
+              rtUpdate(
+                base,
+                Object.fromEntries(entries.map((p) => [p.key, stripUndefined(p.value)])),
+              ),
+            ),
         });
-        const fresh = prepared.filter((p) => !existing.has(p.key));
-        for (const part of chunk(fresh, LIVE_BATCH_SIZE)) {
-          await rtUpdate(
-            base,
-            Object.fromEntries(part.map((p) => [p.key, stripUndefined(p.value)])),
-          );
-        }
-        return {
-          written: fresh.length,
-          alreadyExisted: prepared.filter((p) => existing.has(p.key)).map((p) => p.ts),
-        };
       }),
     readMinutes: (streamId, query: MinuteRangeQuery) =>
       guard(async (): Promise<Page<v2.MinuteRecord>> => {
@@ -799,30 +943,52 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
 
     // Live window ---------------------------------------------------------------------------
     pushLiveEvents: (streamId, events) =>
-      guard(async () => {
+      baseGuard(async () => {
+        requireUid();
         const entries = events.map((e) => {
           const value = toLiveValue(parseOrInvalid(v2.LiveEventSchema, e, "live event"));
           return [liveKey(value.t, nextNonce()), value] as const;
         });
         const base = rtRef(rt, `live/${streamId}/events`);
+        let pushed = 0;
         for (const part of chunk(entries, LIVE_BATCH_SIZE)) {
-          await rtUpdate(base, Object.fromEntries(part));
+          try {
+            await io(() => rtUpdate(base, Object.fromEntries(part)));
+          } catch (error) {
+            throw mapError(error).withPartial({
+              writtenSoFar: entries.slice(0, pushed).map(([, v]) => v.t),
+              pending: entries.slice(pushed).map(([, v]) => v.t),
+            });
+          }
+          pushed += part.length;
         }
-        return { pushed: entries.length };
+        return { pushed };
       }),
-    pruneLive: (streamId, nowMs = now()) =>
-      guard(async (): Promise<PruneResult> => {
+    pruneLive: (streamId, requestedNowMs = now()) =>
+      baseGuard(async (): Promise<PruneResult> => {
+        requireUid();
+        if (!Number.isFinite(requestedNowMs)) throw invalid("nowMs must be a finite number.");
+        // A far-future `nowMs` would delete live data; never trust it beyond the allowed skew.
+        const nowMs = Math.min(requestedNowMs, now() + MAX_CLOCK_SKEW_MS);
         const base = rtRef(rt, `live/${streamId}/events`);
-        const snap = await rtGet(rtQuery(base, orderByKey(), endBefore(pruneEndKey(nowMs))));
+        const snap = await io(() =>
+          rtGet(rtQuery(base, orderByKey(), endBefore(pruneEndKey(nowMs)))),
+        );
         const entries: (readonly [string, unknown])[] = [];
         snap.forEach((child) => {
           entries.push([child.key, child.val()] as const);
         });
         const { remove, skipped } = selectPrunable(entries, nowMs);
+        let removed = 0;
         for (const part of chunk(remove, LIVE_BATCH_SIZE)) {
-          await rtUpdate(base, Object.fromEntries(part.map((k) => [k, null])));
+          try {
+            await io(() => rtUpdate(base, Object.fromEntries(part.map((k) => [k, null]))));
+          } catch (error) {
+            throw mapError(error).withPartial({ removed });
+          }
+          removed += part.length;
         }
-        return { removed: remove.length, skipped };
+        return { removed, skipped };
       }),
     subscribeLive(streamId, handlers: SubscriptionHandlers<v2.LiveEvent>): Unsubscribe {
       const q = rtQuery(
@@ -849,6 +1015,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     // Status --------------------------------------------------------------------------------
     setStatus: (streamId, status, options) =>
       guard(async () => {
+        requireUid();
         const s = stripUndefined(parseOrInvalid(v2.StreamStatusSchema, status, "status"));
         if (options?.publish === true) {
           await rtUpdate(rtRef(rt), {

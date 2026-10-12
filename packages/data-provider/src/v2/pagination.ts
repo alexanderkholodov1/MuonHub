@@ -56,7 +56,12 @@ export function planMinuteRange(query: MinuteRangeQuery): MinuteRangePlan {
   if (cursor !== null && !KEY.test(cursor)) {
     throw new DataProviderError("invalid-argument", { message: "Invalid pagination cursor." });
   }
-  const useCursor = cursor !== null && cursor >= fromKey;
+  if (cursor !== null && cursor < fromKey) {
+    throw new DataProviderError("invalid-argument", {
+      message: "The pagination cursor is before the start of the range.",
+    });
+  }
+  const useCursor = cursor !== null;
   return {
     startKey: useCursor ? cursor : fromKey,
     startExclusive: useCursor,

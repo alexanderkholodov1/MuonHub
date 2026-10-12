@@ -27,7 +27,7 @@ describe("buildPublicStation", () => {
     const json = JSON.stringify(p);
     expect(json).not.toContain("-0.1963");
     expect(json).not.toContain("altitude");
-    expect(json).not.toContain("ownerUid");
+    expect(json).not.toContain('"ownerUid"');
   });
 
   it("hidden precision carries no location at all", () => {
