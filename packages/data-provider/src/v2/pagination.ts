@@ -34,7 +34,12 @@ const KEY = /^\d{13}$/;
 
 export function planMinuteRange(query: MinuteRangeQuery): MinuteRangePlan {
   const { fromTs, toTs } = query;
-  if (!Number.isSafeInteger(fromTs) || !Number.isSafeInteger(toTs) || fromTs < 0 || toTs <= fromTs) {
+  if (
+    !Number.isSafeInteger(fromTs) ||
+    !Number.isSafeInteger(toTs) ||
+    fromTs < 0 ||
+    toTs <= fromTs
+  ) {
     throw new DataProviderError("invalid-argument", {
       message: "Minute range needs integer fromTs >= 0 and toTs > fromTs.",
     });

@@ -207,7 +207,11 @@ export interface LiveApi {
 
 export interface StatusApi {
   /** Writes `status/{streamId}`; with `publish: true` also `statusPublic/{streamId}` atomically. */
-  setStatus(streamId: string, status: v2.StreamStatus, options?: { publish?: boolean }): Promise<void>;
+  setStatus(
+    streamId: string,
+    status: v2.StreamStatus,
+    options?: { publish?: boolean },
+  ): Promise<void>;
   getStatus(streamId: string): Promise<v2.StreamStatus | null>;
   subscribeStatus(
     streamId: string,
@@ -221,7 +225,8 @@ export interface StatusApi {
 }
 
 export interface DataProviderV2
-  extends AuthApi,
+  extends
+    AuthApi,
     IdentityApi,
     StationsApi,
     DevicesApi,

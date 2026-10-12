@@ -82,11 +82,7 @@ import {
   toLiveValue,
   windowStartKey,
 } from "./live-window.js";
-import {
-  buildMinutePage,
-  planMinuteRange,
-  type MinuteRangeQuery,
-} from "./pagination.js";
+import { buildMinutePage, planMinuteRange, type MinuteRangeQuery } from "./pagination.js";
 import {
   buildPublicStation,
   buildStationAccess,
@@ -261,7 +257,9 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     }
   }
 
-  async function countDevices(stationId: string): Promise<{ deviceCount: number; active: boolean }> {
+  async function countDevices(
+    stationId: string,
+  ): Promise<{ deviceCount: number; active: boolean }> {
     const devices = collection(fs, "devices");
     const [all, active] = await Promise.all([
       getCountFromServer(fsQuery(devices, where("stationId", "==", stationId))),
@@ -291,8 +289,8 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     signInWithEmail: (email, password) =>
       guard(async () => toAuthUser((await signInWithEmailAndPassword(auth, email, password)).user)),
     createAccount: (email, password) =>
-      guard(
-        async () => toAuthUser((await createUserWithEmailAndPassword(auth, email, password)).user),
+      guard(async () =>
+        toAuthUser((await createUserWithEmailAndPassword(auth, email, password)).user),
       ),
     signOut: () => guard(() => fbSignOut(auth)),
 
@@ -312,11 +310,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     getUser: (uid) => guard(() => getParsed(docRef("users", uid), v2.UserSchema)),
     updateDisplayName: (uid, displayName) =>
       guard(async () => {
-        const name = parseOrInvalid(
-          v2.UserSchema.shape.displayName,
-          displayName,
-          "display name",
-        );
+        const name = parseOrInvalid(v2.UserSchema.shape.displayName, displayName, "display name");
         await updateDoc(docRef("users", uid), { displayName: name });
       }),
     findUidByUsername: (username) =>
@@ -366,9 +360,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         );
         const quarantine = new QuarantineCollector();
         const items: { station: v2.Station; role: v2.MemberRole }[] = [];
-        type Row =
-          | { key: string; error: string }
-          | { station: v2.Station; role: v2.MemberRole };
+        type Row = { key: string; error: string } | { station: v2.Station; role: v2.MemberRole };
         const rows: Row[] = await Promise.all(
           memberships.docs.map(async (m): Promise<Row> => {
             const stationId = m.ref.parent.parent?.id;
@@ -399,7 +391,10 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         if (current === null) throw new DataProviderError("not-found");
         const changed: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(patch)) {
-          if (value !== undefined && JSON.stringify(value) !== JSON.stringify(current[key as keyof v2.Station])) {
+          if (
+            value !== undefined &&
+            JSON.stringify(value) !== JSON.stringify(current[key as keyof v2.Station])
+          ) {
             changed[key] = value;
           }
         }
@@ -415,7 +410,10 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), { public: isPublic(next) });
         }
         const batch = writeBatch(fs);
-        batch.update(docRef("stations", stationId), stripUndefined({ ...changed, updatedAt: nextAt }));
+        batch.update(
+          docRef("stations", stationId),
+          stripUndefined({ ...changed, updatedAt: nextAt }),
+        );
         const projectionRef = docRef("publicStations", stationId);
         const affectsProjection = ["name", "location", "publicPrecision", "visibility"].some(
           (k) => k in changed,
@@ -654,11 +652,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           if (!snap.exists()) throw new DataProviderError("not-found");
           const current = v2.SessionSchema.parse(snap.data());
           if (current.endedAt !== undefined) throw new DataProviderError("conflict");
-          const closed = parseOrInvalid(
-            v2.SessionSchema,
-            { ...current, ...end },
-            "session end",
-          );
+          const closed = parseOrInvalid(v2.SessionSchema, { ...current, ...end }, "session end");
           tx.update(
             ref,
             stripUndefined({

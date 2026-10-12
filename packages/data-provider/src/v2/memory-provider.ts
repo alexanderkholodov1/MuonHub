@@ -154,7 +154,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     return store.subscribe(emit);
   };
 
-  const statusWatcher = <T>(path: string, schema: { parse(v: unknown): T }) =>
+  const statusWatcher =
+    <T>(path: string, schema: { parse(v: unknown): T }) =>
     (handlers: SubscriptionHandlers<T | null>): Unsubscribe =>
       watch<T | null>(() => {
         if (!store.rtdb.has(path)) return { value: null };
@@ -203,11 +204,17 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
 
     async createUserProfile(input) {
       const profile = validate(v2.UserSchema, input, "user profile");
-      if (store.docs.has(`users/${profile.uid}`) || store.docs.has(`usernames/${profile.username}`)) {
+      if (
+        store.docs.has(`users/${profile.uid}`) ||
+        store.docs.has(`usernames/${profile.username}`)
+      ) {
         throw new DataProviderError("already-exists");
       }
       createDoc(`users/${profile.uid}`, profile);
-      createDoc(`usernames/${profile.username}`, { uid: profile.uid, createdAt: profile.createdAt });
+      createDoc(`usernames/${profile.username}`, {
+        uid: profile.uid,
+        createdAt: profile.createdAt,
+      });
     },
     async getUser(uid) {
       return getDocOrNull(`users/${uid}`, v2.UserSchema);
@@ -265,8 +272,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const changed = Object.fromEntries(
         Object.entries(patch).filter(
           ([k, v]) =>
-            v !== undefined &&
-            JSON.stringify(v) !== JSON.stringify(current[k as keyof v2.Station]),
+            v !== undefined && JSON.stringify(v) !== JSON.stringify(current[k as keyof v2.Station]),
         ),
       );
       if (Object.keys(changed).length === 0) return;
@@ -488,7 +494,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const taken = rows.slice(0, n);
       const parsed = parseEntries(taken, (key, value) => {
         const s = v2.DaySummarySchema.parse(value);
-        if (s.day !== key || s.streamId !== streamId) throw new Error("summary does not match its path");
+        if (s.day !== key || s.streamId !== streamId)
+          throw new Error("summary does not match its path");
         return s;
       });
       const last = taken[taken.length - 1];
