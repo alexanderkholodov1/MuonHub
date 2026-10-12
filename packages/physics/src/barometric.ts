@@ -225,7 +225,7 @@ export interface BarometricCorrectedRate extends CorrectedRate {
 
 /**
  * Corrects a rate to the reference pressure P₀ when the fit was applied:
- * R_c = R · exp(−(β/100)(P − P₀)); σ adds σ_β/100 · |P − P₀| · R in quadrature.
+ * R_c = R · exp(−(β/100)(P − P₀)); σ adds σ_β/100 · |P − P₀| · R_c (the corrected rate) in quadrature.
  */
 export function applyBarometricCorrection(
   rate: CorrectedRate,
@@ -247,10 +247,11 @@ export function applyBarometricCorrection(
   }
   const dp = pressureHpa - fit.p0Hpa;
   const factor = Math.exp(-(fit.beta / 100) * dp);
-  const sigma = Math.hypot(rate.sigma * factor, (fit.sigmaBeta / 100) * Math.abs(dp) * rate.rate);
+  const corrected = rate.rate * factor;
+  const sigma = Math.hypot(rate.sigma * factor, (fit.sigmaBeta / 100) * Math.abs(dp) * corrected);
   return {
     ...rate,
-    rate: rate.rate * factor,
+    rate: corrected,
     sigma,
     barometric: "applied",
     provenance: provenance("applyBarometricCorrection", {

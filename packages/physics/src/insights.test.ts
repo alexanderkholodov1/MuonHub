@@ -46,6 +46,20 @@ describe("buildCorrectedRateInsights", () => {
     expect(out.hourly[0]?.corrected.barometric).toBe("not-computable");
   });
 
+  it("marks the β fit uncorrected and records live sources when any hour is nominal", () => {
+    const raw = syntheticHours({ hours: 60 * 24, betaPctPerHpa: -0.12 });
+    const hours = raw
+      .map(toInsight)
+      .map((h, i) => (i % 10 === 0 ? { ...h, liveSource: "nominal" as const } : h));
+    const out = buildCorrectedRateInsights(hours);
+    expect(out.beta.status).toBe("uncorrected");
+    expect(out.beta.provenance.params["nominalHours"]).toBe(144);
+    expect(out.beta.provenance.params["liveSources"]).toEqual({ nominal: 144, counter: 1296 });
+    const clean = buildCorrectedRateInsights(raw.map(toInsight));
+    expect(clean.beta.status).toBe("ok");
+    expect(clean.beta.provenance.params["nominalHours"]).toBe(0);
+  });
+
   it("handles a single usable hour without a baseline", () => {
     const out = buildCorrectedRateInsights([
       { hourStart: 0, counts: 100, completeMinutes: 60, liveSource: "nominal" },

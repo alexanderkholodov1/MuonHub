@@ -14,6 +14,7 @@ import {
 } from "./barometric.js";
 import { correctRateByLiveTime, uncorrectedRate } from "./live-time.js";
 import { madSigma, median } from "./math.js";
+import { effectiveSampleSize } from "./statistics.js";
 import { provenance, type Provenance, type ResultStatus } from "./provenance.js";
 
 /** One hour of a stream, as read from a day summary (spec 0083). */
@@ -48,7 +49,7 @@ export function buildCorrectedRateInsights(
   opts: CorrectedRateInsightsOptions = {},
 ): CorrectedRateInsights {
   const durationMs = (h: InsightHour): number => h.completeMinutes * 60_000;
-  const beta = fitBarometricBeta(
+  const fit = fitBarometricBeta(
     hours.map((h) => {
       const p = { hourStart: h.hourStart, counts: h.counts, liveMs: h.liveMs ?? durationMs(h) };
       return {
@@ -59,6 +60,19 @@ export function buildCorrectedRateInsights(
     }),
     opts.beta,
   );
+  const liveSources: Record<string, number> = {};
+  for (const h of hours) liveSources[h.liveSource] = (liveSources[h.liveSource] ?? 0) + 1;
+  const nominalHours = liveSources["nominal"] ?? 0;
+  // Nominal hours enter the fit without a dead-time correction: say so, never silently.
+  const beta: BetaFitResult = {
+    ...fit,
+    status: fit.status === "ok" && nominalHours > 0 ? "uncorrected" : fit.status,
+    provenance: provenance(fit.provenance.fn, {
+      ...fit.provenance.params,
+      liveSources,
+      nominalHours,
+    }),
+  };
   const hourly = hours.map((h) => {
     const base =
       h.liveSource === "nominal" || h.liveMs === undefined
@@ -75,7 +89,10 @@ export function buildCorrectedRateInsights(
   const rates = usable.map((h) => h.corrected.rate as number);
   const baseline =
     rates.length >= 2
-      ? { value: median(rates), sigma: (1.2533 * madSigma(rates)) / Math.sqrt(rates.length) }
+      ? {
+          value: median(rates),
+          sigma: (1.2533 * madSigma(rates)) / Math.sqrt(effectiveSampleSize(rates)),
+        }
       : { value: 0, sigma: 0 };
   const deviations = detectHourScaleDeviations(
     usable.map((h) => ({

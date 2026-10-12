@@ -60,8 +60,24 @@ describe("detectHourScaleDeviations", () => {
     // 8766 h · 2 · (0.00135)^3 ≈ 4.3e-5 per year for 3σ and 3 windows.
     expect(res.falseAlarmsPerYear).toBeCloseTo(8766 * 2 * 0.00135 ** 3, 7);
     expect(res.falseAlarmsPerYear).toBeLessThan(1e-3);
+    expect(res.residualAutocorrelation).toBeGreaterThan(0.5);
+    expect(res.falseAlarmsPerYearAutocorrelated).toBeGreaterThan(res.falseAlarmsPerYear);
+    expect(plain.falseAlarmsPerYearAutocorrelated).toBeGreaterThanOrEqual(plain.falseAlarmsPerYear);
     const loose = detectHourScaleDeviations(windows, baseline, { threshold: 2, persistence: 1 });
     expect(loose.falseAlarmsPerYear).toBeGreaterThan(res.falseAlarmsPerYear);
+  });
+
+  it("overdispersion uses the Poisson variance only, not the baseline σ", () => {
+    const rng = mulberry32(11);
+    const gauss = (sd: number): HourlyRate[] =>
+      flat(4000).map((h) => ({ ...h, rate: 2.4 + sd * gaussian(rng) }));
+    // Scatter equals the per-window σ: no excess, whatever the baseline σ.
+    const res = detectHourScaleDeviations(gauss(SIGMA), { value: 2.4, sigma: 0.05 });
+    expect(res.sigmaOverdispersion).toBeLessThan(0.01);
+    // Scatter 0.1 with a large baseline σ: excess √(0.1² − σ²) is still reported (old rule: 0.06).
+    const r2 = detectHourScaleDeviations(gauss(0.1), { value: 2.4, sigma: 0.09 });
+    expect(r2.sigmaOverdispersion).toBeGreaterThan(0.085);
+    expect(r2.sigmaOverdispersion).toBeLessThan(0.1);
   });
 
   it("is not computable with fewer than two windows", () => {

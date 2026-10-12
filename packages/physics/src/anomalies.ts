@@ -7,7 +7,7 @@
  * estimated from the residuals (uncorrected pressure/temperature residuals are autocorrelated, so
  * √N alone underestimates the false-alarm rate).
  */
-import { madSigma, mean, twoSidedTail } from "./math.js";
+import { lag1Autocorrelation, madSigma, mean, twoSidedTail } from "./math.js";
 import { provenance, type Provenance, type ResultStatus } from "./provenance.js";
 
 export interface HourlyRate {
@@ -44,9 +44,16 @@ export interface AnomalyResult {
   readonly sigmaOverdispersion: number;
   /**
    * Expected false alarms per year of hourly windows for this threshold and persistence, assuming
-   * independent windows after the overdispersion term (a lower bound when residuals remain correlated).
+   * independent windows: a LOWER BOUND when the residuals are positively correlated.
    */
   readonly falseAlarmsPerYear: number;
+  /** Lag-1 autocorrelation ρ of the residuals (0 when not computable). */
+  readonly residualAutocorrelation: number;
+  /**
+   * Same estimate with the residuals' lag-1 autocorrelation: a run of `persistence` windows counts
+   * as k_eff = max(1, persistence·(1−ρ)/(1+ρ)) independent windows (effective number of windows).
+   */
+  readonly falseAlarmsPerYearAutocorrelated: number;
   readonly provenance: Provenance;
 }
 
@@ -69,12 +76,19 @@ export function detectHourScaleDeviations(
       deviations: [],
       sigmaOverdispersion: 0,
       falseAlarmsPerYear,
+      residualAutocorrelation: 0,
+      falseAlarmsPerYearAutocorrelated: falseAlarmsPerYear,
       provenance: prov,
     };
   }
   const sorted = [...windows].sort((a, b) => a.hourStart - b.hourStart);
   const residuals = sorted.map((w) => w.rate - baseline.value);
-  const expectedVar = mean(sorted.map((w) => w.sigma * w.sigma + baseline.sigma * baseline.sigma));
+  // Expected variance of the residuals about their own (robust) centre: the Poisson terms only.
+  // baseline.sigma is a common offset, not a per-window scatter, so it stays out of this term.
+  const expectedVar = mean(sorted.map((w) => w.sigma * w.sigma));
+  const rho = Math.min(0.99, Math.max(0, lag1Autocorrelation(residuals)));
+  const kEff = Math.max(1, (persistence * (1 - rho)) / (1 + rho));
+  const falseAlarmsPerYearAutocorrelated = HOURS_PER_YEAR * 2 * Math.pow(pTail, kEff);
   // Robust spread (MAD) so the deviations being searched for do not inflate their own σ.
   const observedVar = madSigma(residuals) ** 2;
   const sigmaOverdispersion = Math.sqrt(Math.max(0, observedVar - expectedVar));
@@ -117,5 +131,13 @@ export function detectHourScaleDeviations(
     }
   }
   close();
-  return { status: "ok", deviations, sigmaOverdispersion, falseAlarmsPerYear, provenance: prov };
+  return {
+    status: "ok",
+    deviations,
+    sigmaOverdispersion,
+    falseAlarmsPerYear,
+    residualAutocorrelation: rho,
+    falseAlarmsPerYearAutocorrelated,
+    provenance: prov,
+  };
 }

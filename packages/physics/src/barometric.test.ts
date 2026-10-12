@@ -24,8 +24,11 @@ describe("fitBarometricBeta", () => {
   it("β gate: one week of the same stream is not significant and is not applied", () => {
     const fit = fitBarometricBeta(syntheticHours({ hours: 7 * 24, betaPctPerHpa: -0.12 }));
     expect(fit.status).toBe("ok");
-    expect(fit.significance as number).toBeLessThan(3);
-    expect(fit.sigmaBeta as number).toBeGreaterThan(0.03);
+    // Known answer for the seeded series (seed 20261003): |β|/σ_β ≈ 1.28, σ_β ≈ 0.092 %/hPa.
+    expect(fit.significance as number).toBeGreaterThanOrEqual(1.2);
+    expect(fit.significance as number).toBeLessThanOrEqual(2.0);
+    expect(fit.sigmaBeta as number).toBeGreaterThanOrEqual(0.05);
+    expect(fit.sigmaBeta as number).toBeLessThanOrEqual(0.1);
     expect(fit.applied).toBe(false);
     expect(fit.reason).toContain("<");
   });
@@ -112,11 +115,10 @@ describe("applyBarometricCorrection", () => {
   };
   const rate = { ...correctRateByLiveTime(144 * 10, 600_000), rate: 2.4, sigma: 0 };
 
-  it("β propagation: added σ = 0.02/100 · 5 · 2.4 = 2.4e-3 s⁻¹", () => {
+  it("β propagation: added σ = 0.02/100 · 5 · R_c (corrected rate) s⁻¹", () => {
     const out = applyBarometricCorrection(rate, 773, fit);
     expect(out.barometric).toBe("applied");
-    expect(out.sigma as number).toBeCloseTo((0.02 / 100) * 5 * 2.4, 12);
-    expect(out.sigma as number).toBeCloseTo(2.4e-3, 4);
+    expect(out.sigma as number).toBeCloseTo((0.02 / 100) * 5 * 2.4 * Math.exp(0.0012 * 5), 12);
     expect(out.rate as number).toBeCloseTo(2.4 * Math.exp(0.0012 * 5), 12);
   });
 

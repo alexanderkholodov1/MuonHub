@@ -61,6 +61,15 @@ describe("deadFractionFromCounter", () => {
     expect(r.status).toBe("invalid");
   });
 
+  it("equal device clock: invalid but not a reset", () => {
+    const r = deadFractionFromCounter(
+      { deadTimeUs: 1_000, deviceTimeMs: 5_000 },
+      { deadTimeUs: 2_000, deviceTimeMs: 5_000 },
+    );
+    expect(r.status).toBe("invalid");
+    expect(r.reset).toBe(false);
+  });
+
   it("rejects non-finite input and a dead time longer than the elapsed time", () => {
     expect(
       deadFractionFromCounter(

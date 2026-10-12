@@ -4,7 +4,7 @@
  * One definition, shared with the contracts (spec 0083 FR10): for a device that reports a cumulative
  * dead-time counter, the dead time of a minute is the counter increment between the last line of
  * that minute and the last line of the previous minute, over the device-clock span between the same
- * two lines. A decrease of the counter or of the device clock is a reset — never a fraction.
+ * two lines. A decrease of the counter or of the device clock is a reset (an unchanged clock is merely invalid) — never a fraction.
  */
 import type { v2 } from "@muonhub/shared";
 import { provenance, type Provenance, type ResultStatus } from "./provenance.js";
@@ -42,8 +42,12 @@ export function deadFractionFromCounter(
   if (values.some((v) => !Number.isFinite(v))) {
     return { status: "invalid", reset: false, provenance: prov };
   }
-  if (end.deadTimeUs < start.deadTimeUs || end.deviceTimeMs <= start.deviceTimeMs) {
+  if (end.deadTimeUs < start.deadTimeUs || end.deviceTimeMs < start.deviceTimeMs) {
     return { status: "invalid", reset: true, provenance: prov };
+  }
+  if (end.deviceTimeMs === start.deviceTimeMs) {
+    // No elapsed device time (duplicate line): invalid, but not a session boundary.
+    return { status: "invalid", reset: false, provenance: prov };
   }
   const deadMs = (end.deadTimeUs - start.deadTimeUs) / 1000;
   const deltaDeviceMs = end.deviceTimeMs - start.deviceTimeMs;
