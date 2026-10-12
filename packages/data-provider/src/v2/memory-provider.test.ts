@@ -32,6 +32,20 @@ describe("memory provider — stations", () => {
     expect(pub.items.map((p) => p.id)).toEqual([STATION_ID]);
   });
 
+  it("pages public stations with at most 100 per page and rejects larger pages", async () => {
+    const { provider } = setup();
+    await provider.createStation(station());
+    const page = await provider.listPublicStations({ limit: 1 });
+    expect(page.items).toHaveLength(1);
+    expect(page.nextCursor).toBe(STATION_ID);
+    expect(
+      (await provider.listPublicStations({ limit: 1, cursor: page.nextCursor })).items,
+    ).toEqual([]);
+    await expect(provider.listPublicStations({ limit: 101 })).rejects.toMatchObject({
+      code: "invalid-argument",
+    });
+  });
+
   it("does not create a projection for a private station", async () => {
     const { provider } = setup();
     await provider.createStation(station({ visibility: "private" }));

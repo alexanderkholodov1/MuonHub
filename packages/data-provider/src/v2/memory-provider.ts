@@ -376,8 +376,19 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
         buildPublicStation(station, countDevices(stationId), now()),
       );
     },
-    async listPublicStations() {
-      return listDocs("publicStations", v2.PublicStationSchema);
+    async listPublicStations(opts) {
+      const n = opts?.limit ?? 100;
+      if (!Number.isInteger(n) || n < 1 || n > 100) fail("Invalid page size.");
+      const cursor = opts?.cursor ?? null;
+      const rows = children("publicStations")
+        .filter(([id]) => cursor === null || id > cursor)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .slice(0, n);
+      const last = rows[rows.length - 1];
+      return {
+        ...parseEntries(rows, (_k, v) => v2.PublicStationSchema.parse(v)),
+        nextCursor: rows.length === n && last !== undefined ? last[0] : null,
+      };
     },
 
     async listMembers(stationId) {
@@ -583,8 +594,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       if (!day.test(fromDay) || !day.test(toDay) || toDay < fromDay) {
         fail("Day range must be YYYY-MM-DD with fromDay <= toDay.");
       }
-      const n = opts?.limit ?? 400;
-      if (!Number.isInteger(n) || n < 1 || n > 1000) fail("Invalid page size.");
+      const n = opts?.limit ?? 100;
+      if (!Number.isInteger(n) || n < 1 || n > 100) fail("Invalid page size.");
       const cursor = opts?.cursor ?? null;
       if (cursor !== null && !day.test(cursor)) fail("Invalid pagination cursor.");
       const rows = children(`streams/${streamId}/days`)
@@ -598,7 +609,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
         return s;
       });
       const last = taken[taken.length - 1];
-      return { ...parsed, nextCursor: rows.length > n && last !== undefined ? last[0] : null };
+      return { ...parsed, nextCursor: taken.length === n && last !== undefined ? last[0] : null };
     },
 
     async pushLiveEvents(streamId, events) {

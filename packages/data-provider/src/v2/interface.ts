@@ -88,7 +88,14 @@ export interface StationsApi {
   updateStation(stationId: string, patch: StationOwnerPatch): Promise<void>;
   /** Recomputes the public projection (device count, active flag); owner only. */
   refreshPublicProjection(stationId: string): Promise<void>;
-  listPublicStations(): Promise<ListResult<v2.PublicStation>>;
+  /**
+   * Public projections, in id order. The rules require a page size of at most 100, so this is
+   * paged: pass `nextCursor` back until it is `null`. A full page may be followed by an empty one.
+   */
+  listPublicStations(options?: {
+    limit?: number;
+    cursor?: string | null;
+  }): Promise<Page<v2.PublicStation>>;
 
   listMembers(stationId: string): Promise<ListResult<v2.StationMember>>;
   addMember(stationId: string, uid: string, role: v2.MemberRole): Promise<void>;
@@ -199,7 +206,11 @@ export interface DaySummariesApi {
   putDaySummary(summary: v2.DaySummary): Promise<void>;
   /** Throws `invalid-data` if the stored document does not validate. */
   getDaySummary(streamId: string, day: string): Promise<v2.DaySummary | null>;
-  /** Days `fromDay`..`toDay` inclusive (`YYYY-MM-DD`), oldest first; days with no data are absent. */
+  /**
+   * Days `fromDay`..`toDay` inclusive (`YYYY-MM-DD`), oldest first; days with no data are absent.
+   * Page size is at most 100 (the rules bound list queries); a full page may be followed by an
+   * empty one.
+   */
   listDaySummaries(
     streamId: string,
     fromDay: string,

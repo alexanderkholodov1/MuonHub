@@ -133,6 +133,8 @@ export interface FirebaseV2Config {
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const DEFAULT_SESSION_LIMIT = 50;
 const MAX_SESSION_LIMIT = 500;
+/** The security rules reject list queries asking for more than 100 documents. */
+const MAX_LIST_LIMIT = 100;
 
 function invalid(message: string): DataProviderError {
   return new DataProviderError("invalid-argument", { message });
@@ -546,8 +548,31 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           stripUndefined(buildPublicStation(station, stats, now())),
         );
       }),
-    listPublicStations: () =>
-      guard(() => listParsed(collection(fs, "publicStations"), v2.PublicStationSchema)),
+    listPublicStations: (options) =>
+      guard(async (): Promise<Page<v2.PublicStation>> => {
+        const n = options?.limit ?? MAX_LIST_LIMIT;
+        if (!Number.isInteger(n) || n < 1 || n > MAX_LIST_LIMIT) {
+          throw invalid(`Page size must be an integer between 1 and ${MAX_LIST_LIMIT}.`);
+        }
+        const cursor = options?.cursor ?? null;
+        const snap = await getDocs(
+          fsQuery(
+            collection(fs, "publicStations"),
+            fsOrderBy(documentId()),
+            ...(cursor === null ? [] : [fsStartAfter(cursor)]),
+            fsLimit(n),
+          ),
+        );
+        const parsed = parseEntries(
+          snap.docs.map((d) => [d.id, d.data()] as const),
+          (_key, value) => v2.PublicStationSchema.parse(value),
+        );
+        const last = snap.docs[snap.docs.length - 1];
+        return {
+          ...parsed,
+          nextCursor: snap.docs.length === n && last !== undefined ? last.id : null,
+        };
+      }),
 
     // Members and transfers -----------------------------------------------------------------
     listMembers: (stationId) =>
@@ -669,6 +694,9 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
           ownerUid: requireUid(),
           pendingOwner: null,
+          // The rules demand a clean node on hand-over: the new owner re-shares from scratch.
+          editors: null,
+          viewers: null,
         }),
       ),
     getTransfer: (id) =>
@@ -764,8 +792,10 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const stream = parseOrInvalid(v2.StreamSchema, input, "stream");
         await createMirrorNode(
           `streamStation/${stream.id}`,
-          stream.stationId,
-          (existing) => existing === stream.stationId,
+          // `since` bounds the minutes the rules accept for this stream (never before creation).
+          { stationId: stream.stationId, since: stream.createdAt },
+          (existing) =>
+            (existing as { stationId?: unknown } | null)?.stationId === stream.stationId,
         );
         await createStrict([[docRef("streams", stream.id), stream]]);
       }),
@@ -909,8 +939,9 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         if (!DAY.test(fromDay) || !DAY.test(toDay) || toDay < fromDay) {
           throw invalid("Day range must be YYYY-MM-DD with fromDay <= toDay.");
         }
-        const n = options?.limit ?? 400;
-        if (!Number.isInteger(n) || n < 1 || n > 1000) throw invalid("Invalid page size.");
+        const n = options?.limit ?? MAX_LIST_LIMIT;
+        if (!Number.isInteger(n) || n < 1 || n > MAX_LIST_LIMIT)
+          throw invalid("Invalid page size.");
         const cursor = options?.cursor ?? null;
         if (cursor !== null && !DAY.test(cursor)) throw invalid("Invalid pagination cursor.");
         const constraints = [
@@ -918,12 +949,12 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           where(documentId(), "<=", toDay),
           fsOrderBy(documentId()),
           ...(cursor === null ? [] : [fsStartAfter(cursor)]),
-          fsLimit(n + 1),
+          fsLimit(n),
         ];
         const snap = await getDocs(
           fsQuery(collection(fs, "streams", streamId, "days"), ...constraints),
         );
-        const taken = snap.docs.slice(0, n);
+        const taken = snap.docs;
         const parsed = parseEntries(
           taken.map((d) => [d.id, d.data()] as const),
           (key, value) => {
@@ -937,7 +968,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const last = taken[taken.length - 1];
         return {
           ...parsed,
-          nextCursor: snap.docs.length > n && last !== undefined ? last.id : null,
+          nextCursor: taken.length === n && last !== undefined ? last.id : null,
         };
       }),
 
