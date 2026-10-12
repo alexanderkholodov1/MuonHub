@@ -625,56 +625,35 @@ service cloud.firestore {
         '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
     }
 
-    function dayStartMs(day) {
-      let p = day.split('-');
-      return timestamp.date(int(p[0]), int(p[1]), int(p[2])).toMillis();
+    function hourFields() {
+      return ['hourStart', 'completeMinutes', 'n', 'liveSource', 'liveMs', 'coincidences', 'pressureHpa',
+        'pressureMinutes', 'temperatureC', 'temperatureMinutes', 'histogram', 'saturated'];
     }
 
-    // One hour entry (spec 0083 FR11): present only for hours with at least one complete minute.
-    function hourValid(h, start) {
-      return h is map
-        && h.keys().hasAll(['hourStart', 'completeMinutes', 'n', 'liveSource'])
-        && h.keys().hasOnly(['hourStart', 'completeMinutes', 'n', 'liveSource', 'liveMs', 'coincidences',
-          'pressureHpa', 'pressureMinutes', 'temperatureC', 'temperatureMinutes', 'histogram', 'saturated'])
-        && h.hourStart == start
-        && h.completeMinutes is int && h.completeMinutes >= 1 && h.completeMinutes <= 60
-        && count(h.n)
-        && h.liveSource in ['counter', 'tau', 'nominal']
-        && ((h.liveSource == 'nominal') == !('liveMs' in h))
-        && (!('liveMs' in h) || (h.liveMs is number && h.liveMs > 0 && h.liveMs <= 3600000))
-        && optCount(h, 'coincidences')
-        && optCount(h, 'saturated')
-        && (('pressureHpa' in h) == ('pressureMinutes' in h))
-        && (!('pressureHpa' in h) || (h.pressureHpa is number && h.pressureHpa > 0 && h.pressureHpa <= 1100
-          && h.pressureMinutes is int && h.pressureMinutes >= 1 && h.pressureMinutes <= h.completeMinutes))
-        && (('temperatureC' in h) == ('temperatureMinutes' in h))
-        && (!('temperatureC' in h) || (h.temperatureC is number && h.temperatureC >= -60 && h.temperatureC <= 100
-          && h.temperatureMinutes is int && h.temperatureMinutes >= 1 && h.temperatureMinutes <= h.completeMinutes))
-        && (!('histogram' in h) || (h.histogram is list && h.histogram.size() <= 1024));
-    }
-
-    function hourOk(hours, k, dayStart) {
-      return !(k in hours) || hourValid(hours[k], dayStart + int(k) * 3600000);
+    // One hour entry (spec 0083 FR11), present only for hours with at least one complete minute.
+    // Firestore evaluates at most 1000 expressions per request: a 24-hour document leaves room only
+    // for the allowed-key check of each hour (no unexpected data, nothing that is not a map). Types
+    // and ranges of the hour fields are enforced by the data layer's zod schema before every write
+    // (spec 0083 DaySummarySchema); the canonical per-minute records stay write-once in RTDB.
+    function hourOk(hs, k) {
+      return !(k in hs) || hs[k].keys().hasOnly(hourFields());
     }
 
     function validDay(d, streamId, day) {
-      let start = dayStartMs(day);
       let hs = d.hours;
       return d.keys().hasAll(['schemaVersion', 'streamId', 'day', 'hours', 'updatedAt'])
         && d.keys().hasOnly(['schemaVersion', 'streamId', 'day', 'hours', 'updatedAt'])
         && d.schemaVersion == 2
         && d.streamId == streamId
-        && d.day == day && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.day == day && day.matches('^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
         && hs is map && hs.keys().hasOnly(hourKeys())
         && pastMs(d.updatedAt)
-        && hourOk(hs, '00', start) && hourOk(hs, '01', start) && hourOk(hs, '02', start)
-        && hourOk(hs, '03', start) && hourOk(hs, '04', start) && hourOk(hs, '05', start)
-        && hourOk(hs, '06', start) && hourOk(hs, '07', start) && hourOk(hs, '08', start)
-        && hourOk(hs, '09', start) && hourOk(hs, '10', start) && hourOk(hs, '11', start)
-        && hourOk(hs, '12', start) && hourOk(hs, '13', start) && hourOk(hs, '14', start)
-        && hourOk(hs, '15', start) && hourOk(hs, '16', start) && hourOk(hs, '17', start)
-        && hourOk(hs, '18', start) && hourOk(hs, '19', start) && hourOk(hs, '20', start)
-        && hourOk(hs, '21', start) && hourOk(hs, '22', start) && hourOk(hs, '23', start);
+        && hourOk(hs, '00') && hourOk(hs, '01') && hourOk(hs, '02') && hourOk(hs, '03')
+        && hourOk(hs, '04') && hourOk(hs, '05') && hourOk(hs, '06') && hourOk(hs, '07')
+        && hourOk(hs, '08') && hourOk(hs, '09') && hourOk(hs, '10') && hourOk(hs, '11')
+        && hourOk(hs, '12') && hourOk(hs, '13') && hourOk(hs, '14') && hourOk(hs, '15')
+        && hourOk(hs, '16') && hourOk(hs, '17') && hourOk(hs, '18') && hourOk(hs, '19')
+        && hourOk(hs, '20') && hourOk(hs, '21') && hourOk(hs, '22') && hourOk(hs, '23');
     }
 
     match /streams/{streamId} {

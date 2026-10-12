@@ -93,6 +93,8 @@ export const OLD_TRANSFER = "stPriv_oldtransfer1";
 // ── Time ─────────────────────────────────────────────────────────────────────────────────────
 
 export const now = (): number => Date.now();
+/** Fixed creation time of seeded documents, so a test can rewrite a whole document unchanged. */
+const T_SEED = Date.now() - 3_600_000;
 /** Start of the last complete minute before now. */
 export const lastMinute = (): number => Math.floor(Date.now() / 60_000) * 60_000 - 60_000;
 export const minuteKey = (ts: number): string => v2.minuteKey(ts);
@@ -118,7 +120,7 @@ export function station(
   visibility: v2.Visibility,
   publicPrecision: v2.PublicPrecision,
 ): v2.Station {
-  const t = now() - 3_600_000;
+  const t = T_SEED;
   return v2.StationSchema.parse({
     schemaVersion: 2,
     id,
@@ -182,7 +184,7 @@ export function device(id: string, stationId: string, ownerUid: string): v2.Devi
     },
     saturation: { value: 3300, unit: "mV" },
     status: "active",
-    createdAt: now() - 3_000_000,
+    createdAt: T_SEED,
   });
 }
 
@@ -251,12 +253,12 @@ export function stream(
     stationId,
     deviceId,
     status: "active",
-    createdAt: now() - 600_000,
+    createdAt: T_SEED,
   };
 }
 
 export function session(streamId: string, id: string, closed = false): v2.Session {
-  const startedAt = now() - 600_000;
+  const startedAt = T_SEED;
   return v2.SessionSchema.parse({
     schemaVersion: 2,
     id,
