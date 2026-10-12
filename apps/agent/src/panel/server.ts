@@ -280,18 +280,16 @@ export class PanelServer {
         ),
       );
     } else if (path === "/outbox/export") {
-      const lines = this.d.outbox
-        .parked()
-        .map((i) =>
-          JSON.stringify({
-            kind: i.kind,
-            ts: i.ts,
-            rev: i.rev,
-            sessionId: i.sessionId,
-            error: i.lastError,
-            payload: JSON.parse(i.payload) as unknown,
-          }),
-        );
+      const lines = this.d.outbox.parked().map((i) =>
+        JSON.stringify({
+          kind: i.kind,
+          ts: i.ts,
+          rev: i.rev,
+          sessionId: i.sessionId,
+          error: i.lastError,
+          payload: JSON.parse(i.payload) as unknown,
+        }),
+      );
       this.send(
         res,
         200,

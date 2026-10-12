@@ -4,7 +4,7 @@
  * (`droppedLiveBatches`, `droppedHeartbeats`) and logged at warn level, never retried into the past.
  * Failures are never treated as "no data": counters and the status make them visible.
  */
-import { v2 as dp } from "@muonhub/data-provider";
+import type { v2 as dp } from "@muonhub/data-provider";
 import type { v2 } from "@muonhub/shared";
 import type { Reporter } from "../reporter.js";
 import type { AuthManager } from "../sync/auth.js";
@@ -13,6 +13,8 @@ export const LIVE_BATCH_MS = 5000;
 export const HEARTBEAT_MS = 60_000;
 export const PRUNE_MS = 60_000;
 const BUFFER_CAP = 5000;
+/** Rule bound is +/- 60 s; stay inside it with a margin for clock skew. */
+export const LIVE_MAX_AGE_MS = 50_000;
 
 export interface LiveCounters {
   droppedLiveBatches: number;
@@ -84,8 +86,12 @@ export class LivePublisher {
   /** Writes the buffered events; a failure drops the batch (counted), never retries it. */
   async flushBatch(): Promise<void> {
     if (this.batchInFlight || this.buffer.length === 0) return;
-    const cutoff = this.now() - dp.LIVE_RETENTION_MS + 30_000;
-    const fresh = this.buffer.filter((e) => e.t >= cutoff);
+    // The rules accept a live entry only when its time is within 60 s of the server clock (so an
+    // entry can never escape pruning); older events are stale, not retried into the past.
+    const now = this.now();
+    const fresh = this.buffer.filter(
+      (e) => e.t >= now - LIVE_MAX_AGE_MS && e.t <= now + LIVE_MAX_AGE_MS,
+    );
     this.counters.staleLiveEvents += this.buffer.length - fresh.length;
     this.buffer = [];
     if (fresh.length === 0) return;

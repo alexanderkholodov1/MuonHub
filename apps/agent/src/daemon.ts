@@ -83,12 +83,12 @@ export class Daemon {
   }
 
   async start(): Promise<void> {
-    // Surfaces first or last? Recording matters most: start the agent, then the surfaces; a surface
-    // that cannot start only logs and retries.
-    await this.o.agent.start();
+    // The mirror must exist before the first line arrives; bridge and panel only listen. A surface
+    // that cannot start logs, shows it in status, and retries — it never prevents recording.
     await this.mirror?.start();
     this.bridge?.start();
     this.panel?.start();
+    await this.o.agent.start();
   }
 
   /** Resolves when a finite source has ended (virtual detector) or the agent stopped. */

@@ -5,6 +5,8 @@ import {
   dataChunks,
   makeHarness,
   scriptedFactory,
+  settleSource,
+  type ScriptedSource,
   STREAM_ID,
   T0,
   until,
@@ -47,9 +49,7 @@ async function feed(
   plan: Parameters<typeof dataChunks>[0],
 ): Promise<void> {
   src.push(...dataChunks(plan));
-  await until(() => h.store.rawLineCount() >= 0);
-  await new Promise((r) => setTimeout(r, 10));
-  h.agent.pipeline.flush();
+  await settleSource(h, src as unknown as ScriptedSource);
 }
 
 describe("CA3: outbox offline then online", () => {

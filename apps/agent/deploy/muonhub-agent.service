@@ -1,0 +1,54 @@
+# MuonHub agent - headless device daemon (spec 0087 FR1, ADR-007).
+# Installed by deploy/install.sh to /etc/systemd/system/muonhub-agent.service.
+[Unit]
+Description=MuonHub agent (cosmic-ray detector daemon)
+Documentation=https://github.com/alexanderkholodov/MuonHub/blob/main/docs/operations/AGENT.md
+After=network-online.target time-sync.target
+Wants=network-online.target
+# Never give up after repeated quick failures: a detector that must record 24/7 comes back by itself.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=muonhub
+Group=muonhub
+# dialout: read the serial port. The device list below limits which devices the service may touch.
+SupplementaryGroups=dialout
+ExecStart=/opt/muonhub/node/bin/node /opt/muonhub/agent/dist/cli.js run --config /etc/muonhub/agent.json
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+Environment=NODE_ENV=production
+
+# State: /var/lib/muonhub (SQLite, credential file, panel token, raw logs) - private to the service.
+StateDirectory=muonhub
+StateDirectoryMode=0700
+# Runtime: /run/muonhub (the raw mirror socket raw.sock, mode 0660, group muonhub).
+RuntimeDirectory=muonhub
+RuntimeDirectoryMode=0750
+UMask=0077
+
+# Hardening (FR1)
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+DevicePolicy=closed
+DeviceAllow=char-ttyUSB rw
+DeviceAllow=char-ttyACM rw
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+# MemoryDenyWriteExecute is NOT set: V8's JIT needs writable+executable memory.
+
+[Install]
+WantedBy=multi-user.target

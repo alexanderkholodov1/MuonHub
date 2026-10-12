@@ -11,7 +11,7 @@
 import { createWriteStream } from "node:fs";
 import { loadConfig, DEFAULT_CONFIG_PATH } from "./config.js";
 import { runCapture } from "./capture/capture.js";
-import { loadOrCreatePanelToken } from "./panel/token.js";
+import { readPanelToken } from "./panel/token.js";
 import { buildDaemon, AGENT_VERSION, stateFile } from "./runtime.js";
 import { openLocalStore } from "./store/sqlite.js";
 
@@ -85,14 +85,14 @@ async function main(argv: string[]): Promise<number> {
     }
     case "panel-url": {
       const config = await loadConfig(configPath(args));
-      const token = loadOrCreatePanelToken(stateFile(config, "panel-token"));
+      const token = readPanelToken(stateFile(config, "panel-token"));
       out(`http://127.0.0.1:${String(config.panel.port)}/auth?token=${token}`);
       out("From another machine: ssh -L 8787:localhost:8787 <host>, then open the address above.");
       return 0;
     }
     case "status": {
       const config = await loadConfig(configPath(args));
-      const token = loadOrCreatePanelToken(stateFile(config, "panel-token"));
+      const token = readPanelToken(stateFile(config, "panel-token"));
       const base = `http://127.0.0.1:${String(config.panel.port)}`;
       const auth = await fetch(`${base}/auth?token=${token}`, { redirect: "manual" });
       const cookie = auth.headers.get("set-cookie")?.split(";")[0] ?? "";
@@ -101,6 +101,12 @@ async function main(argv: string[]): Promise<number> {
       return 0;
     }
     case "outbox": {
+      if (process.getuid?.() === 0 && !args.includes("--allow-root")) {
+        out(
+          "run this as the service user so the database files keep their owner: sudo -u muonhub muonhub-agent outbox ...",
+        );
+        return 2;
+      }
       const config = await loadConfig(configPath(args));
       const store = await openLocalStore({
         path: stateFile(config, "agent.db"),

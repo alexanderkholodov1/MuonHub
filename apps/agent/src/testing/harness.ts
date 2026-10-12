@@ -42,6 +42,11 @@ export class ScriptedSource {
   private done = false;
   closed = false;
 
+  /** Chunks not yet consumed by the agent. */
+  get pending(): number {
+    return this.queue.length;
+  }
+
   push(...chunks: AgentChunk[]): void {
     this.queue.push(...chunks);
     this.settle();
@@ -139,6 +144,7 @@ export const chunk = (text: string, hostMs: number, monoMs?: number): AgentChunk
 });
 
 export interface Harness {
+  factory: SourceFactory;
   agent: Agent;
   store: LocalStore;
   provider: dp.DataProviderV2;
@@ -167,6 +173,9 @@ export interface HarnessOptions {
   intervals?: AgentDeps["intervals"];
   clockHoldMs?: number;
   wrapProvider?: (p: dp.DataProviderV2) => dp.DataProviderV2;
+  /** A real (emulator) provider: used as is, already signed in by the caller. */
+  externalProvider?: dp.DataProviderV2;
+  streamId?: string;
   credentials?: ReturnType<typeof createMemoryCredentialStore>;
   refresh?: Harness["refresh"];
 }
@@ -174,7 +183,7 @@ export interface HarnessOptions {
 export async function makeHarness(o: HarnessOptions): Promise<Harness> {
   const store = o.store ?? (await openLocalStore({ path: ":memory:" }));
   const memory = o.memory ?? new dp.MemoryStore();
-  const provider = dp.createMemoryProviderV2({ store: memory });
+  const provider = o.externalProvider ?? dp.createMemoryProviderV2({ store: memory });
   const logger = memoryLogger();
   const reporter = new Reporter(logger, o.now ?? Date.now);
   const credentials = o.credentials ?? createMemoryCredentialStore();
@@ -187,7 +196,7 @@ export async function makeHarness(o: HarnessOptions): Promise<Harness> {
     },
     checkSession: () => Promise.resolve(!refresh.revoked && provider.currentUser() !== null),
   };
-  if (o.signedIn !== false && o.withProvider !== false) {
+  if (o.signedIn !== false && o.withProvider !== false && o.externalProvider === undefined) {
     if (!memory.accounts.size) await provider.createAccount("agent@example.org", "pw-pw-pw-1");
     else await provider.signInWithEmail("agent@example.org", "pw-pw-pw-1");
     credentials.write("refresh-token-1");
@@ -197,7 +206,7 @@ export async function makeHarness(o: HarnessOptions): Promise<Harness> {
   const agent = new Agent({
     version: "6.0.0-test",
     deviceType: o.deviceType ?? v2.MUNRA,
-    streamId: STREAM_ID,
+    streamId: o.streamId ?? STREAM_ID,
     deviceId: DEVICE_ID,
     store,
     reporter,
@@ -216,7 +225,19 @@ export async function makeHarness(o: HarnessOptions): Promise<Harness> {
     ...(o.intervals === undefined ? {} : { intervals: o.intervals }),
     ...(o.clockHoldMs === undefined ? {} : { clockHoldMs: o.clockHoldMs }),
   });
-  return { agent, store, provider, memory, clock, disk, logger, reporter, credentials, refresh };
+  return {
+    factory: o.factory,
+    agent,
+    store,
+    provider,
+    memory,
+    clock,
+    disk,
+    logger,
+    reporter,
+    credentials,
+    refresh,
+  };
 }
 
 /** Reads every minute written to the cloud for the test stream. */
@@ -272,4 +293,11 @@ export async function until(fn: () => boolean | Promise<boolean>, ms = 3000): Pr
     if (Date.now() - t0 > ms) throw new Error("timed out waiting for a condition");
     await new Promise((r) => setTimeout(r, 5));
   }
+}
+
+/** Waits until the agent has consumed everything a source was given, then commits the raw batch. */
+export async function settleSource(h: Harness, src: ScriptedSource): Promise<void> {
+  await until(() => src.pending === 0);
+  for (let i = 0; i < 3; i++) await new Promise((r) => setImmediate(r));
+  h.agent.pipeline.flush();
 }

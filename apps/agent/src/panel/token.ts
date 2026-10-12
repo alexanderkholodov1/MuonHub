@@ -34,3 +34,16 @@ export function loadOrCreatePanelToken(path: string): string {
   }
   return token;
 }
+
+/** Reads the token for `panel-url`/`status`; never creates it (a token created by root would lock the service out). */
+export function readPanelToken(path: string): string {
+  if (!existsSync(path)) {
+    throw new Error(
+      `no panel token at ${path}: start the service once (sudo systemctl start muonhub-agent)`,
+    );
+  }
+  const mode = statSync(path).mode & 0o777;
+  if ((mode & 0o077) !== 0)
+    throw new Error(`panel token file ${path} has mode ${mode.toString(8)}; it must be 0600`);
+  return readFileSync(path, "utf8").trim();
+}

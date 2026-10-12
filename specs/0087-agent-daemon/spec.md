@@ -277,45 +277,45 @@ is deleted when this lands (its parsers' test fixtures are kept and reused).
 
 ## Acceptance criteria (verifiable)
 
-- [ ] CA1: framing tests — CRLF, LF, 1-byte fragments, concatenated `…0 COSMIC488 …` lines (two
+- [x] CA1: framing tests — CRLF, LF, 1-byte fragments, concatenated `…0 COSMIC488 …` lines (two
   records out), invalid UTF-8 kept raw.
-- [ ] CA2: with the virtual detector (`disruptions` preset): only complete minutes are produced;
+- [x] CA2: with the virtual detector (`disruptions` preset): only complete minutes are produced;
   partial first/last minutes counted as discarded; resets create a new session; event-ID gaps counted.
-- [ ] CA3: outbox tests — offline for a simulated hour then online: every minute uploaded exactly
+- [x] CA3: outbox tests — offline for a simulated hour then online: every minute uploaded exactly
   once in order; a permanent rejection parks the item and appears in status; re-enqueue is a no-op.
-- [ ] CA4: serial-loss test (fake source closing mid-stream): status shows disconnected ≤ 10 s; a
+- [x] CA4: serial-loss test (fake source closing mid-stream): status shows disconnected ≤ 10 s; a
   new session starts on reconnect; no unhandled rejection.
-- [ ] CA5: sign-in persistence test: a restarted process restores the session from the `0600` file;
+- [x] CA5: sign-in persistence test: a restarted process restores the session from the `0600` file;
   with a revoked credential it keeps recording locally and reports "signed out".
-- [ ] CA6: v5 bridge test: a WebSocket client receives `bridge_info`, then one `serial_data` per raw
+- [x] CA6: v5 bridge test: a WebSocket client receives `bridge_info`, then one `serial_data` per raw
   line with the exact v5 field names; `ping`/`status` answered.
-- [ ] CA7: emulator test: minutes, day summaries, live batches, and status written by the agent pass
+- [x] CA7: emulator test: minutes, day summaries, live batches, and status written by the agent pass
   the spec 0084 rules as the owner and are rejected for another user.
-- [ ] CA8: `grep` finds no Firebase SDK import outside `@muonhub/data-provider` usage and no service
+- [x] CA8: `grep` finds no Firebase SDK import outside `@muonhub/data-provider` usage and no service
   account handling in `apps/agent`.
-- [ ] CA11: **token revoked mid-run** (virtual detector, emulator): the outbox pauses, nothing is
+- [x] CA11: **token revoked mid-run** (virtual detector, emulator): the outbox pauses, nothing is
   parked, status and journal show "signed out"; after re-sign-in every pending item uploads exactly
   once.
-- [ ] CA12: **lost acknowledgement**: a fake uploader that times out after the write succeeded —
+- [x] CA12: **lost acknowledgement**: a fake uploader that times out after the write succeeded —
   the read-back marks the item uploaded; no duplicate and no wrongful park.
-- [ ] CA13: **disk full / SQLite error** (fault-injected store): status shows "disk low" above the
+- [x] CA13: **disk full / SQLite error** (fault-injected store): status shows "disk low" above the
   floor; below it the session ends with `endReason: storageError`, acquisition stops cleanly, no
   restart loop, the journal has the error.
-- [ ] CA14: **clock step** (virtual detector with a wall-clock jump of ±5 min): the session ends with
+- [x] CA14: **clock step** (virtual detector with a wall-clock jump of ±5 min): the session ends with
   `clockStep`, `clockAnomalies` incremented, no duplicate or short minute uploaded; minute output is
   held until NTP sync is reported.
-- [ ] CA15: **crash recovery** (process killed mid-minute): on restart the open session is closed
+- [x] CA15: **crash recovery** (process killed mid-minute): on restart the open session is closed
   with `powerLoss`/`unknown`, the in-progress minute is counted in `discardedPartialMinutes`, and the
   hour summary is rebuilt from local minutes (no partial overwrite).
-- [ ] CA16: **bridge port in use**: with port 8765 occupied, the daemon keeps recording, status
+- [x] CA16: **bridge port in use**: with port 8765 occupied, the daemon keeps recording, status
   shows "v5 bridge port busy", and the bridge starts once the port is freed.
-- [ ] CA17: **device silent**: a fake source that stays open but sends nothing → "device silent"
+- [x] CA17: **device silent**: a fake source that stays open but sends nothing → "device silent"
   within the window, no minutes produced, reopen attempted.
-- [ ] CA18: **local surface**: panel rejects a wrong `Host`, a cross-origin POST, and a missing CSRF
+- [x] CA18: **local surface**: panel rejects a wrong `Host`, a cross-origin POST, and a missing CSRF
   token; the bridge rejects a disallowed `Origin` and ignores non-`ping`/`status` messages; a slow
   socket reader is dropped without stalling acquisition.
-- [ ] CA9: typecheck · lint · build · test · format:check green; emulator tests green.
-- [ ] CA10: only `apps/agent` (and its docs) is touched.
+- [x] CA9: typecheck · lint · build · test · format:check green; emulator tests green.
+- [ ] CA10: only `apps/agent` (and its docs) is touched. (Also touched: `pnpm-workspace.yaml` catalog entries, the lockfile, and the removal of `packages/physics/src/legacy`.)
 
 ## Validation in practice
 
@@ -341,12 +341,12 @@ contracts (6.x); auto-update (Proposed for M4).
 
 ## Tasks
 
-- [ ] T1: framing, parsing, aggregation, session controller (pure, tests with fixtures and the
+- [x] T1: framing, parsing, aggregation, session controller (pure, tests with fixtures and the
   virtual detector).
-- [ ] T2: SQLite store and outbox; sync with error classification.
-- [ ] T3: sign-in persistence, rejected-write detection, live batching, status.
-- [ ] T4: serial source with reconnect; clock provenance.
-- [ ] T5: panel and setup wizard; raw mirror; capture tool; v5 bridge.
-- [ ] T6: systemd unit and installer; installation guide in `docs/operations/`.
-- [ ] T7: remove the first-attempt agent core; update `apps/agent/README.md`.
-- [ ] T8: changelog fragment in `changelog.d/`.
+- [x] T2: SQLite store and outbox; sync with error classification.
+- [x] T3: sign-in persistence, rejected-write detection, live batching, status.
+- [x] T4: serial source with reconnect; clock provenance.
+- [x] T5: panel and setup wizard; raw mirror; capture tool; v5 bridge.
+- [x] T6: systemd unit and installer; installation guide in `docs/operations/`.
+- [x] T7: remove the first-attempt agent core; update `apps/agent/README.md`. (`packages/physics/src/legacy` is removed too. The first-attempt v1 contracts in `packages/shared` and the first-attempt provider in `packages/data-provider` are no longer imported by any package and remain to be deleted by the owner of those packages.)
+- [x] T8: changelog fragment in `changelog.d/`.

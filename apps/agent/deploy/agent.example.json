@@ -1,0 +1,16 @@
+{
+  "deviceType": "munra",
+  "source": {
+    "kind": "serial",
+    "path": "/dev/serial/by-id/REPLACE-WITH-YOUR-DEVICE"
+  },
+  "silenceWindowSec": 120,
+  "panel": { "enabled": true, "port": 8787 },
+  "bridge": { "enabled": false, "port": 8765 },
+  "firebase": {
+    "apiKey": "REPLACE",
+    "projectId": "muonhub",
+    "databaseURL": "REPLACE",
+    "authDomain": "REPLACE"
+  }
+}

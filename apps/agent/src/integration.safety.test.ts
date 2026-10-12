@@ -11,6 +11,7 @@ import {
   dataChunks,
   makeHarness,
   scriptedFactory,
+  settleSource,
   STREAM_ID,
   T0,
   until,
@@ -37,8 +38,9 @@ async function boot(o: Partial<Parameters<typeof makeHarness>[0]> = {}) {
 }
 
 const settle = async (h: Harness): Promise<void> => {
-  await new Promise((r) => setTimeout(r, 15));
-  h.agent.pipeline.flush();
+  // all scripted sources of this harness
+  const sources = (h.factory as ReturnType<typeof scriptedFactory>).sources;
+  for (const src of sources) await settleSource(h, src);
 };
 
 describe("CA5: sign-in persistence", () => {

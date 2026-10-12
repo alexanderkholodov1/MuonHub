@@ -67,11 +67,3 @@ export type {
 } from "./insights.js";
 
 export { rateToFlux } from "./flux.js";
-
-// First-attempt event science, kept only for the first-attempt agent until M1 step 7 removes both.
-export { buildEventSummary, calibrateNoiseThreshold } from "./legacy/event-science.js";
-export type {
-  BuildEventSummaryParams,
-  NoiseThresholdCalibration,
-  NoiseThresholdCalibrationOptions,
-} from "./legacy/event-science.js";

@@ -159,6 +159,7 @@ export class SourceSupervisor {
     const iterator = source[Symbol.asyncIterator]();
     let gotData = false;
     let silentStage = 0;
+    let yieldCounter = 0;
     let abandon: ((v: "silence") => void) | null = null;
     const abandoned = new Promise<"silence">((resolve) => {
       abandon = resolve;
@@ -195,6 +196,9 @@ export class SourceSupervisor {
           return { kind: "end", reason: "source closed", gotData };
         }
         gotData = true;
+        // A source that never waits (the virtual detector in fast mode) must not starve timers,
+        // the panel or signal handlers: yield to the event loop now and then.
+        if (++yieldCounter % 500 === 0) await new Promise<void>((resolve) => setImmediate(resolve));
         if (silentStage > 0) {
           silentStage = 0;
           this.state = "connected";
