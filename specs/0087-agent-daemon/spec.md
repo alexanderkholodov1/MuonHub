@@ -83,8 +83,10 @@ bundle packager (M4), or a cloud raw uploader (admin-gated, M4).
   `clockAnomalies` is incremented, the minute in progress is discarded and counted, and a new
   session starts. Minute output is **held** after boot until `timedatectl` reports
   `NTPSynchronized=yes`; if it is not synchronized within 10 min *(Proposed)*, minutes are produced
-  with `timeProvenance.source: "none"` (never silently labelled `ntp`). Clock provenance is polled
-  every 10 min *(Proposed)* and at session start.
+  with `timeProvenance.source: "none"` (never silently labelled `ntp`). A session that ends while
+  minutes are still held (any end reason, including `stop` during the boot hold) discards them and
+  counts them in `discardedPartialMinutes` of that session's end; their raw lines remain. Clock
+  provenance is polled every 10 min *(Proposed)* and at session start.
 - **FR7c — Crash recovery:** on startup, any session left open in SQLite is closed with
   `endReason: powerLoss` (if the last raw line is older than the boot time) or `unknown`, and the
   minute that was in progress in memory is counted in `discardedPartialMinutes`; its raw lines remain
@@ -117,8 +119,12 @@ bundle packager (M4), or a cloud raw uploader (admin-gated, M4).
   - **unknown** (timeout or lost acknowledgement) → the item stays pending; before any retry the
     uploader **reads the record back** and compares it: identical → mark uploaded; absent → retry;
     different → park as a conflict. An item is marked uploaded only on an SDK confirmation or a
-    matching read-back. The Firebase SDK's own offline write queue is not relied on (writes use
-    explicit timeouts; the outbox is the only queue);
+    matching read-back **from the server** — never from the SDK's local cache (Firestore reads
+    are server-only and refuse documents with pending writes; RTDB reads happen only while
+    `.info/connected` is true). The Firebase SDK's own offline write queue is not relied on
+    (writes use explicit timeouts; the outbox is the only queue). Recomputed records (hour
+    summaries, session counters) are sent newest revision only; an older revision is marked
+    superseded and never sent;
   - **`PERMISSION_DENIED` → check the auth state first:** if the session is signed out or its token
     is invalid, the outbox is **paused** (items stay pending, nothing is parked), status shows
     "signed out — data stored locally", and the condition is logged at error level; only when the
