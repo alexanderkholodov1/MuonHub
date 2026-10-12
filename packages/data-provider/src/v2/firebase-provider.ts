@@ -666,39 +666,49 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           to: toUid,
           createdAt: at,
         };
+        // The mirror lock goes first. The rules let nobody cancel it from the owner's side, so a
+        // failed transfer is NOT rolled back: the lock stays, a retry with the same recipient
+        // completes it, and the recipient can decline by clearing `pendingOwner`.
         await rtUpdate(accessRef, { pendingOwner: toUid });
-        try {
-          await fsRunTransaction(fs, async (tx) => {
-            const snap = await tx.get(stationRef);
-            if (!snap.exists()) throw new DataProviderError("not-found");
-            const station = stationSchema.parse(snap.data());
-            if (station.ownerUid !== me) throw new DataProviderError("permission-denied");
-            tx.set(docRef("ownershipTransfers", transferId), transfer);
-            tx.update(stationRef, { ownerUid: toUid, transferId, updatedAt: at });
-          });
-        } catch (error) {
-          try {
-            await rtUpdate(accessRef, { pendingOwner: null });
-          } catch (rollbackError) {
-            throw new DataProviderError("internal", {
-              message: "Transfer failed and the pending owner could not be cleared.",
-              cause: new AggregateError([error, rollbackError]),
-            });
-          }
-          throw mapError(error);
-        }
+        await fsRunTransaction(fs, async (tx) => {
+          const snap = await tx.get(stationRef);
+          if (!snap.exists()) throw new DataProviderError("not-found");
+          const station = stationSchema.parse(snap.data());
+          if (station.ownerUid !== me) throw new DataProviderError("permission-denied");
+          tx.set(docRef("ownershipTransfers", transferId), transfer);
+          tx.update(stationRef, { ownerUid: toUid, transferId, updatedAt: at });
+        });
         return transferId;
       }),
     claimStationMirror: (stationId) =>
-      guard(() =>
-        rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
-          ownerUid: requireUid(),
+      guard(async () => {
+        const me = requireUid();
+        // The rules require a clean node on hand-over (no editors/viewers): take over, then
+        // re-share from the Firestore members, which are the source of truth.
+        await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), {
+          ownerUid: me,
           pendingOwner: null,
-          // The rules demand a clean node on hand-over: the new owner re-shares from scratch.
           editors: null,
           viewers: null,
-        }),
-      ),
+        });
+        const members = await listParsed(
+          collection(fs, "stations", stationId, "members"),
+          v2.StationMemberSchema,
+        );
+        if (members.quarantine.count > 0) {
+          throw new DataProviderError("invalid-data", {
+            message: "Some memberships are invalid; the mirror was not fully restored.",
+          });
+        }
+        const grants: Record<string, true> = {};
+        for (const m of members.items) {
+          if (m.uid !== me)
+            grants[`${m.role === "editor" ? "editors" : "viewers"}/${m.uid}`] = true;
+        }
+        if (Object.keys(grants).length > 0) {
+          await rtUpdate(rtRef(rt, `stationAccess/${stationId}`), grants);
+        }
+      }),
     getTransfer: (id) =>
       guard(() => getParsed(docRef("ownershipTransfers", id), v2.OwnershipTransferSchema)),
 

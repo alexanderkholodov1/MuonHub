@@ -16,8 +16,14 @@ export const StationAccessSchema = z.strictObject({
   pendingOwner: UidSchema.optional(),
 });
 
-/** `streamStation/{streamId}` (RTDB) — the station id, create-once. */
-export const StreamStationSchema = IdSchema;
+/**
+ * `streamStation/{streamId}` (RTDB), create-once: the station id and `since`, the stream's creation
+ * time (ms). The rules deny minutes with a timestamp before `since`.
+ */
+export const StreamStationSchema = z.strictObject({
+  stationId: IdSchema,
+  since: EpochMsSchema,
+});
 
 /** `admins/{uid}` (Firestore). */
 export const AdminEntrySchema = z.strictObject({

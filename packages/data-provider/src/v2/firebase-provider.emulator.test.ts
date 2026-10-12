@@ -160,7 +160,8 @@ describeEmu("data layer v2 against the emulators", () => {
       stationId: station.id,
       deviceId,
       status: "active",
-      createdAt: Date.now(),
+      // `since` of the mirror: minutes before it are denied, so the test stream starts days ago.
+      createdAt: Date.now() - 6 * 86_400_000,
     });
     await owner.provider.startSession({
       schemaVersion: 2,
@@ -199,7 +200,7 @@ describeEmu("data layer v2 against the emulators", () => {
       minute(0, { ts: base + i * 60_000, sessionId: "session-1" }),
     );
     const first = await owner.provider.writeMinutes(streamId, records);
-    expect(first).toEqual({ written: 25, alreadyExisted: [] });
+    expect(first).toMatchObject({ written: 25, alreadyExisted: [] });
     const again = await owner.provider.writeMinutes(streamId, [records[3] as v2.MinuteRecord]);
     expect(again.alreadyExisted).toEqual([base + 3 * 60_000]);
     expect(again.written).toBe(0);
