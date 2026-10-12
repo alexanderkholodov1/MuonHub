@@ -286,13 +286,13 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     if (!rtConnected) {
       // The connection opens lazily: give it a short moment before giving up.
       await new Promise<void>((resolve) => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
+        const pending: { timer?: ReturnType<typeof setTimeout> } = {};
         const wake = (): void => {
-          clearTimeout(timer);
+          clearTimeout(pending.timer);
           connectionWaiters.delete(wake);
           resolve();
         };
-        timer = setTimeout(wake, Math.min(timeoutMs, RT_CONNECT_WAIT_MS));
+        pending.timer = setTimeout(wake, Math.min(timeoutMs, RT_CONNECT_WAIT_MS));
         connectionWaiters.add(wake);
       });
     }

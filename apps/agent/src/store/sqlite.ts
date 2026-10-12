@@ -415,6 +415,22 @@ export function createSqliteStore(driver: SqlDriver, now: () => number = Date.no
         [reason.slice(0, 500), at, id],
       );
     },
+    hasNewerRevision(item) {
+      return (
+        driver.get(
+          `SELECT 1 AS x FROM outbox WHERE stream_id = ? AND kind = ? AND ts = ? AND rev > ?
+             AND session_id IS ? LIMIT 1`,
+          [item.streamId, item.kind, item.ts, item.rev, item.sessionId],
+        ) !== undefined
+      );
+    },
+    supersede(id, at) {
+      driver.run(
+        `UPDATE outbox SET state = 'superseded', uploaded_at = ?,
+           last_error = 'superseded by a newer revision' WHERE id = ?`,
+        [at, id],
+      );
+    },
     unparkAll() {
       return driver.run(
         "UPDATE outbox SET state = 'pending', parked_at = NULL, next_attempt_at = 0 WHERE state = 'parked'",

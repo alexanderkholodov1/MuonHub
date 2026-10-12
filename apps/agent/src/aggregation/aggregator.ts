@@ -74,14 +74,21 @@ export class MinuteAggregator {
     );
   }
 
-  /** Begins a new session: nothing carries over (first minute is partial). */
-  startSession(sessionId: string): void {
+  /**
+   * Begins a new session: nothing carries over (first minute is partial). A minute still in
+   * progress from the previous session (which was not ended through {@link end}) is returned as a
+   * discard, so the caller counts it — it is never dropped silently.
+   */
+  startSession(sessionId: string): AggregatorOutput[] {
+    const out: AggregatorOutput[] = [];
+    if (this.cur !== null) out.push({ kind: "discard", ts: this.cur.ts, reason: "end" });
     this.sessionId = sessionId;
     this.gapsTotal = 0;
     this.cur = null;
     this.prevRef = null;
     this.nextPartial = true;
     this.lastEventId = null;
+    return out;
   }
 
   /** Missing event IDs seen in this session, partial minutes included. */

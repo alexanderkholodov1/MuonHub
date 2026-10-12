@@ -32,7 +32,11 @@ export const OUTBOX_KINDS: readonly OutboxKind[] = [
   "session-end",
 ];
 
-export type OutboxState = "pending" | "uploaded" | "parked";
+/**
+ * `superseded`: an older revision (hour summary, session counters) that a newer revision of the
+ * same key replaces; it is never sent, so it can never overwrite the newer one.
+ */
+export type OutboxState = "pending" | "uploaded" | "parked" | "superseded";
 
 export interface OutboxItem {
   id: number;
@@ -158,6 +162,10 @@ export interface LocalStore {
   /** Keeps the item pending: records the error and the next attempt time. */
   markRetry(ids: readonly number[], error: string, nextAttemptAt: number): void;
   park(id: number, reason: string, at: number): void;
+  /** True when a later revision of the item's key (stream, kind, ts, session) exists in any state. */
+  hasNewerRevision(item: OutboxItem): boolean;
+  /** Marks an older revision as replaced by a newer one (never sent, never unparked). */
+  supersede(id: number, at: number): void;
   unparkAll(): number;
   parkedItems(limit: number): OutboxItem[];
   outboxCounts(): OutboxCounts;

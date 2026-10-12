@@ -57,6 +57,10 @@ export function recoverOpenSessions(options: {
         completeMinutes: Math.max(session.counters.completeMinutes, own.length),
       },
     };
+    // Every hour the session touched is rebuilt from the stored minutes (a crash can come right
+    // after an hour rollover whose summary was never enqueued); unchanged hours enqueue nothing.
+    const hours = [...new Set(own.map((m) => hourStartOf(m.ts)))].sort((a, b) => a - b);
+    const lastHour = hours[hours.length - 1];
     store.transaction(() => {
       store.upsertSession(ended);
       store.enqueue({
@@ -70,11 +74,16 @@ export function recoverOpenSessions(options: {
           counters: cloudCounters(ended.counters),
         }),
       });
+      for (const hour of hours) {
+        enqueueHourSummary(
+          store,
+          session.streamId,
+          deviceType,
+          hour,
+          hour === lastHour ? ended : null,
+        );
+      }
     });
-    const last = own[own.length - 1];
-    if (last !== undefined) {
-      enqueueHourSummary(store, session.streamId, deviceType, hourStartOf(last.ts), ended);
-    }
     reporter.report(
       "warn",
       "session-recovered",

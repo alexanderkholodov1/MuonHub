@@ -153,19 +153,24 @@ export class AuthManager {
   /**
    * Is the session still valid? Called before a flush cycle and when a write was denied:
    * a denial with a valid session is permanent, with an invalid one it only pauses the outbox.
+   * `unknown` when the check itself failed (e.g. offline): the caller backs off and retries —
+   * it must neither park an item nor pause the outbox on a guess.
    */
-  async validate(): Promise<boolean> {
-    if (this.provider.currentUser() === null) return false;
+  async validate(): Promise<"valid" | "invalid" | "unknown"> {
+    if (this.provider.currentUser() === null) return "invalid";
     if (this.support?.checkSession !== undefined) {
       try {
         const ok = await this.support.checkSession();
         if (!ok) this.set("signed-out");
-        return ok;
-      } catch {
-        // cannot tell (e.g. offline): do not pause on a guess, the write error decides
-        return true;
+        return ok ? "valid" : "invalid";
+      } catch (error) {
+        this.lastError = error instanceof Error ? error.message : String(error);
+        this.reporter.report("warn", "auth-check-failed", "cannot check the session; will retry", {
+          error: this.lastError,
+        });
+        return "unknown";
       }
     }
-    return this.state === "signed-in";
+    return this.state === "signed-in" ? "valid" : "invalid";
   }
 }

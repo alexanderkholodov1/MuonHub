@@ -89,6 +89,8 @@ export class Pipeline {
   private lastMinuteHour: number | null = null;
   private halted = false;
   private lastEventHost: number | null = null;
+  /** A `storageError` session end that could not be written yet (see {@link abortSession}). */
+  private unrecordedEnd: SessionRow | null = null;
 
   constructor(private readonly o: PipelineOptions) {
     o.gate.onRelease((how) => {
@@ -125,10 +127,82 @@ export class Pipeline {
     this.timer = null;
   }
 
-  /** Re-arms the pipeline after a storage halt (space available again). */
+  /**
+   * Re-arms the pipeline after a storage halt (space available again). A session end that could
+   * not be recorded when the store failed is written first; if that still fails the pipeline stays
+   * halted and the error is thrown (the caller retries later; a restart's recovery closes it).
+   */
   resume(): void {
+    if (this.unrecordedEnd !== null) {
+      this.recordEnd(this.unrecordedEnd);
+      this.unrecordedEnd = null;
+    }
     this.halted = false;
     this.start();
+  }
+
+  /**
+   * The store failed (or the disk is below its floor) while a session was open: closes it with
+   * `storageError`. The minute in progress and any minutes held for the clock are counted in
+   * `discardedPartialMinutes` (their raw lines, where committed, remain). The session end and its
+   * `session-end` outbox item are written in ONE transaction; if that fails the stored session
+   * keeps `ended_at` NULL — so crash recovery closes it on the next start — and the end is retried
+   * by {@link resume}. Either way the pipeline no longer has an active session.
+   */
+  abortSession(at: number): void {
+    this.buffer = [];
+    this.bufferedLines = 0;
+    const row = this.current;
+    const discarded = this.o.aggregator.end().filter((o) => o.kind === "discard").length;
+    this.current = null;
+    this.lastMinuteHour = null;
+    if (row === null) return;
+    this.rows.delete(row.id);
+    const held = this.takeHeld(row.id);
+    const ended: SessionRow = {
+      ...row,
+      endedAt: Math.max(at, row.startedAt),
+      endReason: "storageError",
+      counters: {
+        ...row.counters,
+        discardedPartialMinutes: row.counters.discardedPartialMinutes + discarded + held,
+        eventIdGaps: this.o.aggregator.eventIdGapTotal,
+      },
+    };
+    this.o.onSession?.(null);
+    try {
+      this.recordEnd(ended);
+    } catch (error) {
+      this.unrecordedEnd = ended;
+      this.o.reporter.report(
+        "error",
+        "session-end-unrecorded",
+        "the session end could not be stored; it is retried on resume, or closed by recovery",
+        {
+          sessionId: row.id,
+          discardedMinutes: discarded + held,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  }
+
+  /** The session row and its `session-end` outbox item, in one transaction. */
+  private recordEnd(row: SessionRow): void {
+    this.o.store.transaction(() => {
+      this.o.store.upsertSession(row);
+      this.o.store.enqueue({
+        streamId: this.o.streamId,
+        kind: "session-end",
+        ts: row.startedAt,
+        sessionId: row.id,
+        payload: JSON.stringify({
+          endedAt: row.endedAt,
+          endReason: row.endReason,
+          counters: cloudCounters(row.counters),
+        }),
+      });
+    });
   }
 
   push(ops: readonly PipelineOp[]): void {
@@ -253,8 +327,18 @@ export class Pipeline {
   private activateSession(op: Extract<PipelineOp, { t: "sessionStart" }>): void {
     const row = this.rows.get(op.sessionId);
     if (row === undefined) return;
+    // A minute still in progress belongs to the previous session: it is counted there, never lost.
+    const leftover = this.o.aggregator.startSession(row.id);
+    if (this.current !== null) this.applyOutputs(leftover);
+    else if (leftover.length > 0) {
+      this.o.reporter.report(
+        "warn",
+        "minute-discarded",
+        "a partial minute without an open session was discarded",
+        { count: leftover.length },
+      );
+    }
     this.current = row;
-    this.o.aggregator.startSession(row.id);
     this.lastMinuteHour = null;
     this.o.onSession?.(row);
   }
@@ -263,30 +347,18 @@ export class Pipeline {
     const row = this.current;
     if (row === null || row.id !== op.sessionId) return;
     this.applyOutputs(this.o.aggregator.end());
-    if (op.reason === "clockStep") {
-      row.counters.clockAnomalies += 1;
-      // Held minutes carry timestamps from a clock that just jumped: drop them (raw lines remain).
-      this.dropHeld();
-    }
+    if (op.reason === "clockStep") row.counters.clockAnomalies += 1;
+    // Minutes still held for the clock cannot reach a closed session: they are dropped and counted
+    // on EVERY end (after a clock step their timestamps are untrustworthy anyway). Raw lines remain.
+    this.dropHeld(row, op.reason);
     row.counters.eventIdGaps = this.o.aggregator.eventIdGapTotal;
     row.endedAt = Math.max(op.at, row.startedAt);
     row.endReason = op.reason;
     const finalHour = this.lastMinuteHour;
     this.o.store.transaction(() => {
-      this.o.store.upsertSession(row);
-      this.o.store.enqueue({
-        streamId: this.o.streamId,
-        kind: "session-end",
-        ts: row.startedAt,
-        sessionId: row.id,
-        payload: JSON.stringify({
-          endedAt: row.endedAt,
-          endReason: row.endReason,
-          counters: cloudCounters(row.counters),
-        }),
-      });
+      this.recordEnd(row);
+      if (finalHour !== null) this.enqueueHourSummary(finalHour, row);
     });
-    if (finalHour !== null) this.enqueueHourSummary(finalHour, row);
     this.rows.delete(row.id);
     this.current = null;
     this.o.onSession?.(null);
@@ -348,12 +420,30 @@ export class Pipeline {
     const live = this.current?.id === minute.sessionId;
     const owner = live ? null : this.o.store.getSession(minute.sessionId);
     const counters = live ? this.current?.counters : owner?.counters;
-    const result = this.o.store.commitMinute(minute, {
-      streamId: this.o.streamId,
-      kind: "minute",
-      ts: minute.ts,
-      sessionId: minute.sessionId,
-      payload: JSON.stringify(minute.record),
+    const hour = hourStartOf(minute.ts);
+    const rollover = this.lastMinuteHour !== null && hour !== this.lastMinuteHour;
+    const previousHour = this.lastMinuteHour;
+    // The minute, its outbox item, the session counters and — when this minute opens a new hour —
+    // the summary of the hour just completed are ONE transaction: a crash cannot keep one without
+    // the other.
+    const result = this.o.store.transaction(() => {
+      const r = this.o.store.commitMinute(minute, {
+        streamId: this.o.streamId,
+        kind: "minute",
+        ts: minute.ts,
+        sessionId: minute.sessionId,
+        payload: JSON.stringify(minute.record),
+      });
+      if (r === "duplicate") return r;
+      if (counters !== undefined) counters.completeMinutes += 1;
+      try {
+        if (owner !== null) this.o.store.upsertSession(owner);
+        if (rollover && previousHour !== null) this.enqueueHourSummary(previousHour, this.current);
+      } catch (error) {
+        if (counters !== undefined) counters.completeMinutes -= 1;
+        throw error;
+      }
+      return r;
     });
     if (result === "duplicate") {
       // A minute is never replaced (ADR-006): the same minute produced again (e.g. after a clock
@@ -370,13 +460,7 @@ export class Pipeline {
       });
       return;
     }
-    if (counters !== undefined) counters.completeMinutes += 1;
-    if (owner !== null) this.o.store.upsertSession(owner);
     this.o.onMinute?.(minute.record);
-    const hour = hourStartOf(minute.ts);
-    if (this.lastMinuteHour !== null && hour !== this.lastMinuteHour) {
-      this.enqueueHourSummary(this.lastMinuteHour, this.current);
-    }
     this.lastMinuteHour = hour;
   }
 
@@ -402,13 +486,26 @@ export class Pipeline {
     }
   }
 
-  private dropHeld(): void {
-    if (this.held.length === 0) return;
-    if (this.current !== null) this.current.counters.discardedPartialMinutes += this.held.length;
-    this.o.reporter.report("warn", "minutes-dropped", "held minutes dropped after a clock step", {
-      count: this.held.length,
-    });
-    this.held = [];
+  /** Removes the held minutes of one session; returns how many. */
+  private takeHeld(sessionId: string): number {
+    const before = this.held.length;
+    this.held = this.held.filter((h) => h.row.sessionId !== sessionId);
+    return before - this.held.length;
+  }
+
+  /** Drops (and counts in `discardedPartialMinutes`) the minutes of `row` held for the clock. */
+  private dropHeld(row: SessionRow, reason: v2.EndReason): void {
+    const count = this.takeHeld(row.id);
+    if (count === 0) return;
+    row.counters.discardedPartialMinutes += count;
+    this.o.reporter.report(
+      "warn",
+      "minutes-dropped",
+      reason === "clockStep"
+        ? "held minutes dropped after a clock step"
+        : "held minutes dropped: the session ended before the clock was confirmed",
+      { count, reason, sessionId: row.id },
+    );
   }
 
   // ── summaries ───────────────────────────────────────────────────────────────────────────────

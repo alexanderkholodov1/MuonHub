@@ -391,23 +391,17 @@ export class Agent {
     if (this.storageHalted || this.stopping) return;
     this.storageHalted = true;
     this.reporter.raise("storage-stopped", `acquisition stopped: ${reason}`);
-    const ops = this.classifier.end("storageError", this.endTime());
+    const at = this.endTime();
+    const ops = this.classifier.end("storageError", at);
+    // Disk floor (the store still works): the normal path ends the session.
     if (!writeFailed) {
       this.pipeline.push(ops);
       this.pipeline.flush();
-    } else {
-      // The store is failing: best effort to record the end, the journal already has the error.
-      const session = this.pipeline.activeSession;
-      if (session !== null) {
-        try {
-          session.endedAt = Math.max(this.endTime(), session.startedAt);
-          session.endReason = "storageError";
-          this.store.upsertSession(session);
-        } catch {
-          // recovery closes it as unknown on the next start
-        }
-      }
     }
+    // A failing store (or a flush that just failed): the pipeline closes whatever is still open —
+    // the partial minute and held minutes are counted, the end and its outbox item go in one
+    // transaction, and if even that fails the session stays open in SQLite for recovery.
+    this.pipeline.abortSession(at);
     this.pipeline.halt();
     await this.supervisor.stop();
   }
@@ -415,12 +409,16 @@ export class Agent {
   private async tryResume(): Promise<void> {
     try {
       this.store.setMeta("resume-probe", String(this.now()));
-    } catch {
+      // Records a session end the failing store could not take (or throws: still not writable).
+      this.pipeline.resume();
+    } catch (error) {
+      this.reporter.report("warn", "resume-failed", "the local store is still not writable", {
+        error: errorText(error),
+      });
       return;
     }
     this.reporter.clear("storage-stopped");
     this.storageHalted = false;
-    this.pipeline.resume();
     this.supervisor.start();
     this.reporter.report(
       "info",

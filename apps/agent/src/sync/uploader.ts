@@ -7,9 +7,16 @@
  *  - unknown (timeout, lost ack)      → the item stays pending; before any retry the record is read
  *    back: identical → uploaded, absent → retry, different → parked as a conflict;
  *  - PERMISSION_DENIED                → the auth state is checked FIRST: signed out or invalid token
- *    pauses the whole outbox (nothing parked); only with a valid session is it permanent;
+ *    pauses the whole outbox (nothing parked); a check that cannot answer (offline) backs off and
+ *    retries; only with a confirmed valid session is it permanent;
  *  - permanent (denied with a valid session, validation) → the item is parked, counted, logged at
  *    error level, never retried blindly, never dropped, and it does not block later items.
+ *
+ * Read-backs only ever see the server (the provider refuses cache reads and documents with pending
+ * SDK writes), so a write that is still only in the SDK's local cache is never marked uploaded; an
+ * item whose outcome is unknown keeps its `unknown` mark through transient failures until a
+ * read-back settles it. Recomputed revisions (hour summaries, session counters) are sent newest
+ * only: an older revision is marked superseded, so it can never overwrite a newer one.
  */
 import { v2 as dp } from "@muonhub/data-provider";
 import { v2 } from "@muonhub/shared";
@@ -45,7 +52,10 @@ export interface UploaderOptions {
   intervalMs?: number;
 }
 
-type Outcome = "uploaded" | "retry" | "parked" | "paused";
+/** `isolate`: a rejected batch is being narrowed to single items; keep going within the cycle. */
+type Outcome = "uploaded" | "retry" | "parked" | "paused" | "isolate";
+
+const SIGNED_OUT = "signed out — data stored locally";
 
 class Permanent extends Error {
   constructor(
@@ -61,7 +71,13 @@ export class Uploader {
   private readonly random: () => number;
   private readonly inFlight = new Set<OutboxKind>();
   private readonly failures = new Map<OutboxKind, { count: number; until: number }>();
-  private readonly isolate = new Set<OutboxKind>();
+  /** Kinds in single-item mode after a rejected batch: how many single sends remain. */
+  private readonly isolate = new Map<OutboxKind, number>();
+  /** Items settled during the current send without being uploaded (parked, superseded). */
+  private settled = new Set<number>();
+  /** Auth re-check backoff (signed-out pause, or a session check that could not answer). */
+  private authFailures = 0;
+  private authRetryAt = 0;
   private timer: NodeJS.Timeout | null = null;
   private paused: string | null = null;
   private lastSuccessAt: number | null = null;
@@ -103,8 +119,10 @@ export class Uploader {
     await this.cycle?.catch(() => undefined);
   }
 
-  /** Clears the signed-out pause (after a new sign-in). */
+  /** Clears the signed-out pause (after a new sign-in or a successful session check). */
   resume(): void {
+    this.authFailures = 0;
+    this.authRetryAt = 0;
     if (this.paused === null) return;
     this.paused = null;
     this.failures.clear();
@@ -122,17 +140,21 @@ export class Uploader {
 
   private async run(): Promise<void> {
     try {
-      if (this.paused === null && !this.o.auth.isSignedIn()) {
-        this.pause("signed out — data stored locally");
-      }
-      if (this.paused !== null) {
-        if (!this.o.auth.isSignedIn()) return;
-        this.resume();
-      }
-      if (!(await this.o.auth.validate())) {
-        this.pause("signed out — data stored locally");
+      if (!this.o.auth.isSignedIn()) {
+        this.pause(SIGNED_OUT);
         return;
       }
+      // While paused (or after a session check that could not answer) the session is re-checked
+      // with backoff — never every cycle, so the "paused" alert does not flap.
+      if (this.authRetryAt > this.now()) return;
+      const auth = await this.o.auth.validate();
+      if (auth !== "valid") {
+        if (auth === "invalid") this.pause(SIGNED_OUT);
+        this.authFailures += 1;
+        this.authRetryAt = this.now() + this.jittered(this.authFailures);
+        return;
+      }
+      this.resume();
       for (const kind of OUTBOX_KINDS) {
         if (this.paused !== null) return;
         await this.flushKind(kind);
@@ -151,13 +173,24 @@ export class Uploader {
     this.o.reporter.raise("outbox-paused", reason);
   }
 
+  private jittered(count: number): number {
+    const base = Math.min(BACKOFF_MAX_MS, BACKOFF_BASE_MS * 2 ** (count - 1));
+    return Math.round(base * (0.5 + this.random() * 0.5));
+  }
+
   private backoff(kind: OutboxKind): number {
     const f = this.failures.get(kind) ?? { count: 0, until: 0 };
     f.count += 1;
-    const base = Math.min(BACKOFF_MAX_MS, BACKOFF_BASE_MS * 2 ** (f.count - 1));
-    f.until = this.now() + Math.round(base * (0.5 + this.random() * 0.5));
+    f.until = this.now() + this.jittered(f.count);
     this.failures.set(kind, f);
     return f.until;
+  }
+
+  /** The retry note keeps an `unknown` outcome marked until a read-back settles it. */
+  private note(items: readonly OutboxItem[], text: string): string {
+    return items.some((i) => i.lastError?.startsWith("unknown") === true)
+      ? `unknown: ${text}`
+      : `transient: ${text}`;
   }
 
   private async flushKind(kind: OutboxKind): Promise<void> {
@@ -171,7 +204,7 @@ export class Uploader {
         const items = this.eligible(kind, this.o.store.pendingItems(kind, this.now(), limit));
         if (items.length === 0) return;
         const outcome = await this.send(kind, items);
-        if (outcome !== "uploaded" && outcome !== "parked") return;
+        if (outcome !== "uploaded" && outcome !== "parked" && outcome !== "isolate") return;
         if (outcome === "uploaded") this.failures.delete(kind);
       }
     } finally {
@@ -189,6 +222,7 @@ export class Uploader {
 
   private async send(kind: OutboxKind, items: OutboxItem[]): Promise<Outcome> {
     const { store } = this.o;
+    this.settled = new Set();
     try {
       const readBackFirst = items.some((i) => i.lastError?.startsWith("unknown") === true);
       let uploaded: number[];
@@ -202,10 +236,10 @@ export class Uploader {
       else uploaded = await this.sendSessionEnd(items[0] as OutboxItem);
       store.markUploaded(uploaded, this.now());
       if (uploaded.length > 0) this.lastSuccessAt = this.now();
-      if (items.length > 1) this.isolate.delete(kind);
-      const remaining = items.filter((i) => !uploaded.includes(i.id));
+      this.isolated(kind, items.length);
+      const remaining = items.filter((i) => !uploaded.includes(i.id) && !this.settled.has(i.id));
       if (remaining.length > 0) return "retry";
-      return "uploaded";
+      return uploaded.length > 0 ? "uploaded" : "parked";
     } catch (error) {
       return this.classify(kind, items, error);
     }
@@ -229,17 +263,26 @@ export class Uploader {
     switch (err.code) {
       case "permission-denied":
       case "unauthenticated": {
-        const valid = err.code === "permission-denied" && (await this.o.auth.validate());
-        if (!valid) {
-          this.pause("signed out — data stored locally");
+        const auth = err.code === "permission-denied" ? await this.o.auth.validate() : "invalid";
+        if (auth === "invalid") {
+          this.pause(SIGNED_OUT);
           return "paused";
+        }
+        if (auth === "unknown") {
+          // Cannot tell a revoked session from a real denial right now: never park on a guess.
+          const next = this.backoff(kind);
+          store.markRetry(pendingIds, this.note(pending, `${err.code}, session unchecked`), next);
+          reporter.report("warn", "upload-denied-unchecked", "write denied; session check failed", {
+            kind,
+          });
+          return "retry";
         }
         return this.parkOrIsolate(kind, pending, err.code, err.message);
       }
       case "unavailable":
       case "rate-limited": {
         const next = this.backoff(kind);
-        store.markRetry(pendingIds, `transient: ${err.code}`, next);
+        store.markRetry(pendingIds, this.note(pending, err.code), next);
         reporter.report("warn", "upload-transient", `upload failed (${err.code}); retrying`, {
           kind,
         });
@@ -278,14 +321,18 @@ export class Uploader {
         return this.parkOrIsolate(kind, pending, err.code, err.message);
       default: {
         const next = this.backoff(kind);
-        store.markRetry(pendingIds, `transient: ${err.code}`, next);
+        store.markRetry(pendingIds, this.note(pending, err.code), next);
         reporter.report("warn", "upload-failed", `upload failed (${err.code}); retrying`, { kind });
         return "retry";
       }
     }
   }
 
-  /** A rejected batch is narrowed to single items so only the offender is parked. */
+  /**
+   * A rejected batch is narrowed to single items so only the offender is parked. Single-item mode
+   * lasts until the rejected batch has been walked (each single send, successful or parked, counts)
+   * or the offender is parked — it never sticks.
+   */
   private parkOrIsolate(
     kind: OutboxKind,
     items: OutboxItem[],
@@ -293,39 +340,48 @@ export class Uploader {
     message: string,
   ): Outcome {
     if (items.length > 1) {
-      this.isolate.add(kind);
-      return "retry";
+      this.isolate.set(kind, items.length);
+      return "isolate";
     }
     const item = items[0];
     if (item === undefined) return "retry";
-    this.o.store.park(item.id, `${code}: ${message}`, this.now());
-    this.rejected += 1;
-    this.lastRejected = { kind, ts: item.ts, code, at: this.now() };
-    this.o.reporter.report("error", "write-rejected", `write rejected (${code}); item parked`, {
-      kind,
-      ts: item.ts,
-      code,
-    });
+    this.parkSingle(item, code, message);
+    this.isolate.delete(kind);
     return "parked";
+  }
+
+  /** One single send in single-item mode is done. */
+  private isolated(kind: OutboxKind, sent: number): void {
+    const left = this.isolate.get(kind);
+    if (left === undefined) return;
+    if (sent > 1 || left <= 1) this.isolate.delete(kind);
+    else this.isolate.set(kind, left - 1);
+  }
+
+  /** A record that fails validation before sending: quarantined, parked, counted, logged. */
+  private rejectInvalid(item: OutboxItem, reason: string): void {
+    this.o.store.quarantine(item.kind, reason, item.payload, this.now());
+    this.parkSingle(item, "invalid-data", `failed validation before send: ${reason}`);
+  }
+
+  /** An older revision of a recomputed record: never sent (it would overwrite a newer one). */
+  private supersededBy(item: OutboxItem): boolean {
+    if (!this.o.store.hasNewerRevision(item)) return false;
+    this.o.store.supersede(item.id, this.now());
+    this.settled.add(item.id);
+    return true;
   }
 
   // ── per-kind writers (each returns the outbox ids confirmed uploaded) ─────────────────────────
 
   private async sendMinutes(items: OutboxItem[], readBackFirst: boolean): Promise<number[]> {
-    const { store, streamId } = { store: this.o.store, streamId: this.o.streamId };
+    const { streamId } = this.o;
     const valid: { item: OutboxItem; record: v2.MinuteRecord }[] = [];
     for (const item of items) {
       const parsed = v2.MinuteRecordSchema.safeParse(safeParse(item.payload));
       if (!parsed.success) {
         // Fails validation before sending: set aside, counted, never thrown into the loop.
-        store.quarantine("minute", parsed.error.message, item.payload, this.now());
-        store.park(item.id, "failed validation before send", this.now());
-        this.o.reporter.report(
-          "error",
-          "outbox-invalid",
-          "an outbox minute failed validation; quarantined",
-          { ts: item.ts },
-        );
+        this.rejectInvalid(item, parsed.error.message);
         continue;
       }
       valid.push({ item, record: parsed.data });
@@ -367,6 +423,7 @@ export class Uploader {
 
   private parkSingle(item: OutboxItem, code: string, message: string): void {
     this.o.store.park(item.id, `${code}: ${message}`, this.now());
+    this.settled.add(item.id);
     this.rejected += 1;
     this.lastRejected = { kind: item.kind, ts: item.ts, code, at: this.now() };
     this.o.reporter.report("error", "write-rejected", `write rejected (${code}); item parked`, {
@@ -396,10 +453,12 @@ export class Uploader {
   }
 
   private async sendHour(item: OutboxItem, readBackFirst: boolean): Promise<number[]> {
+    // Always the newest revision of an hour: an older one (e.g. unparked, or delayed by a backoff)
+    // would overwrite a newer entry on the server.
+    if (this.supersededBy(item)) return [];
     const entry = v2.HourEntrySchema.safeParse(safeParse(item.payload));
     if (!entry.success) {
-      this.o.store.quarantine("hour", entry.error.message, item.payload, this.now());
-      this.o.store.park(item.id, "failed validation before send", this.now());
+      this.rejectInvalid(item, entry.error.message);
       return [];
     }
     const { day, hh } = dayAndHour(item.ts);
@@ -423,7 +482,7 @@ export class Uploader {
   private async sendSessionStart(item: OutboxItem): Promise<number[]> {
     const session = v2.SessionSchema.safeParse(safeParse(item.payload));
     if (!session.success) {
-      this.o.store.park(item.id, "failed validation before send", this.now());
+      this.rejectInvalid(item, session.error.message);
       return [];
     }
     try {
@@ -447,15 +506,16 @@ export class Uploader {
     return [item.id];
   }
 
-  private async findSession(id: string): Promise<v2.Session | null> {
-    const list = await this.o.provider.listSessions(this.o.streamId, { limit: 200 });
-    return list.items.find((s) => s.id === id) ?? null;
+  /** Read-back of one session by id (server only). */
+  private findSession(id: string): Promise<v2.Session | null> {
+    return this.o.provider.getSession(this.o.streamId, id);
   }
 
   private async sendCounters(item: OutboxItem): Promise<number[]> {
+    if (this.supersededBy(item)) return [];
     const counters = v2.SessionCountersSchema.safeParse(safeParse(item.payload));
     if (!counters.success || item.sessionId === null) {
-      this.o.store.park(item.id, "failed validation before send", this.now());
+      this.rejectInvalid(item, counters.success ? "no session id" : counters.error.message);
       return [];
     }
     try {
@@ -470,13 +530,9 @@ export class Uploader {
   }
 
   private async sendSessionEnd(item: OutboxItem): Promise<number[]> {
-    const end = safeParse(item.payload) as {
-      endedAt: number;
-      endReason: v2.EndReason;
-      counters: v2.SessionCounters;
-    } | null;
-    if (end === null || item.sessionId === null) {
-      this.o.store.park(item.id, "failed validation before send", this.now());
+    const end = parseSessionEnd(safeParse(item.payload));
+    if (typeof end === "string" || item.sessionId === null) {
+      this.rejectInvalid(item, typeof end === "string" ? end : "no session id");
       return [];
     }
     try {
@@ -522,6 +578,22 @@ export class Uploader {
     const c = this.o.store.outboxCounts();
     return { pending: c.pending, parked: c.parked };
   }
+}
+
+/** The `session-end` payload, or why it is invalid. */
+function parseSessionEnd(
+  value: unknown,
+): { endedAt: number; endReason: v2.EndReason; counters: v2.SessionCounters } | string {
+  if (value === null || typeof value !== "object") return "not an object";
+  const v = value as Record<string, unknown>;
+  const endedAt = v["endedAt"];
+  if (typeof endedAt !== "number" || !Number.isSafeInteger(endedAt) || endedAt < 0)
+    return "endedAt is not a timestamp";
+  const reason = v2.EndReasonSchema.safeParse(v["endReason"]);
+  if (!reason.success) return `endReason: ${reason.error.message}`;
+  const counters = v2.SessionCountersSchema.safeParse(v["counters"]);
+  if (!counters.success) return `counters: ${counters.error.message}`;
+  return { endedAt, endReason: reason.data, counters: counters.data };
 }
 
 function safeParse(text: string): unknown {
