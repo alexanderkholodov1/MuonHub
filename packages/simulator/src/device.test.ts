@@ -20,7 +20,7 @@ describe("dead time (CA3)", () => {
       expect(Math.abs(measured - p)).toBeLessThan(3 * Math.sqrt((p * (1 - p)) / N));
       // cumulative dead time / elapsed = recorded·τ / T equals the dead fraction
       const deadFraction = run.cumulativeDeadS / run.elapsedS;
-      expect(Math.abs(deadFraction - p)).toBeLessThan(4 * Math.sqrt((p * (1 - p)) / N));
+      expect(Math.abs(deadFraction - p)).toBeLessThan(3 * Math.sqrt((p * (1 - p)) / N));
     });
   }
 
@@ -52,7 +52,7 @@ describe("amplitudes (CA5)", () => {
       if (a.saturated) saturated++;
     }
     expect(saturated).toBeGreaterThan(0);
-    // parabola fit to the 9 bins around the maximum
+    // parabola fit to the 13 bins around the maximum
     let m = 0;
     for (let i = 0; i < 300; i++) if ((hist[i] ?? 0) > (hist[m] ?? 0)) m = i;
     let sx = 0,
@@ -110,7 +110,7 @@ describe("amplitudes (CA5)", () => {
       }
     }
     const expected = n * (1 - moyalCdf((140 - 100) / 10));
-    expect(Math.abs(flagged - expected)).toBeLessThan(4 * Math.sqrt(expected));
+    expect(Math.abs(flagged - expected)).toBeLessThan(3 * Math.sqrt(expected));
   });
 
   it("Gaussian noise widens the distribution; noise-trigger amplitudes are exponential and clipped", () => {

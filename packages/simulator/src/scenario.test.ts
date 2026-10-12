@@ -38,6 +38,36 @@ describe("clock (CA7)", () => {
     expect(sim.devices[0]?.recorded[wrapIdx]?.deviceMs).toBeGreaterThan(4_294_967_296);
   });
 
+  it("device timestamps never decrease within a session, even with large jitter", () => {
+    const sim = simulate(
+      testScenario(
+        [
+          testDevice({
+            rate: { kind: "totalTriggerRate", ratePerS: 50 },
+            clock: { offsetMs: 0, jitterMs: 5 },
+            disruptions: { resets: [1_000_000] },
+          }),
+        ],
+        { durationMs: 2_000_000, stepMs: 10_000 },
+      ),
+    );
+    const rec = sim.devices[0]?.recorded ?? [];
+    expect(rec.length).toBeGreaterThan(50_000);
+    let prev = -1;
+    let session = -1;
+    for (const e of rec) {
+      if (e.sessionIndex !== session) {
+        session = e.sessionIndex;
+        prev = -1;
+      }
+      expect(e.deviceMs).toBeGreaterThanOrEqual(0);
+      if (e.deviceMs < prev) throw new Error("device clock went backwards");
+      prev = e.deviceMs;
+    }
+    expect(deviceElapsedMs(0, 0, 0, { jitterMs: 100 }, new Rng(1))).toBeGreaterThanOrEqual(0);
+    expect(deviceElapsedMs(10, 0, 100, {}, undefined, 500)).toBe(500);
+  });
+
   it("50 ppm drift gives 4.32 s per day (±1 %)", () => {
     const off = deviceElapsedMs(DAY, 0, 0, { driftPpm: 50 }) - DAY;
     expect(Math.abs(off - 4320) / 4320).toBeLessThan(0.01);
@@ -91,7 +121,7 @@ describe("scenario simulation", () => {
     // arrivals include noise triggers: n = 55 s⁻¹, loss fraction nτ/(1+nτ) = 0.22/1.22
     const p = (55 * 0.004) / (1 + 55 * 0.004);
     expect(Math.abs(c.lostToDeadTime / c.arrived - p)).toBeLessThan(
-      4 * Math.sqrt((p * (1 - p)) / c.arrived),
+      3 * Math.sqrt((p * (1 - p)) / c.arrived),
     );
     // cumulative dead-time counter / elapsed device time equals the ground-truth dead fraction
     const rec = sim.devices[0]?.recorded ?? [];
@@ -105,6 +135,8 @@ describe("scenario simulation", () => {
     expect(iv[10]?.pressureHpa).toBeCloseTo(768, 9);
     expect(iv[10]?.liveMs).toBeLessThan(60_000);
     expect(iv[10]?.trueRatePerS).toBe(50);
+    // total rate includes the noise triggers (5 s⁻¹ here); the signal-only rate does not
+    expect(iv[10]?.trueTotalRatePerS).toBe(55);
   });
 
   it("rate modulation by pressure shows in the truth (β)", () => {
@@ -218,7 +250,7 @@ describe("coincidences (CA6)", () => {
     // the hardware flag agrees with "a partner within the half-window"
     const expectedFlagged = a.length * (1 - Math.exp(-2 * tauC * (b.length / T)));
     expect(Math.abs(flaggedCount(sim, 0) - expectedFlagged)).toBeLessThan(
-      4 * Math.sqrt(expectedFlagged),
+      3 * Math.sqrt(expectedFlagged),
     );
     expect(flaggedCount(sim, 1)).toBeGreaterThan(0);
   }, 120_000);
@@ -252,6 +284,26 @@ describe("interruptions (CA8)", () => {
     // the event counter is continuous across a USB gap
     const ids = (dev?.recorded ?? []).filter((e) => e.sessionIndex === 0).map((e) => e.eventId);
     expect(ids).toEqual(ids.map((_, i) => i + 1));
+  });
+
+  it("per-minute truth marks USB-gap and power-off minutes", () => {
+    const iv = simulate(cfg).devices[0]?.intervals ?? [];
+    // gap 100–130 s overlaps the minutes starting at 60 s and 120 s (partially delivered)
+    for (const m of [60_000, 120_000]) {
+      const x = iv.find((i) => i.minuteStartMs === m);
+      expect(x?.usbGap).toBe(true);
+      expect(x?.complete).toBe(false);
+      expect(x?.delivered ?? 1e9).toBeLessThan(x?.n ?? 0);
+    }
+    const first = iv.find((i) => i.minuteStartMs === 0);
+    expect(first?.usbGap).toBe(false);
+    expect(first?.complete).toBe(true);
+    expect(first?.delivered).toBe(first?.n);
+    // power gap 300–330 s: half of the minute starting at 300 s is off, so liveMs <= 30 s
+    const off = iv.find((i) => i.minuteStartMs === 300_000);
+    expect(off?.complete).toBe(false);
+    expect(off?.liveMs ?? 1e9).toBeLessThanOrEqual(30_000);
+    expect(off?.n).toBeGreaterThan(0);
   });
 
   it("reset and power loss start new sessions: counter, clock, and dead time restart", () => {

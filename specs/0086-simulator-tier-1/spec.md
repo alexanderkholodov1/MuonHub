@@ -72,6 +72,8 @@ and never mixed with real data.
     backlog B-M1-10), the dead-time column semantics are a configuration option: cumulative in µs,
     ms, or s, or per-event. The default is cumulative µs and is labelled "assumption until the
     capture of M1 step 9".
+  - **ADC2** of the MuNRa variant is rendered as a copy of ADC1 — an assumption until the capture of
+    M1 step 9 (its real meaning is unverified).
   - Rendering uses the device-type definition shapes of spec 0083 where they exist; until then a
     local renderer table with the same field names.
 - **FR9 — Multiple devices and coincidences.** N devices in a stacked assembly (vertical separation,
@@ -85,6 +87,8 @@ and never mixed with real data.
   configurable). Accidentals arise naturally from the singles; the expected accidental rate is
   2 · τ_c · R₁ · R₂ with R₁, R₂ the **recorded** (post-dead-time) singles rates — ≈ 3.5 × 10⁻⁴ s⁻¹ at
   2.4 s⁻¹ and τ_c = 30 µs (≈ 90 in 72 h).
+  All virtual-detector instances of one assembly must share the same seed and configuration, so
+  that they derive the same shared simulation.
 - **FR10 — Ground truth.** Alongside the lines, the generator emits a ground-truth record per event:
   true time, true amplitude, noise flag, saturation flag, lost-to-dead-time flag, coincidence group
   id, and per-interval true rate, `liveMs`, and `pressureHpa` (names as in spec 0083) — so tests can

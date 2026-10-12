@@ -28,7 +28,7 @@ export type BaseRateConfig =
       readonly ivPerCm2SSr: number;
     }
   | {
-      /** Total trigger rate given directly (MIP-type, gammas, noise) — not a muon flux. */
+      /** Rate of non-noise triggers given directly (MIP-type, gammas) — not a muon flux; noise triggers are added via noiseTriggers. */
       readonly kind: "totalTriggerRate";
       readonly ratePerS: number;
     };

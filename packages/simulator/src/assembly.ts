@@ -16,7 +16,7 @@ export function expectedAccidentalRate(
 /**
  * Number of true-coincidence groups: coincidence group ids that appear in the truth of both the
  * upper device (index `upper`) and the next device, counted among the upper device's true signal
- * events (FR9: fraction of the upper device's true events that also cross the lower one).
+ * events that the upper device recorded (not lost to dead time, not while powered off) (FR9: fraction of the upper device's true events that also cross the lower one).
  */
 export function trueCoincidenceCount(
   sim: SimulationResult,
@@ -28,7 +28,7 @@ export function trueCoincidenceCount(
   let upperEvents = 0;
   let shared = 0;
   for (const e of top) {
-    if (e.noise) continue;
+    if (e.noise || e.lost || e.off) continue;
     upperEvents++;
     if (lowerIds.has(e.groupId)) shared++;
   }

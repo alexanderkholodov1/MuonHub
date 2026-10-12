@@ -24,17 +24,23 @@ export interface HostLatencyConfig {
   readonly jitterMs: number;
 }
 
-/** Device clock reading in ms (unwrapped) for a true time, given the session start. */
+/**
+ * Device clock reading in ms (unwrapped) for a true time, given the session start. Jitter never
+ * makes the clock run backwards: the reading is clamped to at least `notBeforeMs` (the previous
+ * reading of the same session) and to at least 0.
+ */
 export function deviceElapsedMs(
   trueMs: number,
   sessionStartTrueMs: number,
   sessionStartReadingMs: number,
   config: ClockConfig,
   rng?: Rng,
+  notBeforeMs = 0,
 ): number {
   const drift = (config.driftPpm ?? 0) * 1e-6;
   const jitter = rng && (config.jitterMs ?? 0) > 0 ? (config.jitterMs ?? 0) * rng.normal() : 0;
-  return sessionStartReadingMs + (trueMs - sessionStartTrueMs) * (1 + drift) + jitter;
+  const reading = sessionStartReadingMs + (trueMs - sessionStartTrueMs) * (1 + drift) + jitter;
+  return Math.max(reading, notBeforeMs, 0);
 }
 
 /** Wrap a millisecond reading into an unsigned counter of `bits` width. */

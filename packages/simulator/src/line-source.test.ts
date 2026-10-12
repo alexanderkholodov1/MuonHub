@@ -227,4 +227,4 @@ describe("presets and end-to-end disruptions", () => {
   });
 });
 
-const REFERENCE_HASH = 1426001814;
+const REFERENCE_HASH = 2561885061;

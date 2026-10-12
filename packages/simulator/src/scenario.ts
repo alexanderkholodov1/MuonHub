@@ -69,12 +69,22 @@ export interface SessionTruth {
 /** Per-minute truth (names follow spec 0083: `liveMs`, `pressureHpa`). */
 export interface IntervalTruth {
   readonly minuteStartMs: number;
-  /** True when the whole minute lies inside one session and the device was powered. */
+  /**
+   * True when the whole minute lies inside one session, the device was powered throughout, and no
+   * USB gap touched it (so every recorded line was delivered). Partial minutes are `false`.
+   */
   readonly complete: boolean;
-  /** Mean true rate over the minute (s⁻¹). */
+  /** Mean true rate of signal (non-noise) triggers over the minute (s⁻¹); excludes noise triggers. */
   readonly trueRatePerS: number;
-  /** Events recorded in the minute. */
+  /** Mean true total trigger rate, signal plus noise triggers (s⁻¹); compare with recorded `n`. */
+  readonly trueTotalRatePerS: number;
+  /** Events recorded by the device in the minute (including any not delivered over USB). */
   readonly n: number;
+  /** Lines actually emitted to the host in the minute (`n` minus those lost in a USB gap). */
+  readonly delivered: number;
+  /** True when a USB gap overlaps the minute. */
+  readonly usbGap: boolean;
+  /** Live time in the minute (ms): 60 000 minus powered-off time minus dead time. */
   readonly liveMs: number;
   readonly pressureHpa: number;
 }
@@ -300,6 +310,7 @@ function detectDevice(
   let eventId = 0;
   let deadSoFar = 0;
   let sessionReading = 0;
+  let lastReading = 0;
   for (const a of arrivals) {
     const amp = a.noise
       ? sampleNoiseAmplitude(
@@ -328,6 +339,7 @@ function detectDevice(
       eventId = 0;
       deadSoFar = 0;
       sessionReading = s === 0 ? (clock.offsetMs ?? 0) : 0;
+      lastReading = 0;
     }
     const isRecorded = a.t >= busyUntil;
     const delivered = !inside(usbGaps, a.t);
@@ -345,6 +357,15 @@ function detectDevice(
     busyUntil = a.t + tauMs;
     eventId++;
     const session = sessions[s];
+    const deviceMs = deviceElapsedMs(
+      a.t,
+      session?.startTrueMs ?? start,
+      sessionReading,
+      clock,
+      clockRng,
+      lastReading,
+    );
+    lastReading = deviceMs;
     recorded.push({
       trueMs: a.t,
       amplitude: amp.value,
@@ -353,13 +374,7 @@ function detectDevice(
       groupId: a.groupId,
       sessionIndex: s,
       eventId,
-      deviceMs: deviceElapsedMs(
-        a.t,
-        session?.startTrueMs ?? start,
-        sessionReading,
-        clock,
-        clockRng,
-      ),
+      deviceMs,
       cumulativeDeadMs: deadSoFar,
       pressureHpa: pressure(a.t),
       temperatureC: temperature(a.t),
@@ -376,7 +391,9 @@ function detectDevice(
     recorded,
     sessions,
     powerGaps,
+    usbGaps,
     tauMs,
+    device.noiseTriggers?.ratePerS ?? 0,
     pressure,
     rate,
   );
@@ -398,7 +415,9 @@ function buildIntervals(
   recorded: readonly RecordedEvent[],
   sessions: readonly SessionTruth[],
   powerGaps: readonly { startMs: number; endMs: number }[],
+  usbGaps: readonly { startMs: number; endMs: number }[],
   tauMs: number,
+  noiseRatePerS: number,
   pressure: Series,
   rate: Series,
 ): IntervalTruth[] {
@@ -406,16 +425,23 @@ function buildIntervals(
   let k = 0;
   for (let m = Math.ceil(start / MINUTE_MS) * MINUTE_MS; m + MINUTE_MS <= end; m += MINUTE_MS) {
     const mEnd = m + MINUTE_MS;
+    const overlap = (g: { startMs: number; endMs: number }): number =>
+      Math.max(0, Math.min(mEnd, g.endMs) - Math.max(m, g.startMs));
+    const usbGap = usbGaps.some((g) => overlap(g) > 0);
+    const offMs = powerGaps.reduce((acc, g) => acc + overlap(g), 0);
     const complete =
-      sessions.some((s) => s.startTrueMs <= m && s.endTrueMs >= mEnd) &&
-      !powerGaps.some((g) => g.startMs < mEnd && g.endMs > m);
+      sessions.some((s) => s.startTrueMs <= m && s.endTrueMs >= mEnd) && offMs === 0 && !usbGap;
     let n = 0;
+    let delivered = 0;
     let dead = 0;
     while (k < recorded.length && (recorded[k]?.trueMs ?? 0) < m - tauMs) k++;
     for (let i = k; i < recorded.length; i++) {
       const t = recorded[i]?.trueMs ?? 0;
       if (t >= mEnd) break;
-      if (t >= m) n++;
+      if (t >= m) {
+        n++;
+        if (recorded[i]?.delivered) delivered++;
+      }
       dead += Math.max(0, Math.min(mEnd, t + tauMs) - Math.max(m, t));
     }
     let rateSum = 0;
@@ -431,8 +457,11 @@ function buildIntervals(
       minuteStartMs: m,
       complete,
       trueRatePerS: rateSum / samples,
+      trueTotalRatePerS: rateSum / samples + noiseRatePerS,
       n,
-      liveMs: MINUTE_MS - dead,
+      delivered,
+      usbGap,
+      liveMs: Math.max(0, MINUTE_MS - offMs - dead),
       pressureHpa: pressureSum / samples,
     });
   }
