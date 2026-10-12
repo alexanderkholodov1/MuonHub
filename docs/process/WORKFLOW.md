@@ -97,8 +97,14 @@ v6 is built in about six milestones, one pull request each (ADR-008).
   | `physicist` | **mandatory** for physics code, scientific wording, and data-processing semantics; veto over incorrect scientific claims |
 
 - **Parallel subagents are welcome** — research, reviews, and disjoint lanes of work run
-  concurrently. Lanes are kept disjoint (separate folders or packages) so they never edit the same
-  files.
+  concurrently, **at most 2–3 at a time** (session limits stop every running agent at once). Lanes
+  are kept disjoint (separate folders or packages) so they never edit the same files.
+- **Checkpoints.** A subagent that writes code commits work in progress every few files and pushes
+  it (`wip(...)` commits with `[skip ci]` in the subject), so an interrupted session loses nothing and
+  the next agent resumes from the branch. Version-bump commits come only when a step is green.
+- **Model by complexity.** Choose the model per task to save quota: **Haiku** for mechanical work
+  (formatting, renames, simple docs, searches); **Sonnet** for implementation that follows a clear,
+  approved spec; **Opus** for design, physics, security, and critical reviews.
 - **Docs are part of done.** A change that alters behaviour, structure, or policy updates its
   documentation in the same pull request and adds a changelog fragment under
   [`changelog.d/`](../../changelog.d/README.md). `AGENTS.md` holds the documentation matrix (which

@@ -47,7 +47,9 @@ reviews, integrates, and reports.
    claim as fact without checking it.
 6. **Investigation standard.** Before proposing or rejecting a tool, provider, or capability, read the
    official documentation and verify the current reality. Do not conclude from stale memory.
-7. **Parallel subagents are welcome** for independent work, with disjoint file boundaries. The author
+7. **Parallel subagents are welcome** for independent work, with disjoint file boundaries — at most
+   2–3 at a time, committing `wip` checkpoints often, and using the cheapest model that fits the
+   task (see `docs/process/WORKFLOW.md`). The author
    of a change is never its only reviewer — use the reviewer subagents in
    [`.claude/agents/`](.claude/agents/).
 
