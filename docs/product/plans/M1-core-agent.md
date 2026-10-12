@@ -113,3 +113,6 @@ data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seis
 | 6.0.0-alpha.1.2 | 2 — specs drafted | 0083–0087 written and reviewed (physicist, security-reviewer, silent-failure-hunter); findings applied; awaiting the maintainer's spec gate. |
 | — | spec gate | specs 0083–0087 approved 2026-10-07 with the recommendations: dedicated per-machine agent account as station editor; first-attempt web moved to `legacy/` (option b); proposed numeric defaults accepted. |
 | 6.0.0-alpha.1.3 | 3 — contracts v2 | `packages/shared/src/v2` (zod 4, `v2` namespace), built-in device types, compact minute serializer (10 000-record round trip), `docs/architecture/DATA-MODEL.md`; v1 kept on `zod/v3` until step 7; shared tests 41 → 68. |
+| 6.0.0-alpha.1.3 | 3 — contracts v2 | zod 4; v2 contracts in `packages/shared/src/v2`; compact serializer; built-in device types; `docs/architecture/DATA-MODEL.md`. |
+| 6.0.0-alpha.1.4 | 4 — physics | spec 0085 implemented (88 tests, ≈98 % coverage); foundation erratum and amendments applied; physicist review (WARNING, no critical) fixed. |
+| 6.0.0-alpha.1.5 | 5 — simulator | `@muonhub/simulator` (66 tests, ≈97 % coverage); physicist review (WARNING, no critical) fixed: monotonic device clock, delivered/USB-gap ground truth, total-rate truth. 264 tests repo-wide. |
