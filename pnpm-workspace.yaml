@@ -38,3 +38,9 @@ catalog:
   # are not a public API and may change in any release. Upgrade deliberately and re-run the
   # session-restore emulator tests.
   firebase: 12.14.0
+
+# Security overrides for transitive dependencies of the Firebase SDK (pnpm audit, 2026-10-12; grpc-js 1.14.x needs >=1.14.5):
+# patched releases inside the same major versions.
+overrides:
+  "@grpc/grpc-js": ">=1.14.5 <2"
+  protobufjs: ">=7.6.5 <8"

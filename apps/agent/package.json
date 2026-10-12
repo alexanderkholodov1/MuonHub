@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/agent",
-  "version": "6.0.0-alpha.1.6",
+  "version": "6.0.0-alpha.1.7",
   "private": true,
   "description": "MuonHub agent \u2014 headless Node.js 24 daemon that reads devices over serial, keeps every raw line locally, and syncs complete-minute records (spec 0087, ADR-007)",
   "license": "MIT",
