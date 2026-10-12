@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/simulator",
-  "version": "6.0.0-alpha.1.5",
+  "version": "6.0.0-alpha.1.6",
   "private": true,
   "description": "Tier-1 synthetic event streams and a virtual detector for testing (spec 0086) — synthetic data only",
   "license": "MIT",
