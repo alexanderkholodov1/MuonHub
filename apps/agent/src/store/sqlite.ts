@@ -263,13 +263,6 @@ export function createSqliteStore(driver: SqlDriver, now: () => number = Date.no
             ],
           );
         }
-        const last = rows[rows.length - 1];
-        if (last?.sessionId !== null && last?.sessionId !== undefined) {
-          driver.run("UPDATE sessions SET last_raw_ts = ? WHERE id = ?", [
-            last.hostTs,
-            last.sessionId,
-          ]);
-        }
         return rows.length;
       });
     },

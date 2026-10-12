@@ -97,7 +97,8 @@ export class SourceSupervisor {
   }
 
   private stamp(chunk: AgentChunk): { host: number; mono: bigint } {
-    const host = chunk.hostReceivedAtMs;
+    // Host times are whole milliseconds (a simulated source reports fractions).
+    const host = Math.round(chunk.hostReceivedAtMs);
     if (chunk.monotonicNs !== undefined) return { host, mono: chunk.monotonicNs };
     // A source without its own monotonic clock (the virtual detector): derive one from the host
     // time it reports, so wall and monotonic deltas agree and no clock step is invented.
