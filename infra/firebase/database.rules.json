@@ -5,31 +5,31 @@
     "stationAccess": {
       "$stationId": {
         ".read": "auth != null && (data.child('ownerUid').val() === auth.uid || data.child('pendingOwner').val() === auth.uid)",
-        ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && !newData.child('pendingOwner').exists()) || (data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid && newData.child('pendingOwner').val() === data.child('pendingOwner').val()))",
-        ".validate": "newData.hasChildren(['ownerUid', 'public']) && $stationId.matches(/^[A-Za-z0-9_-]{1,128}$/)",
+        ".write": "auth != null && ((!data.exists() && $stationId.beginsWith(auth.uid + '_') && newData.child('ownerUid').val() === auth.uid && !newData.child('pendingOwner').exists()) || (data.child('ownerUid').val() === auth.uid && !data.child('pendingOwner').exists() && newData.child('ownerUid').val() === auth.uid && !newData.child('pendingOwner').exists()))",
+        ".validate": "newData.hasChildren(['ownerUid', 'public']) && $stationId.matches(/^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$/)",
         "ownerUid": {
-          ".write": "auth != null && data.parent().child('pendingOwner').val() === auth.uid && newData.val() === auth.uid && !newData.parent().child('pendingOwner').exists()",
+          ".write": "auth != null && data.parent().child('pendingOwner').val() === auth.uid && newData.val() === auth.uid && !newData.parent().child('pendingOwner').exists() && !newData.parent().child('editors').exists() && !newData.parent().child('viewers').exists()",
           ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9]{1,128}$/)"
         },
         "pendingOwner": {
-          ".write": "auth != null && ((data.parent().child('ownerUid').val() === auth.uid && newData.parent().child('ownerUid').val() === auth.uid) || (data.val() === auth.uid && !newData.exists() && newData.parent().child('ownerUid').val() === auth.uid))",
+          ".write": "auth != null && ((data.parent().child('ownerUid').val() === auth.uid && newData.parent().child('ownerUid').val() === auth.uid && newData.exists() && (!data.exists() || newData.val() === data.val())) || (data.val() === auth.uid && !newData.exists() && newData.parent().child('ownerUid').val() === auth.uid))",
           ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9]{1,128}$/) && newData.val() !== newData.parent().child('ownerUid').val()"
         },
         "public": {
-          ".write": "auth != null && data.parent().child('ownerUid').val() === auth.uid",
+          ".write": "auth != null && data.parent().child('ownerUid').val() === auth.uid && !data.parent().child('pendingOwner').exists()",
           ".validate": "newData.isBoolean()"
         },
         "editors": {
-          ".write": "auth != null && data.parent().child('ownerUid').val() === auth.uid",
+          ".write": "auth != null && ((data.parent().child('ownerUid').val() === auth.uid && !data.parent().child('pendingOwner').exists()) || (!newData.exists() && data.parent().child('pendingOwner').val() === auth.uid && newData.parent().child('ownerUid').val() === auth.uid))",
           "$uid": {
-            ".write": "auth != null && (data.parent().parent().child('ownerUid').val() === auth.uid || ($uid === auth.uid && !newData.exists()))",
+            ".write": "auth != null && ((data.parent().parent().child('ownerUid').val() === auth.uid && !data.parent().parent().child('pendingOwner').exists()) || ($uid === auth.uid && !newData.exists()))",
             ".validate": "newData.val() === true && $uid.matches(/^[A-Za-z0-9]{1,128}$/) && $uid !== newData.parent().parent().child('ownerUid').val()"
           }
         },
         "viewers": {
-          ".write": "auth != null && data.parent().child('ownerUid').val() === auth.uid",
+          ".write": "auth != null && ((data.parent().child('ownerUid').val() === auth.uid && !data.parent().child('pendingOwner').exists()) || (!newData.exists() && data.parent().child('pendingOwner').val() === auth.uid && newData.parent().child('ownerUid').val() === auth.uid))",
           "$uid": {
-            ".write": "auth != null && (data.parent().parent().child('ownerUid').val() === auth.uid || ($uid === auth.uid && !newData.exists()))",
+            ".write": "auth != null && ((data.parent().parent().child('ownerUid').val() === auth.uid && !data.parent().parent().child('pendingOwner').exists()) || ($uid === auth.uid && !newData.exists()))",
             ".validate": "newData.val() === true && $uid.matches(/^[A-Za-z0-9]{1,128}$/) && $uid !== newData.parent().parent().child('ownerUid').val()"
           }
         },
@@ -40,17 +40,26 @@
     },
     "streamStation": {
       "$streamId": {
-        ".read": "auth != null && (root.child('stationAccess').child(data.val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(data.val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(data.val()).child('viewers').child(auth.uid).val() === true)",
-        ".write": "auth != null && !data.exists() && newData.isString() && $streamId.beginsWith(root.child('stationAccess').child(newData.val()).child('ownerUid').val() + '_') && (root.child('stationAccess').child(newData.val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(newData.val()).child('editors').child(auth.uid).val() === true)",
-        ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{1,128}$/) && $streamId.matches(/^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$/)"
+        ".read": "auth != null && (root.child('stationAccess').child(data.child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(data.child('stationId').val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(data.child('stationId').val()).child('viewers').child(auth.uid).val() === true)",
+        ".write": "auth != null && !data.exists() && $streamId.beginsWith(root.child('stationAccess').child(newData.child('stationId').val()).child('ownerUid').val() + '_') && (root.child('stationAccess').child(newData.child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(newData.child('stationId').val()).child('editors').child(auth.uid).val() === true)",
+        ".validate": "newData.hasChildren(['stationId', 'since']) && $streamId.matches(/^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$/)",
+        "stationId": {
+          ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$/)"
+        },
+        "since": {
+          ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= now - 604800000 && newData.val() <= now + 120000"
+        },
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "minutes": {
       "$streamId": {
-        ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('viewers').child(auth.uid).val() === true)",
+        ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('viewers').child(auth.uid).val() === true)",
         "$ts": {
-          ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true) && !data.exists() && newData.exists()",
-          ".validate": "$ts.matches(/^[0-9]{13}$/) && $ts <= '' + (now + 120000) && $ts.matches(/^(([0369]|[258][0369]*[147]|([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*([258]|[147][0369]*[147]))*[06]|([0369]|[258][0369]*[147]|([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*([258]|[147][0369]*[147]))*([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*[28]|([0369]|[147][0369]*[258]|([258]|[147][0369]*[147])([0369]|[258][0369]*[147])*([147]|[258][0369]*[258]))*([258]|[147][0369]*[147])([0369]|[258][0369]*[147])*4)0000$/) && newData.hasChildren(['v', 's', 'n', 'l', 'qg', 'qc']) && ((newData.child('n').val() > 0 && newData.hasChildren(['am', 'an', 'ax', 'au']) && newData.child('an').val() <= newData.child('am').val() && newData.child('am').val() <= newData.child('ax').val()) || (newData.child('n').val() === 0 && !newData.child('am').exists() && !newData.child('an').exists() && !newData.child('ax').exists() && !newData.child('au').exists())) && ((newData.child('l').val() === 'n' && !newData.child('lm').exists() && !newData.child('dm').exists()) || (newData.child('l').val() === 't' && newData.child('lm').exists() && !newData.child('dm').exists()) || (newData.child('l').val() === 'c' && newData.child('lm').exists() && newData.child('dm').exists()))",
+          ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true) && !data.exists() && newData.exists()",
+          ".validate": "$ts.matches(/^[0-9]{13}$/) && $ts <= '' + (now + 120000) && $ts >= '' + root.child('streamStation').child($streamId).child('since').val() && $ts.matches(/^(([0369]|[258][0369]*[147]|([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*([258]|[147][0369]*[147]))*[06]|([0369]|[258][0369]*[147]|([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*([258]|[147][0369]*[147]))*([147]|[258][0369]*[258])([0369]|[147][0369]*[258])*[28]|([0369]|[147][0369]*[258]|([258]|[147][0369]*[147])([0369]|[258][0369]*[147])*([147]|[258][0369]*[258]))*([258]|[147][0369]*[147])([0369]|[258][0369]*[147])*4)0000$/) && newData.hasChildren(['v', 's', 'n', 'l', 'qg', 'qc']) && ((newData.child('n').val() > 0 && newData.hasChildren(['am', 'an', 'ax', 'au']) && newData.child('an').val() <= newData.child('am').val() && newData.child('am').val() <= newData.child('ax').val()) || (newData.child('n').val() === 0 && !newData.child('am').exists() && !newData.child('an').exists() && !newData.child('ax').exists() && !newData.child('au').exists())) && ((newData.child('l').val() === 'n' && !newData.child('lm').exists() && !newData.child('dm').exists()) || (newData.child('l').val() === 't' && newData.child('lm').exists() && !newData.child('dm').exists()) || (newData.child('l').val() === 'c' && newData.child('lm').exists() && newData.child('dm').exists()))",
           "v": {
             ".validate": "newData.val() === 2"
           },
@@ -105,10 +114,10 @@
     "live": {
       "$streamId": {
         "events": {
-          ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('viewers').child(auth.uid).val() === true)",
+          ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('viewers').child(auth.uid).val() === true)",
           ".indexOn": ["t"],
           "$key": {
-            ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true) && ((!data.exists() && newData.exists() && newData.child('t').val() >= now - 60000 && newData.child('t').val() <= now + 60000) || (data.exists() && !newData.exists() && data.child('t').val() < now - 600000))",
+            ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true) && ((!data.exists() && newData.exists() && newData.child('t').val() >= now - 60000 && newData.child('t').val() <= now + 60000) || (data.exists() && !newData.exists() && data.child('t').val() < now - 600000))",
             ".validate": "newData.hasChildren(['t', 'a']) && $key.matches(/^[A-Za-z0-9_-]{1,64}$/)",
             "t": {
               ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0"
@@ -125,8 +134,8 @@
     },
     "status": {
       "$streamId": {
-        ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('viewers').child(auth.uid).val() === true)",
-        ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true)",
+        ".read": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('viewers').child(auth.uid).val() === true)",
+        ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true)",
         ".validate": "newData.hasChildren(['lastSeenAt', 'agentOnline'])",
         "lastSeenAt": {
           ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= now + 120000"
@@ -147,8 +156,8 @@
     },
     "statusPublic": {
       "$streamId": {
-        ".read": "root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('public').val() === true || (auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('viewers').child(auth.uid).val() === true))",
-        ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).val()).child('editors').child(auth.uid).val() === true)",
+        ".read": "root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('public').val() === true || (auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('viewers').child(auth.uid).val() === true))",
+        ".write": "auth != null && (root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('ownerUid').val() === auth.uid || root.child('stationAccess').child(root.child('streamStation').child($streamId).child('stationId').val()).child('editors').child(auth.uid).val() === true)",
         ".validate": "newData.hasChildren(['lastSeenAt', 'agentOnline'])",
         "lastSeenAt": {
           ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= now + 120000"

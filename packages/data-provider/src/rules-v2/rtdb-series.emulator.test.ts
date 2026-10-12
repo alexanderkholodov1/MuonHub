@@ -14,6 +14,7 @@ import {
   S_OTHER,
   S_PRIV,
   S_PUB,
+  ST_PRIV,
   dbAs,
   emulatorOn,
   initEnv,
@@ -23,6 +24,7 @@ import {
   now,
   omit,
   seed,
+  streamStation,
   type Who,
 } from "./fixtures.js";
 
@@ -129,6 +131,18 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
   it("denies a future minute", async () => {
     const ts = lastMinute() + 10 * 60_000;
     await assertFails(writeMinute("agent", S_PRIV, ts));
+  });
+  it("denies a minute older than the stream's `since` (no backfill before creation)", async () => {
+    const id = "ownerA_sincestream1";
+    const since = lastMinute() - 5 * 60_000;
+    await assertSucceeds(
+      dbAs(env, "owner").ref(`streamStation/${id}`).set(streamStation(ST_PRIV, since)),
+    );
+    await assertFails(writeMinute("agent", id, since - 60_000));
+    await assertFails(writeMinute("agent", id, since - 86_400_000));
+    await assertFails(writeMinute("agent", id, 60_000));
+    await assertSucceeds(writeMinute("agent", id, since));
+    await assertSucceeds(writeMinute("agent", id, lastMinute()));
   });
   it("denies liveMs above 60 000 or not positive", async () => {
     const ts = lastMinute();

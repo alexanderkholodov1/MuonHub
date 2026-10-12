@@ -18,6 +18,8 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import {
+  OLD_TRANSFER,
+  ST_PRIV,
   UID,
   audit,
   emulatorOn,
@@ -25,9 +27,11 @@ import {
   fsUid,
   initEnv,
   now,
+  omit,
   seed,
   user,
   usernameOf,
+  type Who,
 } from "./fixtures.js";
 
 const describeEmu = emulatorOn ? describe : describe.skip;
@@ -128,9 +132,16 @@ describeEmu("users/{uid}", () => {
     b.set(doc(fs, "usernames/renamed"), { uid: UID.stranger, createdAt: now() });
     await assertFails(b.commit());
   });
-  it("a user deletes their own document; a stranger cannot", async () => {
+  it("a user deletes their own document with its username claim; a stranger cannot", async () => {
     await assertFails(deleteDoc(doc(fsAs(env, "stranger"), `users/${UID.owner}`)));
-    await assertSucceeds(deleteDoc(doc(fsAs(env, "stranger"), `users/${UID.stranger}`)));
+    const fs = fsAs(env, "stranger");
+    const b = writeBatch(fs);
+    b.delete(doc(fs, `users/${UID.stranger}`));
+    b.delete(doc(fs, `usernames/${usernameOf(UID.stranger)}`));
+    await assertSucceeds(b.commit());
+  });
+  it("denies deleting the user document while its username claim remains", async () => {
+    await assertFails(deleteDoc(doc(fsAs(env, "stranger"), `users/${UID.stranger}`)));
   });
 });
 
@@ -228,34 +239,138 @@ describeEmu("admins/{uid}", () => {
 });
 
 describeEmu("audit/{id}", () => {
+  const put = (who: Who, entry: Record<string, unknown>) =>
+    setDoc(doc(fsAs(env, who), `audit/${String(entry["id"])}`), entry);
+
   it("a signed-in user appends an entry for their own action", async () => {
-    await assertSucceeds(setDoc(doc(fsAs(env, "owner"), "audit/a1"), audit("a1", UID.owner)));
+    await assertSucceeds(put("owner", audit("a1", UID.owner)));
   });
   it("denies an undefined action type", async () => {
-    await assertFails(
-      setDoc(doc(fsAs(env, "owner"), "audit/a1"), audit("a1", UID.owner, "deleteEverything")),
-    );
+    await assertFails(put("owner", audit("a1", UID.owner, "deleteEverything")));
   });
   it("denies an entry attributed to another user", async () => {
-    await assertFails(setDoc(doc(fsAs(env, "owner"), "audit/a1"), audit("a1", UID.stranger)));
+    await assertFails(put("owner", audit("a1", UID.stranger)));
   });
   it("denies an anonymous entry", async () => {
-    await assertFails(setDoc(doc(fsAs(env, "anon"), "audit/a1"), audit("a1", UID.owner)));
+    await assertFails(put("anon", audit("a1", UID.owner)));
   });
   it("denies an entry not stamped with the current time", async () => {
-    await assertFails(
-      setDoc(doc(fsAs(env, "owner"), "audit/a1"), { ...audit("a1", UID.owner), createdAt: 1000 }),
-    );
+    await assertFails(put("owner", { ...audit("a1", UID.owner), createdAt: 1000 }));
   });
-  it("denies an unbounded payload and unknown keys", async () => {
+  it("denies an unbounded payload, oversized values, missing details, and unknown keys", async () => {
     const details = Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`k${i}`, i]));
+    await assertFails(put("owner", { ...audit("a1", UID.owner), details }));
     await assertFails(
-      setDoc(doc(fsAs(env, "owner"), "audit/a1"), { ...audit("a1", UID.owner), details }),
+      put("owner", {
+        ...audit("a1", UID.owner),
+        details: { memberUid: UID.viewer, role: "viewer", note: "x".repeat(100_000) },
+      }),
     );
     await assertFails(
-      setDoc(doc(fsAs(env, "owner"), "audit/a2"), { ...audit("a2", UID.owner), extra: true }),
+      put("owner", {
+        ...audit("a1", UID.owner),
+        details: { memberUid: "x".repeat(100_000), role: "viewer" },
+      }),
+    );
+    await assertFails(put("owner", omit(audit("a1", UID.owner), "details")));
+    await assertFails(put("owner", { ...audit("a2", UID.owner), extra: true }));
+  });
+
+  // Each action is tied to the state of its target after the batch (getAfter).
+  it("membershipChange: denies a role the membership does not have", async () => {
+    const forged = { memberUid: UID.viewer, role: "editor" };
+    await assertFails(put("owner", audit("a1", UID.owner, "membershipChange", ST_PRIV, forged)));
+  });
+  it("membershipChange: denies a stranger logging a change of someone else's station", async () => {
+    const d = { memberUid: UID.viewer, role: "viewer" };
+    await assertFails(put("stranger", audit("a1", UID.stranger, "membershipChange", ST_PRIV, d)));
+  });
+  it("membershipChange: the owner logs a removal together with the deletion", async () => {
+    const fs = fsAs(env, "owner");
+    const d = { memberUid: UID.editor, role: "removed" };
+    const b = writeBatch(fs);
+    b.delete(doc(fs, `stations/${ST_PRIV}/members/${UID.editor}`));
+    b.set(doc(fs, "audit/a1"), audit("a1", UID.owner, "membershipChange", ST_PRIV, d));
+    await assertSucceeds(b.commit());
+    await assertFails(
+      put(
+        "owner",
+        audit("a2", UID.owner, "membershipChange", ST_PRIV, { ...d, memberUid: UID.viewer }),
+      ),
     );
   });
+  it("membershipChange: a member logs leaving", async () => {
+    const fs = fsAs(env, "viewer");
+    const d = { memberUid: UID.viewer, role: "removed" };
+    const b = writeBatch(fs);
+    b.delete(doc(fs, `stations/${ST_PRIV}/members/${UID.viewer}`));
+    b.set(doc(fs, "audit/a1"), audit("a1", UID.viewer, "membershipChange", ST_PRIV, d));
+    await assertSucceeds(b.commit());
+  });
+  it("visibilityChange: must match the station's visibility after the batch", async () => {
+    await assertSucceeds(
+      put("owner", audit("a1", UID.owner, "visibilityChange", ST_PRIV, { visibility: "private" })),
+    );
+    await assertFails(
+      put("owner", audit("a2", UID.owner, "visibilityChange", ST_PRIV, { visibility: "public" })),
+    );
+    await assertFails(
+      put(
+        "editor",
+        audit("a3", UID.editor, "visibilityChange", ST_PRIV, { visibility: "private" }),
+      ),
+    );
+  });
+  it("ownershipTransfer: must name a transfer record created by the actor", async () => {
+    const d = { stationId: ST_PRIV, to: UID.recipient };
+    await assertSucceeds(
+      put("owner", audit("a1", UID.owner, "ownershipTransfer", OLD_TRANSFER, d)),
+    );
+    await assertFails(
+      put(
+        "owner",
+        audit("a2", UID.owner, "ownershipTransfer", OLD_TRANSFER, { ...d, to: UID.stranger }),
+      ),
+    );
+    await assertFails(
+      put("recipient", audit("a3", UID.recipient, "ownershipTransfer", OLD_TRANSFER, d)),
+    );
+    await assertFails(
+      put("owner", audit("a4", UID.owner, "ownershipTransfer", `${ST_PRIV}_nosuchxfer1`, d)),
+    );
+  });
+  it("adminChange: only an admin, matching the admins collection after the batch", async () => {
+    await assertSucceeds(
+      put("admin", audit("a1", UID.admin, "adminChange", UID.admin, { change: "added" })),
+    );
+    await assertFails(
+      put("admin", audit("a2", UID.admin, "adminChange", UID.owner, { change: "added" })),
+    );
+    await assertFails(
+      put("owner", audit("a3", UID.owner, "adminChange", UID.owner, { change: "removed" })),
+    );
+  });
+  it("deviceTypeStatusChange: must match the device type's status after the batch", async () => {
+    await assertSucceeds(
+      put(
+        "admin",
+        audit("a1", UID.admin, "deviceTypeStatusChange", "inReview", { status: "review" }),
+      ),
+    );
+    await assertFails(
+      put(
+        "admin",
+        audit("a2", UID.admin, "deviceTypeStatusChange", "inReview", { status: "verified" }),
+      ),
+    );
+    await assertFails(
+      put(
+        "owner",
+        audit("a3", UID.owner, "deviceTypeStatusChange", "inReview", { status: "review" }),
+      ),
+    );
+  });
+
   it("denies updating or deleting an entry, even as admin", async () => {
     await assertFails(updateDoc(doc(fsAs(env, "owner"), "audit/entry1"), { targetId: "x" }));
     await assertFails(deleteDoc(doc(fsAs(env, "admin"), "audit/entry1")));

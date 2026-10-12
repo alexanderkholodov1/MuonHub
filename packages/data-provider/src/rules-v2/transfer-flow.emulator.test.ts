@@ -30,7 +30,9 @@ import {
   now,
   seed,
   session,
+  stationAccess,
   stream,
+  streamStation,
   transfer,
   type Who,
 } from "./fixtures.js";
@@ -65,12 +67,28 @@ async function transferToRecipient(): Promise<void> {
     updatedAt: now(),
   });
   await assertSucceeds(b.commit());
-  // 3. The new owner claims the mirror.
+  // 3. The new owner claims the mirror; the claim drops the former owner's editors and viewers.
   await assertSucceeds(
     dbAs(env, "recipient")
       .ref(`stationAccess/${ST_PRIV}`)
-      .update({ ownerUid: UID.recipient, pendingOwner: null }),
+      .update({ ownerUid: UID.recipient, pendingOwner: null, editors: null, viewers: null }),
   );
+}
+
+/** Steps 1–2 only: the Firestore transfer is committed, the mirror is not claimed yet. */
+async function transferWithoutClaim(): Promise<void> {
+  await assertSucceeds(
+    dbAs(env, "owner").ref(`stationAccess/${ST_PRIV}/pendingOwner`).set(UID.recipient),
+  );
+  const fs = fsAs(env, "owner");
+  const b = writeBatch(fs);
+  b.set(doc(fs, `ownershipTransfers/${TID}`), transfer(TID, ST_PRIV, UID.owner, UID.recipient));
+  b.update(doc(fs, `stations/${ST_PRIV}`), {
+    ownerUid: UID.recipient,
+    transferId: TID,
+    updatedAt: now(),
+  });
+  await assertSucceeds(b.commit());
 }
 
 const writeMinute = (who: Who, ts = lastMinute()) =>
@@ -105,6 +123,26 @@ describeEmu("ownership transfer — former owner loses every right", () => {
     await assertFails(db.ref(`stationAccess/${ST_PRIV}/editors/${UID.owner}`).set(true));
     await assertFails(db.ref(`stationAccess/${ST_PRIV}/ownerUid`).set(UID.owner));
   });
+  it("denies the former owner clearing pendingOwner after the Firestore transfer", async () => {
+    await transferWithoutClaim();
+    const db = dbAs(env, "owner");
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}/pendingOwner`).remove());
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}`).update({ pendingOwner: null }));
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}`).set(stationAccess(UID.owner, false)));
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}/pendingOwner`).set(UID.stranger));
+    // The recipient can still claim.
+    await assertSucceeds(
+      dbAs(env, "recipient")
+        .ref(`stationAccess/${ST_PRIV}`)
+        .update({ ownerUid: UID.recipient, pendingOwner: null, editors: null, viewers: null }),
+    );
+  });
+  it("denies the former owner adding editors or going public before the claim", async () => {
+    await transferWithoutClaim();
+    const db = dbAs(env, "owner");
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}/editors/${UID.stranger}`).set(true));
+    await assertFails(db.ref(`stationAccess/${ST_PRIV}/public`).set(true));
+  });
   it("denies the former owner writing or reading minutes", async () => {
     await transferToRecipient();
     await assertFails(writeMinute("owner"));
@@ -112,7 +150,9 @@ describeEmu("ownership transfer — former owner loses every right", () => {
   });
   it("denies the former owner registering new streams for the station", async () => {
     await transferToRecipient();
-    await assertFails(dbAs(env, "owner").ref("streamStation/ownerA_afterxfer01").set(ST_PRIV));
+    await assertFails(
+      dbAs(env, "owner").ref("streamStation/ownerA_afterxfer01").set(streamStation(ST_PRIV, now())),
+    );
   });
   it("denies the former owner re-running the transfer back to themselves", async () => {
     await transferToRecipient();
@@ -140,9 +180,13 @@ describeEmu("ownership transfer — the new owner takes over", () => {
       dbAs(env, "recipient").ref(`stationAccess/${ST_PRIV}/viewers/${UID.stranger}`).set(true),
     );
   });
-  it("the new owner (and the agent, still an editor) write minutes of the existing stream", async () => {
+  it("the agent writes again only after the new owner re-adds it from the Firestore members", async () => {
     await transferToRecipient();
     await assertSucceeds(writeMinute("recipient"));
+    await assertFails(writeMinute("agent", lastMinute() - 120_000));
+    await assertSucceeds(
+      dbAs(env, "recipient").ref(`stationAccess/${ST_PRIV}/editors/${UID.agent}`).set(true),
+    );
     await assertSucceeds(writeMinute("agent", lastMinute() - 120_000));
   });
   it("the new owner re-homes the device and starts a stream under their own prefix", async () => {
@@ -152,7 +196,9 @@ describeEmu("ownership transfer — the new owner takes over", () => {
       setDoc(doc(fs, `devices/${DEV_PRIV}`), device(DEV_PRIV, ST_PRIV, UID.recipient)),
     );
     const id = "recipientN_newstream01";
-    await assertSucceeds(dbAs(env, "recipient").ref(`streamStation/${id}`).set(ST_PRIV));
+    await assertSucceeds(
+      dbAs(env, "recipient").ref(`streamStation/${id}`).set(streamStation(ST_PRIV, now())),
+    );
     await assertSucceeds(
       setDoc(doc(fs, `streams/${id}`), stream(id, ST_PRIV, DEV_PRIV, UID.recipient)),
     );

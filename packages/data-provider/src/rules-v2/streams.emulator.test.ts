@@ -239,10 +239,29 @@ describeEmu("streams/{id}/days/{YYYY-MM-DD}", () => {
           collection(fsAs(env, "anon"), `streams/${S_PUB}/days`),
           where(documentId(), ">=", "2026-09-01"),
           where(documentId(), "<=", "2026-10-31"),
+          limit(100),
         ),
       ),
     );
     expect(snap.size).toBe(1);
+  });
+  it("denies an unbounded or oversized public day-summary list (anonymous and stranger)", async () => {
+    for (const who of ["anon", "stranger"] as const) {
+      const days = collection(fsAs(env, who), `streams/${S_PUB}/days`);
+      await assertFails(getDocs(query(days, where(documentId(), ">=", "2026-09-01"))));
+      await assertFails(getDocs(query(days, limit(101))));
+    }
+  });
+  it("denies a day summary for a future UTC day", async () => {
+    const d = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+    await assertFails(setDoc(ref("agent", S_PRIV, d), daySummary(S_PRIV, d, 0)));
+    await assertFails(
+      setDoc(ref("agent", S_PRIV, "2099-01-01"), daySummary(S_PRIV, "2099-01-01", 0)),
+    );
+  });
+  it("accepts today's day summary", async () => {
+    const d = new Date().toISOString().slice(0, 10);
+    await assertSucceeds(setDoc(ref("agent", S_PRIV, d), daySummary(S_PRIV, d, 1)));
   });
   it("denies anonymous and stranger reads of a private station's days", async () => {
     await assertFails(getDoc(ref("anon", S_PRIV)));

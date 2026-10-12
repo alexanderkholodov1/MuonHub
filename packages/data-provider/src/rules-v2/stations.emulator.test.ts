@@ -16,6 +16,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   query,
   setDoc,
   updateDoc,
@@ -107,24 +108,25 @@ describeEmu("stations/{id} — reads and queries", () => {
 });
 
 describeEmu("stations/{id} — create", () => {
-  const fresh = (vis: "public" | "private") => station("stNew", UID.stranger, vis, "city");
+  const NEW = "strangerS_stationnew1";
+  const fresh = (vis: "public" | "private", id = NEW) => station(id, UID.stranger, vis, "city");
 
   it("a signed-in user creates a private station they own", async () => {
-    await assertSucceeds(setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), fresh("private")));
+    await assertSucceeds(setDoc(doc(fsAs(env, "stranger"), `stations/${NEW}`), fresh("private")));
   });
   it("a public station is created together with its projection", async () => {
     const fs = fsAs(env, "stranger");
     const b = writeBatch(fs);
-    b.set(doc(fs, "stations/stNew"), fresh("public"));
-    b.set(doc(fs, "publicStations/stNew"), projection(fresh("public"), 0));
+    b.set(doc(fs, `stations/${NEW}`), fresh("public"));
+    b.set(doc(fs, `publicStations/${NEW}`), projection(fresh("public"), 0));
     await assertSucceeds(b.commit());
   });
   it("denies a public station without its projection", async () => {
-    await assertFails(setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), fresh("public")));
+    await assertFails(setDoc(doc(fsAs(env, "stranger"), `stations/${NEW}`), fresh("public")));
   });
   it("denies a station owned by someone else", async () => {
     await assertFails(
-      setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), {
+      setDoc(doc(fsAs(env, "stranger"), `stations/${NEW}`), {
         ...fresh("private"),
         ownerUid: UID.owner,
       }),
@@ -132,27 +134,48 @@ describeEmu("stations/{id} — create", () => {
   });
   it("denies a station without visibility (no default)", async () => {
     const noVisibility = omit(fresh("private"), "visibility");
-    await assertFails(setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), noVisibility));
+    await assertFails(setDoc(doc(fsAs(env, "stranger"), `stations/${NEW}`), noVisibility));
   });
   it("denies unknown keys, a transferId, a mismatched id, or a future createdAt", async () => {
-    const ref = doc(fsAs(env, "stranger"), "stations/stNew");
+    const ref = doc(fsAs(env, "stranger"), `stations/${NEW}`);
     await assertFails(setDoc(ref, { ...fresh("private"), members: { x: "editor" } }));
-    await assertFails(setDoc(ref, { ...fresh("private"), transferId: "stNew_abcdef12" }));
+    await assertFails(setDoc(ref, { ...fresh("private"), transferId: `${NEW}_abcdef12` }));
     await assertFails(setDoc(ref, { ...fresh("private"), id: "other" }));
     const t = now() + 3_600_000;
     await assertFails(setDoc(ref, { ...fresh("private"), createdAt: t, updatedAt: t }));
   });
+  it("denies squatting a station id that carries another user's uid", async () => {
+    const squat = "ownerA_squatted01";
+    await assertFails(
+      setDoc(doc(fsAs(env, "stranger"), `stations/${squat}`), fresh("private", squat)),
+    );
+    const fs = fsAs(env, "stranger");
+    const b = writeBatch(fs);
+    b.set(doc(fs, `stations/${squat}`), fresh("public", squat));
+    b.set(doc(fs, `publicStations/${squat}`), projection(fresh("public", squat), 0));
+    await assertFails(b.commit());
+  });
+  it("denies a station id outside the `<ownerUid>_<random>` scheme", async () => {
+    for (const id of [
+      "stNew",
+      "strangerS_short",
+      "strangerS_a_b_cdefgh12",
+      "strangerSx_stationnew1",
+    ]) {
+      await assertFails(setDoc(doc(fsAs(env, "stranger"), `stations/${id}`), fresh("private", id)));
+    }
+  });
   it("denies an invalid location", async () => {
     const s = fresh("private");
     await assertFails(
-      setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), {
+      setDoc(doc(fsAs(env, "stranger"), `stations/${NEW}`), {
         ...s,
         location: { ...s.location, lat: 91 },
       }),
     );
   });
   it("denies an anonymous create and overwriting an existing station", async () => {
-    await assertFails(setDoc(doc(fsAs(env, "anon"), "stations/stNew"), fresh("private")));
+    await assertFails(setDoc(doc(fsAs(env, "anon"), `stations/${NEW}`), fresh("private")));
     await assertFails(
       setDoc(doc(fsAs(env, "stranger"), `stations/${ST_PRIV}`), {
         ...stPriv(),
@@ -337,7 +360,7 @@ describeEmu("publicStations/{id}", () => {
   it("anyone reads and lists public stations, without personal data", async () => {
     const fs = fsAs(env, "anon");
     const one = await assertSucceeds(getDoc(doc(fs, `publicStations/${ST_PUB}`)));
-    const all = await assertSucceeds(getDocs(collection(fs, "publicStations")));
+    const all = await assertSucceeds(getDocs(query(collection(fs, "publicStations"), limit(100))));
     expect(all.size).toBe(1);
     const data = one.data() as Record<string, unknown>;
     const point = data["point"] as { lat: number; lon: number };
@@ -357,9 +380,20 @@ describeEmu("publicStations/{id}", () => {
         "updatedAt",
       ].sort(),
     );
-    expect(JSON.stringify(data)).not.toMatch(/@|ownerUid|ownerA|editorE|viewerV/);
+    // The id carries the owner's uid (`<ownerUid>_<random>`, like stream ids), and the fixture's
+    // name repeats the id; no other field carries personal data.
+    expect(JSON.stringify({ ...data, id: null, name: null })).not.toMatch(
+      /@|ownerUid|ownerA|editorE|viewerV/,
+    );
     expect(point.lat).not.toBe(exact.lat);
     expect(point.lon).not.toBe(exact.lon);
+  });
+  it("denies an unbounded or oversized public-station list query (anonymous and signed in)", async () => {
+    for (const who of ["anon", "stranger"] as const) {
+      const fs = fsAs(env, who);
+      await assertFails(getDocs(collection(fs, "publicStations")));
+      await assertFails(getDocs(query(collection(fs, "publicStations"), limit(101))));
+    }
   });
   it("the owner refreshes the projection (device count, active flag)", async () => {
     await assertSucceeds(

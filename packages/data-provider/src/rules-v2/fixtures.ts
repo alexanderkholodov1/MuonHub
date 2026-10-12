@@ -78,9 +78,10 @@ export function dbAs(env: RulesTestEnvironment, who: Who): Rtdb {
 
 // ── Ids ──────────────────────────────────────────────────────────────────────────────────────
 
-export const ST_PUB = "stPub";
-export const ST_PRIV = "stPriv";
-export const ST_OTHER = "stOther";
+// Station ids are `<ownerUid>_<random>` (spec 0084 FR7, same scheme as stream ids).
+export const ST_PUB = "ownerA_stationpub1";
+export const ST_PRIV = "ownerA_stationpriv1";
+export const ST_OTHER = "strangerS_stationoth1";
 export const DEV_PUB = "devPub";
 export const DEV_PRIV = "devPriv";
 export const DEV_OTHER = "devOther";
@@ -90,7 +91,7 @@ export const S_OTHER = "strangerS_otherstream1";
 export const SESSION_OPEN = "sessOpen";
 export const SESSION_CLOSED = "sessClosed";
 export const DAY = "2026-10-01";
-export const OLD_TRANSFER = "stPriv_oldtransfer1";
+export const OLD_TRANSFER = `${ST_PRIV}_oldtransfer1`;
 
 // ── Time ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -319,16 +320,20 @@ export function transfer(id: string, stationId: string, from: string, to: string
   });
 }
 
-export function audit(id: string, actorUid: string, action: string = "membershipChange") {
-  return {
-    schemaVersion: 2,
-    id,
-    action,
-    actorUid,
-    targetId: ST_PRIV,
-    details: { role: "viewer" },
-    createdAt: now(),
-  };
+/** Audit entry; the default records the owner's (seeded) viewer membership of `stPriv`. */
+export function audit(
+  id: string,
+  actorUid: string,
+  action: string = "membershipChange",
+  targetId: string = ST_PRIV,
+  details: Record<string, unknown> = { memberUid: UID.viewer, role: "viewer" },
+) {
+  return { schemaVersion: 2, id, action, actorUid, targetId, details, createdAt: now() };
+}
+
+/** `streamStation/{streamId}` mirror entry: station id and the stream's first allowed minute. */
+export function streamStation(stationId: string, since: number = now() - 86_400_000) {
+  return { stationId, since };
 }
 
 /** Compact RTDB minute record (spec 0083 FR17) for a complete minute. */
@@ -365,9 +370,9 @@ export function stationAccess(
 
 // ── The seeded world ─────────────────────────────────────────────────────────────────────────
 //
-//  stPub   public  (approximate precision) — owner ownerA; editors editorE, agentEd; viewer viewerV
-//  stPriv  private (exact precision)       — same membership
-//  stOther private                          — owner strangerS, no members
+//  stPub   (ownerA_stationpub1)    public  (approximate) — owner ownerA; editors editorE, agentEd; viewer viewerV
+//  stPriv  (ownerA_stationpriv1)   private (exact)       — same membership
+//  stOther (strangerS_stationoth1) private               — owner strangerS, no members
 //  Streams ownerA_pubstream01 (stPub/devPub), ownerA_privstream1 (stPriv/devPriv),
 //          strangerS_otherstream1 (stOther/devOther). admins: adminX.
 
@@ -435,7 +440,11 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
         [ST_PRIV]: stationAccess(UID.owner, false),
         [ST_OTHER]: stationAccess(UID.stranger, false, [], []),
       },
-      streamStation: { [S_PUB]: ST_PUB, [S_PRIV]: ST_PRIV, [S_OTHER]: ST_OTHER },
+      streamStation: {
+        [S_PUB]: streamStation(ST_PUB),
+        [S_PRIV]: streamStation(ST_PRIV),
+        [S_OTHER]: streamStation(ST_OTHER),
+      },
       minutes: {
         [S_PRIV]: { [minuteKey(lastMinute() - 60_000)]: minute(lastMinute() - 60_000) },
         [S_PUB]: { [minuteKey(lastMinute() - 60_000)]: minute(lastMinute() - 60_000) },

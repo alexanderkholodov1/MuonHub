@@ -11,13 +11,16 @@ import {
 import {
   ST_OTHER,
   ST_PRIV,
+  ST_PUB,
   S_PRIV,
   UID,
   dbAs,
   emulatorOn,
   initEnv,
+  now,
   seed,
   stationAccess,
+  streamStation,
   type Who,
 } from "./fixtures.js";
 
@@ -34,6 +37,8 @@ afterAll(async () => {
   await env?.cleanup();
 });
 
+const NEW = "strangerS_stationnew1";
+
 const acc = (who: Who, path = "") =>
   dbAs(env, who).ref(`stationAccess/${ST_PRIV}${path === "" ? "" : `/${path}`}`);
 
@@ -41,26 +46,43 @@ describeEmu("stationAccess/{stationId} — create and rewrite", () => {
   it("a user creates the mirror of a new station they own", async () => {
     await assertSucceeds(
       dbAs(env, "stranger")
-        .ref("stationAccess/stNew")
+        .ref(`stationAccess/${NEW}`)
         .set(stationAccess(UID.stranger, false, [], [])),
     );
   });
   it("denies a mirror created for someone else, or with a pending owner", async () => {
     const db = dbAs(env, "stranger");
-    await assertFails(db.ref("stationAccess/stNew").set(stationAccess(UID.owner, false, [], [])));
+    await assertFails(db.ref(`stationAccess/${NEW}`).set(stationAccess(UID.owner, false, [], [])));
     await assertFails(
-      db.ref("stationAccess/stNew").set({
+      db.ref(`stationAccess/${NEW}`).set({
         ...stationAccess(UID.stranger, false, [], []),
         pendingOwner: UID.owner,
       }),
     );
   });
+  it("denies squatting a station id that carries another user's uid", async () => {
+    const db = dbAs(env, "stranger");
+    await assertFails(
+      db.ref("stationAccess/ownerA_squatted01").set(stationAccess(UID.stranger, false, [], [])),
+    );
+    await assertFails(
+      db.ref("stationAccess/ownerA_squatted01").set(stationAccess(UID.owner, false, [], [])),
+    );
+  });
+  it("denies a mirror id outside the `<ownerUid>_<random>` scheme", async () => {
+    const db = dbAs(env, "stranger");
+    for (const id of ["stNew", "strangerS_short", "strangerSx_stationnew1"]) {
+      await assertFails(
+        db.ref(`stationAccess/${id}`).set(stationAccess(UID.stranger, false, [], [])),
+      );
+    }
+  });
   it("denies unknown keys, missing keys, or a non-boolean public flag", async () => {
     const db = dbAs(env, "stranger");
     const base = stationAccess(UID.stranger, false, [], []);
-    await assertFails(db.ref("stationAccess/stNew").set({ ...base, admins: { x: true } }));
-    await assertFails(db.ref("stationAccess/stNew").set({ ownerUid: UID.stranger }));
-    await assertFails(db.ref("stationAccess/stNew").set({ ...base, public: "yes" }));
+    await assertFails(db.ref(`stationAccess/${NEW}`).set({ ...base, admins: { x: true } }));
+    await assertFails(db.ref(`stationAccess/${NEW}`).set({ ownerUid: UID.stranger }));
+    await assertFails(db.ref(`stationAccess/${NEW}`).set({ ...base, public: "yes" }));
   });
   it("denies a stranger overwriting an existing mirror (station takeover)", async () => {
     await assertFails(acc("stranger").set(stationAccess(UID.stranger, false, [], [])));
@@ -114,15 +136,31 @@ describeEmu("stationAccess/{stationId} — members and flags", () => {
   });
 });
 
+const CLAIM = { ownerUid: UID.recipient, pendingOwner: null, editors: null, viewers: null };
+
 describeEmu("stationAccess/{stationId} — transfer hand-over", () => {
   it("the owner sets a pending owner; editors cannot", async () => {
     await assertFails(acc("editor", "pendingOwner").set(UID.editor));
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
   });
-  it("the pending owner reads and claims the mirror (ownerUid + clear pendingOwner)", async () => {
+  it("the pending owner reads and claims the mirror (ownerUid, clear pendingOwner and members)", async () => {
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
     await assertSucceeds(acc("recipient").once("value"));
-    await assertSucceeds(acc("recipient").update({ ownerUid: UID.recipient, pendingOwner: null }));
+    await assertSucceeds(acc("recipient").update(CLAIM));
+  });
+  it("denies a claim that keeps the former owner's editors or viewers", async () => {
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+    await assertFails(acc("recipient").update({ ownerUid: UID.recipient, pendingOwner: null }));
+    await assertFails(
+      acc("recipient").update({ ownerUid: UID.recipient, pendingOwner: null, viewers: null }),
+    );
+    await assertFails(acc("recipient").update({ ...CLAIM, viewers: { [UID.stranger]: true } }));
+  });
+  it("the new owner rebuilds editors and viewers after the claim", async () => {
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+    await assertSucceeds(acc("recipient").update(CLAIM));
+    await assertSucceeds(acc("recipient", `editors/${UID.agent}`).set(true));
+    await assertSucceeds(acc("recipient", `viewers/${UID.viewer}`).set(true));
   });
   it("denies a claim that leaves pendingOwner in place", async () => {
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
@@ -130,25 +168,43 @@ describeEmu("stationAccess/{stationId} — transfer hand-over", () => {
   });
   it("denies a claim by anyone but the pending owner", async () => {
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
-    await assertFails(acc("editor").update({ ownerUid: UID.editor, pendingOwner: null }));
-    await assertFails(acc("stranger").update({ ownerUid: UID.stranger, pendingOwner: null }));
+    await assertFails(acc("editor").update({ ...CLAIM, ownerUid: UID.editor }));
+    await assertFails(acc("stranger").update({ ...CLAIM, ownerUid: UID.stranger }));
   });
   it("denies a claim without a pending transfer", async () => {
-    await assertFails(acc("recipient").update({ ownerUid: UID.recipient, pendingOwner: null }));
+    await assertFails(acc("recipient").update(CLAIM));
   });
   it("denies the pending owner changing members before claiming", async () => {
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
     await assertFails(acc("recipient", `editors/${UID.stranger}`).set(true));
   });
-  it("the owner cancels a pending transfer", async () => {
+  it("denies the owner clearing or re-pointing a pending owner (only the claim clears it)", async () => {
     await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
-    await assertSucceeds(acc("owner", "pendingOwner").remove());
+    await assertFails(acc("owner", "pendingOwner").remove());
+    await assertFails(acc("owner", "pendingOwner").set(UID.stranger));
+    await assertFails(acc("owner").update({ pendingOwner: null }));
+  });
+  it("the owner re-sends the same pending owner (idempotent retry)", async () => {
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+  });
+  it("denies the owner rewriting the mirror, members, or the public flag while a transfer is pending", async () => {
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+    await assertFails(acc("owner").set(stationAccess(UID.owner, false)));
+    await assertFails(acc("owner", `editors/${UID.stranger}`).set(true));
+    await assertFails(acc("owner", "editors").set({ [UID.stranger]: true }));
+    await assertFails(acc("owner", `viewers/${UID.stranger}`).set(true));
+    await assertFails(acc("owner", "public").set(true));
+  });
+  it("a member still leaves while a transfer is pending", async () => {
+    await assertSucceeds(acc("owner", "pendingOwner").set(UID.recipient));
+    await assertSucceeds(acc("viewer", `viewers/${UID.viewer}`).remove());
   });
 });
 
 describeEmu("streamStation/{streamId}", () => {
-  const map = (who: Who, streamId: string, stationId = ST_PRIV) =>
-    dbAs(env, who).ref(`streamStation/${streamId}`).set(stationId);
+  const map = (who: Who, streamId: string, stationId = ST_PRIV, since = now()) =>
+    dbAs(env, who).ref(`streamStation/${streamId}`).set(streamStation(stationId, since));
 
   it("the owner registers a stream id carrying their uid", async () => {
     await assertSucceeds(map("owner", "ownerA_newstream01"));
@@ -166,8 +222,22 @@ describeEmu("streamStation/{streamId}", () => {
     await assertFails(map("stranger", "strangerS_newstream01"));
   });
   it("denies re-pointing an existing stream to another station", async () => {
-    await assertFails(map("owner", S_PRIV, "stPub"));
+    await assertFails(map("owner", S_PRIV, ST_PUB));
     await assertFails(map("stranger", S_PRIV, ST_OTHER));
+  });
+  it("denies a mapping without `since`, with extra keys, or as a bare station id", async () => {
+    const ref = dbAs(env, "owner").ref("streamStation/ownerA_newstream01");
+    await assertFails(ref.set({ stationId: ST_PRIV }));
+    await assertFails(ref.set({ ...streamStation(ST_PRIV, now()), extra: 1 }));
+    await assertFails(ref.set(ST_PRIV));
+  });
+  it("denies a `since` more than 7 days back, in the future, or not an integer", async () => {
+    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() - 8 * 86_400_000));
+    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() + 3_600_000));
+    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() - 0.5));
+  });
+  it("accepts a `since` up to 7 days back (agent buffered offline before registering)", async () => {
+    await assertSucceeds(map("owner", "ownerA_newstream01", ST_PRIV, now() - 6 * 86_400_000));
   });
   it("denies deleting a mapping", async () => {
     await assertFails(dbAs(env, "owner").ref(`streamStation/${S_PRIV}`).remove());

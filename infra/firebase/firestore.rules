@@ -150,7 +150,9 @@ service cloud.firestore {
         && (request.resource.data.username == resource.data.username
           || (getAfter(usernamePath(request.resource.data.username)).data.uid == me()
             && !existsAfter(usernamePath(resource.data.username))));
-      allow delete: if signedIn() && userId == me();
+      // Account removal releases the username claim in the same batch (no orphaned claim).
+      allow delete: if signedIn() && userId == me()
+        && !existsAfter(usernamePath(resource.data.username));
     }
 
     match /usernames/{username} {
@@ -198,8 +200,15 @@ service cloud.firestore {
         && l.countryCode is string && l.countryCode.matches('^[A-Z]{2}$');
     }
 
+    // Station ids follow the stream-id scheme `<ownerUid>_<random>` (the creator's uid), so nobody
+    // can create (squat) an id that another user's client will later pick.
+    function isStationId(v) {
+      return v is string && v.matches('^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$');
+    }
+
+    // `{stationId}_{nonce}`; the station id itself contains one `_`.
     function isTransferId(v) {
-      return v is string && v.matches('^[A-Za-z0-9-]+_[A-Za-z0-9]{6,64}$');
+      return v is string && v.matches('^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}_[A-Za-z0-9]{6,64}$');
     }
 
     function validStation(d, sid) {
@@ -208,7 +217,7 @@ service cloud.firestore {
         && d.keys().hasOnly(['schemaVersion', 'id', 'ownerUid', 'name', 'location', 'publicPrecision',
           'visibility', 'institutionId', 'timezone', 'transferId', 'createdAt', 'updatedAt'])
         && d.schemaVersion == 2
-        && d.id == sid && isId(sid)
+        && d.id == sid && isStationId(sid)
         && isUid(d.ownerUid)
         && str(d.name, 1, 120)
         && validLocation(d.location)
@@ -290,6 +299,7 @@ service cloud.firestore {
         && (resource.data.ownerUid == me() || isStationMember(stationId) || isAdmin());
       allow create: if signedIn()
         && request.resource.data.ownerUid == me()
+        && stationId.matches(me() + '_[A-Za-z0-9]{8,64}')
         && validStation(request.resource.data, stationId)
         && !('transferId' in request.resource.data)
         && projectionConsistent(stationId, request.resource.data);
@@ -352,7 +362,9 @@ service cloud.firestore {
 
     match /publicStations/{stationId} {
       // The only station data anonymous visitors read (ADR-009 rule 5): no personal data.
-      allow get, list: if true;
+      // List queries must carry `limit <= 100` (paged; no single-query scrape of the collection).
+      allow get: if true;
+      allow list: if request.query.limit <= 100;
       allow create, update: if signedIn()
         && (getAfter(stationPath(stationId)).data.ownerUid == me() || isAdmin())
         && validPublicStation(request.resource.data, stationId)
@@ -373,7 +385,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['schemaVersion', 'id', 'stationId', 'from', 'to', 'createdAt'])
         && request.resource.data.schemaVersion == 2
         && request.resource.data.id == transferId
-        && isId(request.resource.data.stationId)
+        && isStationId(request.resource.data.stationId)
         && transferId.matches(request.resource.data.stationId + '_[A-Za-z0-9]{6,64}')
         && isTransferId(transferId)
         && request.resource.data.from == me()
@@ -639,6 +651,12 @@ service cloud.firestore {
       return !(k in hs) || hs[k].keys().hasOnly(hourFields());
     }
 
+    // The UTC day has started (2-minute clock tolerance): no summaries for future days.
+    function isPastDay(day) {
+      return timestamp.date(int(day[0:4]), int(day[5:7]), int(day[8:10]))
+        <= request.time + duration.value(120, 's');
+    }
+
     function validDay(d, streamId, day) {
       let hs = d.hours;
       return d.keys().hasAll(['schemaVersion', 'streamId', 'day', 'hours', 'updatedAt'])
@@ -646,6 +664,7 @@ service cloud.firestore {
         && d.schemaVersion == 2
         && d.streamId == streamId
         && d.day == day && day.matches('^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && isPastDay(day)
         && hs is map && hs.keys().hasOnly(hourKeys())
         && pastMs(d.updatedAt)
         && hourOk(hs, '00') && hourOk(hs, '01') && hourOk(hs, '02') && hourOk(hs, '03')
@@ -685,8 +704,12 @@ service cloud.firestore {
       }
 
       // Day summaries: the only anonymously readable series, and only for public stations.
+      // Public (non-member) list queries must carry `limit <= 100`.
       match /days/{day} {
-        allow get, list: if get(stationPath(streamDoc(streamId).data.stationId)).data.visibility == 'public'
+        allow get: if get(stationPath(streamDoc(streamId).data.stationId)).data.visibility == 'public'
+          || (signedIn() && canReadStation(streamDoc(streamId).data.stationId));
+        allow list: if (request.query.limit <= 100
+            && get(stationPath(streamDoc(streamId).data.stationId)).data.visibility == 'public')
           || (signedIn() && canReadStation(streamDoc(streamId).data.stationId));
         allow create, update: if signedIn()
           && validDay(request.resource.data, streamId, day)
@@ -696,21 +719,62 @@ service cloud.firestore {
     }
 
     // ── Audit log (FR14) ─────────────────────────────────────────────────────────────────────
+    //
+    // Each action type has a fixed `details` shape (bounded values) and is tied, with getAfter(), to
+    // the state of its target after the batch: the entry cannot claim an outcome that is not true.
+    // It does not prove that the change happened in the same batch (an entry may restate a state
+    // that already held) — that part of the audit content is self-asserted by the actor.
+
+    function hasDetails(d) {
+      return 'details' in d && d.details is map;
+    }
+
+    function auditTiedToTarget(d) {
+      let t = d.targetId;
+      let x = d.details;
+      return (d.action == 'membershipChange'
+          && x.keys().hasAll(['memberUid', 'role']) && x.keys().hasOnly(['memberUid', 'role'])
+          && isUid(x.memberUid) && x.role in ['editor', 'viewer', 'removed']
+          && isStationId(t)
+          && (getAfter(stationPath(t)).data.ownerUid == me() || x.memberUid == me())
+          && ((x.role == 'removed'
+              && !existsAfter(/databases/$(database)/documents/stations/$(t)/members/$(x.memberUid)))
+            || (x.role != 'removed'
+              && getAfter(/databases/$(database)/documents/stations/$(t)/members/$(x.memberUid)).data.role == x.role)))
+        || (d.action == 'visibilityChange'
+          && x.keys().hasAll(['visibility']) && x.keys().hasOnly(['visibility'])
+          && isStationId(t)
+          && getAfter(stationPath(t)).data.ownerUid == me()
+          && getAfter(stationPath(t)).data.visibility == x.visibility)
+        || (d.action == 'ownershipTransfer'
+          && x.keys().hasAll(['stationId', 'to']) && x.keys().hasOnly(['stationId', 'to'])
+          && isTransferId(t)
+          && getAfter(transferPath(t)).data.from == me()
+          && getAfter(transferPath(t)).data.stationId == x.stationId
+          && getAfter(transferPath(t)).data.to == x.to)
+        || (d.action == 'adminChange'
+          && x.keys().hasAll(['change']) && x.keys().hasOnly(['change'])
+          && isAdmin() && isUid(t)
+          && ((x.change == 'added' && existsAfter(/databases/$(database)/documents/admins/$(t)))
+            || (x.change == 'removed' && !existsAfter(/databases/$(database)/documents/admins/$(t)))))
+        || (d.action == 'deviceTypeStatusChange'
+          && x.keys().hasAll(['status']) && x.keys().hasOnly(['status'])
+          && getAfter(/databases/$(database)/documents/deviceTypes/$(t)).data.status == x.status
+          && (isAdmin() || getAfter(/databases/$(database)/documents/deviceTypes/$(t)).data.get('authorUid', null) == me()));
+    }
 
     match /audit/{auditId} {
       allow get, list: if isAdmin();
       allow create: if signedIn()
-        && request.resource.data.keys().hasAll(['schemaVersion', 'id', 'action', 'actorUid', 'targetId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['schemaVersion', 'id', 'action', 'actorUid', 'targetId', 'details', 'createdAt'])
         && request.resource.data.keys().hasOnly(['schemaVersion', 'id', 'action', 'actorUid', 'targetId', 'details', 'createdAt'])
         && request.resource.data.schemaVersion == 2
         && request.resource.data.id == auditId && isId(auditId)
-        && request.resource.data.action in ['membershipChange', 'visibilityChange', 'ownershipTransfer',
-          'adminChange', 'deviceTypeStatusChange']
         && request.resource.data.actorUid == me()
         && isId(request.resource.data.targetId)
-        && (!('details' in request.resource.data)
-          || (request.resource.data.details is map && request.resource.data.details.size() <= 16))
-        && recentMs(request.resource.data.createdAt);
+        && hasDetails(request.resource.data)
+        && recentMs(request.resource.data.createdAt)
+        && auditTiedToTarget(request.resource.data);
       allow update, delete: if false;
     }
   }
