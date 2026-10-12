@@ -2,23 +2,38 @@
   "name": "@muonhub/agent",
   "version": "6.0.0-alpha.1.6",
   "private": true,
-  "description": "MuonHub agent — the headless Node.js daemon is built in milestone M1 (ADR-007); this package holds the first-attempt TypeScript core until then",
+  "description": "MuonHub agent — headless Node.js 24 daemon that reads devices over serial, keeps every raw line locally, and syncs complete-minute records (spec 0087, ADR-007)",
   "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "muonhub-agent": "./dist/cli.js"
+  },
   "scripts": {
-    "build": "echo 'agent: no build output until the M1 daemon'",
+    "build": "tsc",
     "test": "vitest run",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "dev": "echo 'agent: no dev server until the M1 daemon'",
+    "dev": "tsc --watch",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
-  "devDependencies": {
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+  "engines": {
+    "node": ">=24"
   },
   "dependencies": {
-    "@muonhub/shared": "workspace:*",
     "@muonhub/data-provider": "workspace:*",
-    "@muonhub/physics": "workspace:*"
+    "@muonhub/physics": "workspace:*",
+    "@muonhub/shared": "workspace:*",
+    "serialport": "catalog:",
+    "ws": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@muonhub/simulator": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/ws": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

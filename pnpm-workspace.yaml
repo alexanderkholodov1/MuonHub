@@ -12,6 +12,8 @@ allowBuilds:
   "@firebase/util": false
   protobufjs: false
   re2: false
+  # serialport: prebuilt N-API binaries ship inside the package (linux x64/arm64, win, mac); no compile needed.
+  "@serialport/bindings-cpp": false
   # sharp: Next.js image optimization (optional, unused in static export; skip to avoid native build)
   sharp: false
   # unrs-resolver: Rust-based module resolver used by tailwindcss v4 / next; must build
@@ -28,3 +30,6 @@ catalog:
   "@vitest/coverage-v8": ^5.0.3
   "@types/node": ^24.19.1
   zod: ^4.6.5
+  serialport: ^13.0.0
+  ws: ^8.22.0
+  "@types/ws": ^8.18.2
