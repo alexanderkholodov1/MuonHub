@@ -162,6 +162,22 @@ describe("memory provider — devices, streams, sessions", () => {
     ).rejects.toMatchObject({ code: "not-found" });
   });
 
+  it("updates counters of an open session only", async () => {
+    const { provider } = setup();
+    await provider.startSession(session());
+    const counters = {
+      completeMinutes: 5,
+      discardedPartialMinutes: 1,
+      quarantinedLines: 0,
+      eventIdGaps: 0,
+    };
+    await provider.updateSessionCounters(STREAM_ID, "session-1", counters);
+    await provider.endSession(STREAM_ID, "session-1", { endedAt: T0 + 1000, endReason: "stop" });
+    await expect(
+      provider.updateSessionCounters(STREAM_ID, "session-1", counters),
+    ).rejects.toMatchObject({ code: "conflict" });
+  });
+
   it("returns invalid stored records as quarantine, not silence", async () => {
     const { provider, store } = setup();
     await provider.createDevice(device());

@@ -430,6 +430,14 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const s = validate(v2.SessionSchema, input, "session");
       createDoc(`streams/${s.streamId}/sessions/${s.id}`, s);
     },
+    async updateSessionCounters(streamId, sessionId, counters) {
+      const path = `streams/${streamId}/sessions/${sessionId}`;
+      const valid = validate(v2.SessionCountersSchema, counters, "session counters");
+      const current = getDocOrNull(path, v2.SessionSchema);
+      if (current === null) throw new DataProviderError("not-found");
+      if (current.endedAt !== undefined) throw new DataProviderError("conflict");
+      updateDocFields(path, { counters: valid });
+    },
     async endSession(streamId, sessionId, end) {
       const path = `streams/${streamId}/sessions/${sessionId}`;
       const current = getDocOrNull(path, v2.SessionSchema);
@@ -447,6 +455,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
 
     async writeMinutes(streamId, records) {
       const prepared = records.map((r) => ({ ts: r.ts, ...v2.serializeMinute(r) }));
+      if (new Set(prepared.map((p) => p.key)).size !== prepared.length)
+        fail("Two records share the same minute.");
       const alreadyExisted: number[] = [];
       let written = 0;
       for (const p of prepared) {

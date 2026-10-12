@@ -42,6 +42,7 @@ import {
 } from "firebase/firestore";
 import {
   connectDatabaseEmulator,
+  endAt,
   endBefore,
   get as rtGet,
   getDatabase,
@@ -51,7 +52,6 @@ import {
   orderByKey,
   query as rtQuery,
   ref as rtRef,
-  runTransaction as rtRunTransaction,
   set as rtSet,
   startAfter as rtStartAfter,
   startAt,
@@ -116,7 +116,6 @@ export interface FirebaseV2Config {
 }
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const WRITE_CONCURRENCY = 8;
 const DEFAULT_SESSION_LIMIT = 50;
 const MAX_SESSION_LIMIT = 500;
 
@@ -137,24 +136,6 @@ function parseOrInvalid<T>(schema: { parse(value: unknown): T }, value: unknown,
 
 function toAuthUser(user: FbUser): AuthUser {
   return { uid: user.uid, email: user.email };
-}
-
-async function mapLimit<T, R>(
-  items: readonly T[],
-  concurrency: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array<R>(items.length);
-  let next = 0;
-  const worker = async (): Promise<void> => {
-    for (;;) {
-      const index = next++;
-      if (index >= items.length) return;
-      results[index] = await fn(items[index] as T);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
-  return results;
 }
 
 export function createFirebaseProviderV2(config: FirebaseV2Config): DataProviderV2 {
@@ -199,11 +180,31 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
 
   const docRef = (...path: [string, ...string[]]) => doc(fs, ...path);
 
-  async function createStrict(ref: ReturnType<typeof docRef>, data: object): Promise<void> {
-    await fsRunTransaction(fs, async (tx) => {
-      if ((await tx.get(ref)).exists()) throw new DataProviderError("already-exists");
-      tx.set(ref, stripUndefined(data));
-    });
+  /**
+   * True when the document exists. The security rules answer a read of a missing document with
+   * `permission-denied` (they read `resource.data`), so a denied probe means "not visible to this
+   * user", which for a create is treated as absent; the write itself is still checked by the rules.
+   */
+  async function probeExists(ref: ReturnType<typeof docRef>): Promise<boolean> {
+    try {
+      return (await getDoc(ref)).exists();
+    } catch (error) {
+      const mapped = mapError(error);
+      if (mapped.code === "permission-denied") return false;
+      throw mapped;
+    }
+  }
+
+  /** Create-only write of one or more documents in one atomic batch; `already-exists` if the first exists. */
+  async function createStrict(
+    writes: readonly [ref: ReturnType<typeof docRef>, data: object][],
+  ): Promise<void> {
+    const first = writes[0];
+    if (first === undefined) return;
+    if (await probeExists(first[0])) throw new DataProviderError("already-exists");
+    const batch = writeBatch(fs);
+    for (const [ref, data] of writes) batch.set(ref, stripUndefined(data));
+    await batch.commit();
   }
 
   async function getParsed<T>(
@@ -298,14 +299,12 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     createUserProfile: (user) =>
       guard(async () => {
         const profile = parseOrInvalid(v2.UserSchema, user, "user profile");
-        const userRef = docRef("users", profile.uid);
         const nameRef = docRef("usernames", profile.username);
-        await fsRunTransaction(fs, async (tx) => {
-          const [u, n] = await Promise.all([tx.get(userRef), tx.get(nameRef)]);
-          if (u.exists() || n.exists()) throw new DataProviderError("already-exists");
-          tx.set(userRef, stripUndefined(profile));
-          tx.set(nameRef, { uid: profile.uid, createdAt: profile.createdAt });
-        });
+        if (await probeExists(nameRef)) throw new DataProviderError("already-exists");
+        await createStrict([
+          [docRef("users", profile.uid), profile],
+          [nameRef, { uid: profile.uid, createdAt: profile.createdAt }],
+        ]);
       }),
     getUser: (uid) => guard(() => getParsed(docRef("users", uid), v2.UserSchema)),
     updateDisplayName: (uid, displayName) =>
@@ -329,20 +328,17 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           stripUndefined(access),
           (existing) => (existing as { ownerUid?: unknown } | null)?.ownerUid === station.ownerUid,
         );
-        const stationRef = docRef("stations", station.id);
-        const projectionRef = docRef("publicStations", station.id);
-        await fsRunTransaction(fs, async (tx) => {
-          if ((await tx.get(stationRef)).exists()) throw new DataProviderError("already-exists");
-          tx.set(stationRef, stripUndefined(station));
-          if (isPublic(station)) {
-            tx.set(
-              projectionRef,
-              stripUndefined(
-                buildPublicStation(station, { deviceCount: 0, active: false }, station.updatedAt),
-              ),
-            );
-          }
-        });
+        await createStrict([
+          [docRef("stations", station.id), station],
+          ...(isPublic(station)
+            ? [
+                [
+                  docRef("publicStations", station.id),
+                  buildPublicStation(station, { deviceCount: 0, active: false }, station.updatedAt),
+                ] as [ReturnType<typeof docRef>, object],
+              ]
+            : []),
+        ]);
       }),
     getStation: (id) => guard(() => getParsed(docRef("stations", id), stationSchema)),
     listMyStations: () =>
@@ -461,7 +457,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           [`editors/${uid}`]: role === "editor" ? true : null,
           [`viewers/${uid}`]: role === "viewer" ? true : null,
         });
-        await createStrict(memberRef, member);
+        await createStrict([[memberRef, member]]);
       }),
     changeMemberRole: (stationId, uid, role) =>
       guard(async () => {
@@ -538,7 +534,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     createDevice: (input) =>
       guard(async () => {
         const device = parseOrInvalid(v2.DeviceSchema, input, "device");
-        await createStrict(docRef("devices", device.id), device);
+        await createStrict([[docRef("devices", device.id), device]]);
       }),
     getDevice: (id) => guard(() => getParsed(docRef("devices", id), v2.DeviceSchema)),
     listDevices: (stationId) =>
@@ -567,18 +563,22 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const type = parseOrInvalid(v2.DeviceTypeSchema, input, "device type");
         const parentRef = docRef("deviceTypes", type.id);
         const versionRef = docRef("deviceTypes", type.id, "versions", String(type.version));
-        await fsRunTransaction(fs, async (tx) => {
-          const [parent, existing] = await Promise.all([tx.get(parentRef), tx.get(versionRef)]);
-          if (existing.exists()) throw new DataProviderError("already-exists");
-          if (parent.exists()) {
-            const current = (parent.data() as { version?: unknown }).version;
-            if (typeof current === "number" && current > type.version) {
-              throw new DataProviderError("conflict");
-            }
-          }
-          tx.set(versionRef, stripUndefined(type));
-          tx.set(parentRef, stripUndefined(type));
+        if (await probeExists(versionRef)) throw new DataProviderError("already-exists");
+        const parent = await getDoc(parentRef).catch((error: unknown) => {
+          const mapped = mapError(error);
+          if (mapped.code === "permission-denied") return null;
+          throw mapped;
         });
+        if (parent?.exists() === true) {
+          const current = (parent.data() as { version?: unknown }).version;
+          if (typeof current === "number" && current > type.version) {
+            throw new DataProviderError("conflict");
+          }
+        }
+        const batch = writeBatch(fs);
+        batch.set(versionRef, stripUndefined(type));
+        batch.set(parentRef, stripUndefined(type));
+        await batch.commit();
       }),
     getDeviceType: (id, version) =>
       guard(() =>
@@ -595,7 +595,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     addCalibration: (input) =>
       guard(async () => {
         const c = parseOrInvalid(v2.CalibrationSchema, input, "calibration");
-        await createStrict(docRef("devices", c.deviceId, "calibrations", String(c.version)), c);
+        await createStrict([[docRef("devices", c.deviceId, "calibrations", String(c.version)), c]]);
       }),
     listCalibrations: (deviceId) =>
       guard(async () => {
@@ -623,7 +623,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           stream.stationId,
           (existing) => existing === stream.stationId,
         );
-        await createStrict(docRef("streams", stream.id), stream);
+        await createStrict([[docRef("streams", stream.id), stream]]);
       }),
     getStream: (id) => guard(() => getParsed(docRef("streams", id), v2.StreamSchema)),
     listStreams: (stationId) =>
@@ -642,7 +642,18 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     startSession: (input) =>
       guard(async () => {
         const s = parseOrInvalid(v2.SessionSchema, input, "session");
-        await createStrict(docRef("streams", s.streamId, "sessions", s.id), s);
+        await createStrict([[docRef("streams", s.streamId, "sessions", s.id), s]]);
+      }),
+    updateSessionCounters: (streamId, sessionId, counters) =>
+      guard(async () => {
+        const valid = parseOrInvalid(v2.SessionCountersSchema, counters, "session counters");
+        const ref = docRef("streams", streamId, "sessions", sessionId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) throw new DataProviderError("not-found");
+        if (v2.SessionSchema.parse(snap.data()).endedAt !== undefined) {
+          throw new DataProviderError("conflict");
+        }
+        await updateDoc(ref, { counters: valid });
       }),
     endSession: (streamId, sessionId, end: SessionEnd) =>
       guard(async () => {
@@ -686,17 +697,36 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           ts: r.ts,
           ...v2.serializeMinute(r),
         }));
-        const outcomes = await mapLimit(prepared, WRITE_CONCURRENCY, async (p) => {
-          const result = await rtRunTransaction(
-            rtRef(rt, `minutes/${streamId}/${p.key}`),
-            (current: unknown) => (current === null ? stripUndefined(p.value) : undefined),
-            { applyLocally: false },
-          );
-          return { ts: p.ts, committed: result.committed };
+        if (new Set(prepared.map((p) => p.key)).size !== prepared.length) {
+          throw invalid("Two records share the same minute.");
+        }
+        if (prepared.length === 0) return { written: 0, alreadyExisted: [] };
+        // Write-once: the rules deny any overwrite, so existing minutes are found first (one ranged
+        // read) and left out of the write. A race with another writer surfaces as the rules' denial.
+        const keys = prepared.map((p) => p.key).sort();
+        const base = rtRef(rt, `minutes/${streamId}`);
+        const snap = await rtGet(
+          rtQuery(
+            base,
+            orderByKey(),
+            startAt(keys[0] as string),
+            endAt(keys[keys.length - 1] as string),
+          ),
+        );
+        const existing = new Set<string>();
+        snap.forEach((child) => {
+          if (child.key !== null) existing.add(child.key);
         });
+        const fresh = prepared.filter((p) => !existing.has(p.key));
+        for (const part of chunk(fresh, LIVE_BATCH_SIZE)) {
+          await rtUpdate(
+            base,
+            Object.fromEntries(part.map((p) => [p.key, stripUndefined(p.value)])),
+          );
+        }
         return {
-          written: outcomes.filter((o) => o.committed).length,
-          alreadyExisted: outcomes.filter((o) => !o.committed).map((o) => o.ts),
+          written: fresh.length,
+          alreadyExisted: prepared.filter((p) => existing.has(p.key)).map((p) => p.ts),
         };
       }),
     readMinutes: (streamId, query: MinuteRangeQuery) =>

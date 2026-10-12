@@ -153,6 +153,12 @@ export interface StreamsApi {
   setStreamStatus(streamId: string, status: v2.Stream["status"]): Promise<void>;
 
   startSession(session: v2.Session): Promise<void>;
+  /** Updates the counters of an open session; counters only grow (spec 0084 FR11). */
+  updateSessionCounters(
+    streamId: string,
+    sessionId: string,
+    counters: v2.SessionCounters,
+  ): Promise<void>;
   /** Closes a session once; fails with `conflict` if it is already closed. */
   endSession(streamId: string, sessionId: string, end: SessionEnd): Promise<void>;
   /** Newest first. */
