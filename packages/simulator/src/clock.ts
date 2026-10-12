@@ -10,13 +10,13 @@ import type { Rng } from "./rng.js";
 
 export interface ClockConfig {
   /** Device clock reading at the start of the first session (ms). */
-  readonly offsetMs?: number;
+  readonly offsetMs?: number | undefined;
   /** Rate error in parts per million (positive = runs fast). */
-  readonly driftPpm?: number;
+  readonly driftPpm?: number | undefined;
   /** Standard deviation of per-line timing jitter (ms). */
-  readonly jitterMs?: number;
+  readonly jitterMs?: number | undefined;
   /** Width of the millisecond counter (default 32). */
-  readonly rolloverBits?: number;
+  readonly rolloverBits?: number | undefined;
 }
 
 export interface HostLatencyConfig {

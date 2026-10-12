@@ -18,11 +18,11 @@ export type PressureConfig =
       readonly meanHpa: number;
       readonly semidiurnalAmplitudeHpa: number;
       /** Phase of the tide maximum, hours after 00:00 UTC. */
-      readonly phaseHours?: number;
+      readonly phaseHours?: number | undefined;
       /** Stationary standard deviation of the synoptic noise (hPa). */
-      readonly synopticSigmaHpa?: number;
+      readonly synopticSigmaHpa?: number | undefined;
       /** Correlation time of the synoptic noise (hours). */
-      readonly synopticCorrelationHours?: number;
+      readonly synopticCorrelationHours?: number | undefined;
       readonly seed: number;
     }
   | {
@@ -33,12 +33,12 @@ export type PressureConfig =
 
 export interface TemperatureConfig {
   readonly meanC: number;
-  readonly diurnalAmplitudeC?: number;
+  readonly diurnalAmplitudeC?: number | undefined;
   /** Hour (UTC) of the temperature maximum. */
-  readonly phaseHours?: number;
+  readonly phaseHours?: number | undefined;
   /** Per-minute white noise (°C), deterministic for a seed. */
-  readonly noiseSigmaC?: number;
-  readonly seed?: number;
+  readonly noiseSigmaC?: number | undefined;
+  readonly seed?: number | undefined;
 }
 
 export interface ForbushConfig {
@@ -137,8 +137,8 @@ export interface RateModelConfig {
   /** Rate at the reference pressure (s⁻¹). */
   readonly baseRatePerS: number;
   /** Barometric coefficient in %/hPa (negative). Omitted = no pressure modulation. */
-  readonly betaPercentPerHpa?: number;
-  readonly p0Hpa?: number;
+  readonly betaPercentPerHpa?: number | undefined;
+  readonly p0Hpa?: number | undefined;
   readonly pressure?: Series;
   readonly diurnal?: DiurnalConfig;
   readonly forbush?: readonly ForbushConfig[];
