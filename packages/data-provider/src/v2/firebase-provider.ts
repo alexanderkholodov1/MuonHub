@@ -11,10 +11,13 @@ import {
   connectAuthEmulator,
   createUserWithEmailAndPassword,
   getAuth,
+  initializeAuth,
+  reload,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as fbSignOut,
   type Auth,
+  type Persistence,
   type User as FbUser,
 } from "firebase/auth";
 import {
@@ -90,6 +93,12 @@ import {
   toLiveValue,
   windowStartKey,
 } from "./live-window.js";
+import {
+  createRestorablePersistence,
+  exchangeRefreshToken,
+  idTokenClaims,
+  type RestorablePersistence,
+} from "./session-restore.js";
 import { writeMinutesChunked } from "./minute-writer.js";
 import { buildMinutePage, planMinuteRange, type MinuteRangeQuery } from "./pagination.js";
 import {
@@ -125,6 +134,11 @@ export interface FirebaseV2Config {
    * On expiry the call fails with `outcome-unknown` (the write may still land). `0` disables it.
    */
   timeoutMs?: number;
+  /**
+   * Enables `signInWithRefreshToken` (Node.js agents): the Auth instance is created with a custom
+   * persistence instead of the default. Needs a fresh app name. See `session-restore.ts`.
+   */
+  sessionRestore?: boolean;
   /** Local emulators; never set in production. */
   emulators?: { auth?: string; firestore?: HostPort; database?: HostPort };
 }
@@ -173,7 +187,14 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     );
     fresh = true;
   }
-  const auth: Auth = getAuth(app);
+  const restorer: RestorablePersistence | null =
+    fresh && config.sessionRestore === true ? createRestorablePersistence() : null;
+  const auth: Auth =
+    restorer === null
+      ? getAuth(app)
+      : initializeAuth(app, {
+          persistence: restorer.persistence as unknown as Persistence,
+        });
   const fs: Firestore = getFirestore(app);
   const rt: Database = getDatabase(app);
   if (fresh && config.emulators !== undefined) {
@@ -373,6 +394,58 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         toAuthUser((await createUserWithEmailAndPassword(auth, email, password)).user),
       ),
     signOut: () => guard(() => fbSignOut(auth)),
+    getRefreshToken() {
+      const token = auth.currentUser?.refreshToken;
+      return token === undefined || token === "" ? null : token;
+    },
+    signInWithRefreshToken: (token) =>
+      guard(async () => {
+        if (restorer === null) {
+          throw invalid("Session restore is not enabled (set sessionRestore on a fresh app).");
+        }
+        await auth.authStateReady();
+        const fresh = await exchangeRefreshToken(config.apiKey, token, config.emulators?.auth);
+        const claims = idTokenClaims(fresh.idToken);
+        await restorer.seed({
+          uid: fresh.uid,
+          ...(claims.email === undefined ? {} : { email: claims.email }),
+          emailVerified: claims.emailVerified,
+          isAnonymous: false,
+          providerData: [],
+          stsTokenManager: {
+            refreshToken: fresh.refreshToken,
+            accessToken: fresh.idToken,
+            expirationTime: Date.now() + fresh.expiresInSec * 1000,
+          },
+          apiKey: config.apiKey,
+          appName,
+        });
+        const user = auth.currentUser;
+        if (user === null || user.uid !== fresh.uid) {
+          throw new DataProviderError("internal", { message: "Session restore did not complete." });
+        }
+        await reload(user); // fills the profile and proves the account still exists
+        return toAuthUser(user);
+      }),
+    async checkSession() {
+      const user = auth.currentUser;
+      if (user === null) return false;
+      try {
+        await user.getIdToken(true);
+        return true;
+      } catch (error) {
+        const code = (error as { code?: unknown } | null)?.code;
+        if (
+          code === "auth/user-token-expired" ||
+          code === "auth/user-disabled" ||
+          code === "auth/user-not-found" ||
+          code === "auth/invalid-user-token"
+        ) {
+          return false;
+        }
+        throw mapError(error);
+      }
+    },
 
     // Identity ------------------------------------------------------------------------------
     createUserProfile: (user) =>

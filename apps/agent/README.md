@@ -74,8 +74,5 @@ data-provider emulator suite; CA8 is a `grep` (no Firebase SDK import in this pa
 
 ## Known limits (M1)
 
-- Restoring a session after a restart needs refresh-token support in `@muonhub/data-provider`
-  (`RefreshTokenSupport` in `src/sync/auth.ts`); until the provider offers it the agent records
-  locally and reports "signed out - data stored locally".
 - Dead-time units of the built-in device types flagged `unverified` stay unverified until the step-9
   capture on real hardware.

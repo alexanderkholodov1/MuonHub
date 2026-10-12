@@ -73,6 +73,7 @@ export async function buildDaemon(
           apiKey: fb.apiKey,
           projectId: fb.projectId,
           databaseURL: fb.databaseURL,
+          sessionRestore: true,
           ...(fb.authDomain === undefined ? {} : { authDomain: fb.authDomain }),
           ...(fb.appId === undefined ? {} : { appId: fb.appId }),
           ...(fb.emulators === undefined
@@ -89,14 +90,8 @@ export async function buildDaemon(
                 },
               }),
         });
-  // Session restore needs refresh-token support in the provider; absent, the agent records locally.
-  const maybe = provider as (dp.DataProviderV2 & Partial<RefreshTokenSupport>) | null;
-  const refresh: RefreshTokenSupport | null =
-    maybe !== null &&
-    maybe.getRefreshToken !== undefined &&
-    maybe.signInWithRefreshToken !== undefined
-      ? (maybe as unknown as RefreshTokenSupport)
-      : null;
+  // The Firebase provider (created with sessionRestore) exports and restores the refresh token.
+  const refresh: RefreshTokenSupport | null = provider;
   const credentials = createFileCredentialStore(stateFile(config, "credentials"));
 
   const agent = new Agent({

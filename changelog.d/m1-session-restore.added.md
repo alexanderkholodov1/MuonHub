@@ -1,0 +1,1 @@
+- Data provider: refresh-token sessions (`getRefreshToken`, `signInWithRefreshToken`, `checkSession`) in the Firebase and in-memory v2 providers, so the agent restores its session after a restart without the password; a revoked, expired or disabled account is reported as `unauthenticated`.

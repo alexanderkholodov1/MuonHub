@@ -42,6 +42,23 @@ export interface AuthApi {
   signOut(): Promise<void>;
 }
 
+/**
+ * Persisting a session without the password (the device agent, spec 0087 FR11). Only the refresh
+ * token is ever stored by the caller.
+ */
+export interface SessionRestoreApi {
+  /** The current refresh token after a successful sign-in, or null when signed out. */
+  getRefreshToken(): string | null;
+  /**
+   * Signs in with a stored refresh token. Fails with `unauthenticated` when the token is revoked,
+   * expired or its account is disabled or deleted; with `unavailable` when the service cannot be
+   * reached (the token may still be good).
+   */
+  signInWithRefreshToken(token: string): Promise<AuthUser>;
+  /** Forces a token refresh: false when the session is no longer valid; throws when it cannot tell. */
+  checkSession(): Promise<boolean>;
+}
+
 export interface IdentityApi {
   /** Creates `users/{uid}` and claims `usernames/{username}` in one atomic write. */
   createUserProfile(user: v2.User): Promise<void>;
@@ -262,6 +279,7 @@ export interface StatusApi {
 export interface DataProviderV2
   extends
     AuthApi,
+    SessionRestoreApi,
     IdentityApi,
     StationsApi,
     DevicesApi,

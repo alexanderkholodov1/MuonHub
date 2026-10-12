@@ -471,3 +471,52 @@ describe("memory provider — failure injection", () => {
     });
   });
 });
+
+describe("memory provider — refresh-token sessions", () => {
+  async function enrolled() {
+    const store = new MemoryStore();
+    const first = createMemoryProviderV2({ store });
+    const user = await first.createAccount("agent@example.org", "secret1");
+    const token = first.getRefreshToken();
+    return { store, user, token: token ?? "" };
+  }
+
+  it("exports a token after sign-in and none when signed out", async () => {
+    const { store } = await enrolled();
+    const p = createMemoryProviderV2({ store });
+    expect(p.getRefreshToken()).toBeNull();
+    await p.signInWithEmail("agent@example.org", "secret1");
+    expect(p.getRefreshToken()).toBeTruthy();
+    await p.signOut();
+    expect(p.getRefreshToken()).toBeNull();
+  });
+
+  it("restores the session in a new provider from the token alone", async () => {
+    const { store, user, token } = await enrolled();
+    const restarted = createMemoryProviderV2({ store });
+    expect(await restarted.signInWithRefreshToken(token)).toEqual(user);
+    expect(restarted.currentUser()).toEqual(user);
+    expect(await restarted.checkSession()).toBe(true);
+  });
+
+  it("rejects unknown and revoked tokens as unauthenticated", async () => {
+    const { store, user, token } = await enrolled();
+    const p = createMemoryProviderV2({ store });
+    await expect(p.signInWithRefreshToken("nope")).rejects.toMatchObject({
+      code: "unauthenticated",
+    });
+    store.revokeRefreshTokens(user.uid);
+    await expect(p.signInWithRefreshToken(token)).rejects.toMatchObject({
+      code: "unauthenticated",
+    });
+  });
+
+  it("checkSession is false and signs out after revocation or disabling", async () => {
+    const { store, user, token } = await enrolled();
+    const p = createMemoryProviderV2({ store });
+    await p.signInWithRefreshToken(token);
+    store.disabledUids.add(user.uid);
+    expect(await p.checkSession()).toBe(false);
+    expect(p.currentUser()).toBeNull();
+  });
+});

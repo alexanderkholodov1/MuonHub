@@ -80,7 +80,25 @@ export class MemoryStore {
   readonly docs = new Map<string, unknown>(); // Firestore-like: "collection/id/..." → document
   readonly rtdb = new Map<string, unknown>(); // flat RTDB-like: "minutes/{stream}/{key}" → value
   private readonly listeners = new Set<Listener>();
+  /** Issued refresh tokens → uid; a token is valid while it is here and its account is enabled. */
+  readonly refreshTokens = new Map<string, string>();
+  readonly disabledUids = new Set<string>();
   private accountSeq = 0;
+  private tokenSeq = 0;
+
+  issueRefreshToken(uid: string): string {
+    this.tokenSeq += 1;
+    const token = `mem-refresh-${uid}-${String(this.tokenSeq)}`;
+    this.refreshTokens.set(token, uid);
+    return token;
+  }
+
+  /** Test helper: revokes every refresh token of an account (as "sign out everywhere" would). */
+  revokeRefreshTokens(uid: string): void {
+    for (const [token, owner] of [...this.refreshTokens]) {
+      if (owner === uid) this.refreshTokens.delete(token);
+    }
+  }
 
   nextUid(): string {
     this.accountSeq += 1;
@@ -163,6 +181,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
   const now = options.now ?? Date.now;
   const nextNonce = createNonceSource(() => 0);
   let user: AuthUser | null = null;
+  let refreshToken: string | null = null;
   const authListeners = new Set<(u: AuthUser | null) => void>();
 
   const setUser = (next: AuthUser | null): void => {
@@ -258,8 +277,28 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
         throw new DataProviderError("invalid-credentials");
       }
       const next = { uid: account.uid, email };
+      refreshToken = store.issueRefreshToken(account.uid);
       setUser(next);
       return next;
+    },
+    getRefreshToken: () => (user === null ? null : refreshToken),
+    async signInWithRefreshToken(token) {
+      const uid = store.refreshTokens.get(token);
+      const account =
+        uid === undefined ? undefined : [...store.accounts.values()].find((a) => a.uid === uid);
+      if (uid === undefined || account === undefined || store.disabledUids.has(uid)) {
+        throw new DataProviderError("unauthenticated");
+      }
+      const next = { uid, email: account.email };
+      refreshToken = token;
+      setUser(next);
+      return next;
+    },
+    async checkSession() {
+      if (user === null || refreshToken === null) return false;
+      const ok = store.refreshTokens.has(refreshToken) && !store.disabledUids.has(user.uid);
+      if (!ok) setUser(null);
+      return ok;
     },
     async createAccount(email, password) {
       if (store.accounts.has(email)) throw new DataProviderError("already-exists");
@@ -267,10 +306,12 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const account = { uid: store.nextUid(), email, password };
       store.accounts.set(email, account);
       const next = { uid: account.uid, email };
+      refreshToken = store.issueRefreshToken(account.uid);
       setUser(next);
       return next;
     },
     async signOut() {
+      refreshToken = null;
       setUser(null);
     },
 
@@ -682,7 +723,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     },
   };
   // Failure injection: every async method first consults the store's armed faults.
-  const passthrough = new Set(["currentUser", "onAuthChange", "close"]);
+  const passthrough = new Set(["currentUser", "onAuthChange", "getRefreshToken", "close"]);
   for (const [name, fn] of Object.entries(provider)) {
     if (passthrough.has(name) || name.startsWith("subscribe")) continue;
     const original = fn as (...args: unknown[]) => Promise<unknown>;

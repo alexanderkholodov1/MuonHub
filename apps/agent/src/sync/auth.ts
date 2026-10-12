@@ -4,8 +4,8 @@
  * keys exist on the machine (ADR-009).
  *
  * The password is typed once in the setup wizard and discarded; only the refresh token is stored.
- * Restoring a session from a refresh token needs support in the provider
- * (`RefreshTokenSupport`); when the provider lacks it the agent keeps recording locally and shows
+ * The data provider implements `RefreshTokenSupport` (export the token after sign-in, restore from
+ * it, detect revocation); when a restore fails the agent keeps recording locally and shows
  * "signed out — data stored locally".
  */
 import type { v2 as dp } from "@muonhub/data-provider";

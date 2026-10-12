@@ -12,6 +12,7 @@ export type {
   LiveApi,
   MinutesApi,
   PruneResult,
+  SessionRestoreApi,
   SessionEnd,
   StationMetadataPatch,
   StationOwnerPatch,
