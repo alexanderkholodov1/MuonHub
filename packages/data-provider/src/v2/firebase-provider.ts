@@ -29,8 +29,8 @@ import {
   doc,
   documentId,
   getCountFromServer,
-  getDoc,
-  getDocs,
+  getDocFromServer,
+  getDocsFromServer,
   getFirestore,
   limit as fsLimit,
   orderBy as fsOrderBy,
@@ -41,8 +41,11 @@ import {
   updateDoc,
   where,
   writeBatch,
+  type DocumentReference,
+  type DocumentSnapshot,
   type Firestore,
   type Query,
+  type QuerySnapshot,
 } from "firebase/firestore";
 import {
   connectDatabaseEmulator,
@@ -61,6 +64,8 @@ import {
   startAt,
   update as rtUpdate,
   type Database,
+  type DataSnapshot,
+  type Query as RtQuery,
 } from "firebase/database";
 import { v2 } from "@muonhub/shared";
 import {
@@ -148,6 +153,8 @@ const DEFAULT_SESSION_LIMIT = 50;
 const MAX_SESSION_LIMIT = 500;
 /** The security rules reject list queries asking for more than 100 documents. */
 const MAX_LIST_LIMIT = 100;
+/** How long a Realtime Database read waits for the connection before giving up. */
+const RT_CONNECT_WAIT_MS = 5000;
 
 function invalid(message: string): DataProviderError {
   return new DataProviderError("invalid-argument", { message });
@@ -224,6 +231,78 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
 
   const docRef = (...path: [string, ...string[]]) => doc(fs, ...path);
 
+  // ── Server-only reads (read-back integrity) ────────────────────────────────────────────────
+  //
+  // A read must never confirm a write that only exists in the SDK's local cache: a write that hit
+  // our deadline stays queued in the SDK and is visible to cache reads although the server may
+  // never accept it. Firestore reads therefore go to the server, and a snapshot that still carries
+  // a pending local write is refused. RTDB `get()` falls back to the local cache when offline, so
+  // it is used only while `.info/connected` is true (before AND after the read).
+
+  const pendingWrite = (): DataProviderError =>
+    new DataProviderError("outcome-unknown", {
+      message: "A local write to this document is still pending; the server state is unknown.",
+    });
+
+  async function serverDoc(ref: DocumentReference): Promise<DocumentSnapshot> {
+    const snap = await getDocFromServer(ref);
+    if (snap.metadata.hasPendingWrites) throw pendingWrite();
+    return snap;
+  }
+
+  async function serverDocs(q: Query): Promise<QuerySnapshot> {
+    const snap = await getDocsFromServer(q);
+    if (snap.metadata.hasPendingWrites || snap.docs.some((d) => d.metadata.hasPendingWrites)) {
+      throw pendingWrite();
+    }
+    return snap;
+  }
+
+  let rtConnected = false;
+  let stopConnectionWatch: (() => void) | null = null;
+  const connectionWaiters = new Set<() => void>();
+  const watchConnection = (): void => {
+    if (stopConnectionWatch !== null) return;
+    stopConnectionWatch = onValue(
+      rtRef(rt, ".info/connected"),
+      (snap) => {
+        rtConnected = snap.val() === true;
+        if (!rtConnected) return;
+        for (const wake of [...connectionWaiters]) wake();
+        connectionWaiters.clear();
+      },
+      () => {
+        rtConnected = false;
+      },
+    );
+  };
+  const notConnected = (): DataProviderError =>
+    new DataProviderError("unavailable", {
+      message: "Not connected to the Realtime Database; a read cannot be confirmed by the server.",
+    });
+
+  async function rtServerGet(q: RtQuery): Promise<DataSnapshot> {
+    watchConnection();
+    if (!rtConnected) {
+      // The connection opens lazily: give it a short moment before giving up.
+      await new Promise<void>((resolve) => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const wake = (): void => {
+          clearTimeout(timer);
+          connectionWaiters.delete(wake);
+          resolve();
+        };
+        timer = setTimeout(wake, Math.min(timeoutMs, RT_CONNECT_WAIT_MS));
+        connectionWaiters.add(wake);
+      });
+    }
+    if (!rtConnected) throw notConnected();
+    const snap = await rtGet(q);
+    // Disconnected during the read: the SDK may have answered from its cache.
+    if (!rtConnected) throw notConnected();
+    return snap;
+  }
+
   /**
    * True when the document exists. The security rules answer a read of a missing document with
    * `permission-denied` (they read `resource.data`), so a denied probe means "not visible to this
@@ -231,7 +310,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
    */
   async function probeExists(ref: ReturnType<typeof docRef>): Promise<boolean> {
     try {
-      return (await getDoc(ref)).exists();
+      return (await serverDoc(ref)).exists();
     } catch (error) {
       const mapped = mapError(error);
       if (mapped.code === "permission-denied") return false;
@@ -310,7 +389,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     ref: ReturnType<typeof docRef>,
     schema: { parse(value: unknown): T },
   ): Promise<T | null> {
-    const snap = await getDoc(ref);
+    const snap = await serverDoc(ref);
     if (!snap.exists()) return null;
     try {
       return schema.parse(snap.data());
@@ -323,7 +402,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     q: Query,
     schema: { parse(value: unknown): T },
   ): Promise<ListResult<T>> {
-    const snap = await getDocs(q);
+    const snap = await serverDocs(q);
     return parseEntries(
       snap.docs.map((d) => [d.id, d.data()] as const),
       (_key, value) => schema.parse(value),
@@ -350,7 +429,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       if (mapped.code !== "permission-denied") throw mapped;
       let existing: unknown;
       try {
-        existing = (await rtGet(rtRef(rt, path))).val();
+        existing = (await rtServerGet(rtRef(rt, path))).val();
       } catch {
         throw mapped;
       }
@@ -503,7 +582,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     listSharedWithMe: () =>
       guard(async () => {
         const uid = requireUid();
-        const memberships = await getDocs(
+        const memberships = await serverDocs(
           fsQuery(collectionGroup(fs, "members"), where("uid", "==", uid)),
         );
         const quarantine = new QuarantineCollector();
@@ -624,7 +703,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           throw invalid(`Page size must be an integer between 1 and ${MAX_LIST_LIMIT}.`);
         }
         const cursor = options?.cursor ?? null;
-        const snap = await getDocs(
+        const snap = await serverDocs(
           fsQuery(
             collection(fs, "publicStations"),
             fsOrderBy(documentId()),
@@ -673,7 +752,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const memberRef = docRef("stations", stationId, "members", uid);
         // A plain read: a denied read is a real `permission-denied` (the owner may read members),
         // and only a readable-but-missing document is `not-found`.
-        const snap = await getDoc(memberRef);
+        const snap = await serverDoc(memberRef);
         if (!snap.exists()) throw new DataProviderError("not-found");
         const previous = v2.StationMemberSchema.parse(snap.data()).role;
         if (previous === role) return;
@@ -699,7 +778,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     removeMember: (stationId, uid) =>
       guard(async () => {
         const memberRef = docRef("stations", stationId, "members", uid);
-        const snap = await getDoc(memberRef);
+        const snap = await serverDoc(memberRef);
         const previous = snap.exists() ? v2.StationMemberSchema.parse(snap.data()).role : null;
         // Revocation: mirror first, then Firestore; the mirror is restored if the delete fails.
         await ordered(
@@ -815,7 +894,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const parentRef = docRef("deviceTypes", type.id);
         const versionRef = docRef("deviceTypes", type.id, "versions", String(type.version));
         if (await probeExists(versionRef)) throw new DataProviderError("already-exists");
-        const parent = await getDoc(parentRef).catch((error: unknown) => {
+        const parent = await serverDoc(parentRef).catch((error: unknown) => {
           const mapped = mapError(error);
           if (mapped.code === "permission-denied") return null;
           throw mapped;
@@ -901,7 +980,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       guard(async () => {
         const valid = parseOrInvalid(v2.SessionCountersSchema, counters, "session counters");
         const ref = docRef("streams", streamId, "sessions", sessionId);
-        const snap = await getDoc(ref);
+        const snap = await serverDoc(ref);
         if (!snap.exists()) throw new DataProviderError("not-found");
         if (v2.SessionSchema.parse(snap.data()).endedAt !== undefined) {
           throw new DataProviderError("conflict");
@@ -927,6 +1006,8 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           );
         });
       }),
+    getSession: (streamId, sessionId) =>
+      guard(() => getParsed(docRef("streams", streamId, "sessions", sessionId), v2.SessionSchema)),
     listSessions: (streamId, options) =>
       guard(async () => {
         const n = options?.limit ?? DEFAULT_SESSION_LIMIT;
@@ -962,7 +1043,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           // bounded ranged read per chunk) and left out of the write.
           readExisting: (firstKey, lastKey) =>
             io(async () => {
-              const snap = await rtGet(
+              const snap = await rtServerGet(
                 rtQuery(base, orderByKey(), startAt(firstKey), endAt(lastKey)),
               );
               const found = new Map<string, string | null>();
@@ -986,7 +1067,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       guard(async (): Promise<Page<v2.MinuteRecord>> => {
         const plan = planMinuteRange(query);
         const base = rtRef(rt, `minutes/${streamId}`);
-        const snap = await rtGet(
+        const snap = await rtServerGet(
           rtQuery(
             base,
             orderByKey(),
@@ -1030,7 +1111,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           ...(cursor === null ? [] : [fsStartAfter(cursor)]),
           fsLimit(n),
         ];
-        const snap = await getDocs(
+        const snap = await serverDocs(
           fsQuery(collection(fs, "streams", streamId, "days"), ...constraints),
         );
         const taken = snap.docs;
@@ -1082,7 +1163,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const nowMs = Math.min(requestedNowMs, now() + MAX_CLOCK_SKEW_MS);
         const base = rtRef(rt, `live/${streamId}/events`);
         const snap = await io(() =>
-          rtGet(rtQuery(base, orderByKey(), endBefore(pruneEndKey(nowMs)))),
+          rtServerGet(rtQuery(base, orderByKey(), endBefore(pruneEndKey(nowMs)))),
         );
         const entries: (readonly [string, unknown])[] = [];
         snap.forEach((child) => {
@@ -1138,7 +1219,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       }),
     getStatus: (streamId) =>
       guard(async () => {
-        const value = (await rtGet(rtRef(rt, `status/${streamId}`))).val() as unknown;
+        const value = (await rtServerGet(rtRef(rt, `status/${streamId}`))).val() as unknown;
         if (value === null) return null;
         try {
           return v2.StreamStatusSchema.parse(value);
@@ -1150,7 +1231,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       watchNode(rt, `status/${streamId}`, v2.StreamStatusSchema, handlers),
     getStatusPublic: (streamId) =>
       guard(async () => {
-        const value = (await rtGet(rtRef(rt, `statusPublic/${streamId}`))).val() as unknown;
+        const value = (await rtServerGet(rtRef(rt, `statusPublic/${streamId}`))).val() as unknown;
         if (value === null) return null;
         try {
           return v2.StreamStatusPublicSchema.parse(value);
@@ -1161,7 +1242,12 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     subscribeStatusPublic: (streamId, handlers) =>
       watchNode(rt, `statusPublic/${streamId}`, v2.StreamStatusPublicSchema, handlers),
 
-    close: () => guard(() => deleteApp(app)),
+    close: () =>
+      guard(() => {
+        stopConnectionWatch?.();
+        stopConnectionWatch = null;
+        return deleteApp(app);
+      }),
   };
   return provider;
 }

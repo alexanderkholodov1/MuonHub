@@ -7,6 +7,9 @@
  * - minutes are write-once; a minute that already exists is reported, never replaced;
  * - invalid stored records come back as quarantine counts, never silently dropped;
  * - every failure is a {@link DataProviderError}; nothing is swallowed;
+ * - reads come from the server, never from the SDK's local cache: a document with a write still
+ *   pending in the SDK is refused with `outcome-unknown`, and a Realtime Database read is made only
+ *   while connected (`unavailable` otherwise). A read can therefore confirm a write (read-back);
  * - there is no Cloud Storage API (ADR-005).
  */
 import type { v2 } from "@muonhub/shared";
@@ -188,6 +191,11 @@ export interface StreamsApi {
   ): Promise<void>;
   /** Closes a session once; fails with `conflict` if it is already closed. */
   endSession(streamId: string, sessionId: string, end: SessionEnd): Promise<void>;
+  /**
+   * One session by id, read from the server (never from a local cache); `null` when absent.
+   * Throws `outcome-unknown` while a local write to it is still pending in the SDK.
+   */
+  getSession(streamId: string, sessionId: string): Promise<v2.Session | null>;
   /** Newest first. */
   listSessions(streamId: string, options?: { limit?: number }): Promise<ListResult<v2.Session>>;
 }

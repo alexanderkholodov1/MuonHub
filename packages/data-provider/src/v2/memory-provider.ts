@@ -44,7 +44,17 @@ export type FaultKind =
   /** RTDB's "Client is offline" (maps to `unavailable`). */
   | "offline"
   /** A deadline expiry: the operation may or may not have been applied (`outcome-unknown`). */
-  | "timeout";
+  | "timeout"
+  /**
+   * The SDK accepted the write into its local cache but the server never got it (offline, then the
+   * deadline expired): the call fails with `outcome-unknown` and the write is held in
+   * {@link MemoryStore.pendingLocal} instead of the server state. While it is held, reads behave
+   * like the real provider's server-only reads: a document with a pending write is refused with
+   * `outcome-unknown`, and Realtime Database reads fail with `unavailable` (not connected).
+   * {@link MemoryStore.deliverPendingLocal} lets the write reach the server;
+   * {@link MemoryStore.dropPendingLocal} loses it (e.g. the process exited).
+   */
+  | "pending-local";
 
 export interface MemoryFault {
   /**
@@ -70,6 +80,7 @@ function faultError(kind: FaultKind): DataProviderError {
     case "offline":
       return mapError(new Error("Client is offline."));
     case "timeout":
+    case "pending-local":
       return new DataProviderError("outcome-unknown");
   }
 }
@@ -132,8 +143,11 @@ export class MemoryStore {
    */
   beforeMinuteWrite: ((streamId: string, keys: readonly string[]) => void) | undefined;
 
-  /** Throws the injected error for `op`, if one is armed. Used by the in-memory provider. */
-  checkFault(op: string): void {
+  /**
+   * Throws the injected error for `op`, if one is armed. Used by the in-memory provider. A
+   * `pending-local` fault does not throw here: it is returned so the caller can divert the write.
+   */
+  checkFault(op: string): "pending-local" | undefined {
     for (const entry of this.faults) {
       if (entry.fault.op !== "*" && entry.fault.op !== op) continue;
       if (entry.left <= 0) continue;
@@ -142,8 +156,73 @@ export class MemoryStore {
         continue;
       }
       entry.left -= 1;
+      if (entry.fault.kind === "pending-local") return "pending-local";
       throw faultError(entry.fault.kind);
     }
+    return undefined;
+  }
+
+  /**
+   * Writes accepted only by the (simulated) SDK local cache: `doc:<path>` / `rt:<path>` → the new
+   * value, or `undefined` for a delete. Never visible to reads.
+   */
+  readonly pendingLocal = new Map<string, unknown>();
+
+  /** True while a Firestore-like document has a write pending in the local cache. */
+  hasPendingDoc(path: string): boolean {
+    return this.pendingLocal.has(`doc:${path}`);
+  }
+
+  /** True while any document under `prefix/` has a pending local write. */
+  hasPendingDocUnder(prefix: string): boolean {
+    for (const k of this.pendingLocal.keys()) if (k.startsWith(`doc:${prefix}/`)) return true;
+    return false;
+  }
+
+  /** True while any Realtime Database write is pending (the client is offline). */
+  get rtOffline(): boolean {
+    for (const k of this.pendingLocal.keys()) if (k.startsWith("rt:")) return true;
+    return false;
+  }
+
+  /** The connection comes back: every pending local write reaches the server. */
+  deliverPendingLocal(): void {
+    for (const [k, v] of this.pendingLocal) {
+      const target = k.startsWith("doc:") ? this.docs : this.rtdb;
+      const path = k.slice(k.indexOf(":") + 1);
+      if (v === undefined) target.delete(path);
+      else target.set(path, v);
+    }
+    this.pendingLocal.clear();
+    this.notify();
+  }
+
+  /** The pending local writes are lost (the process exited before reconnecting). */
+  dropPendingLocal(): void {
+    this.pendingLocal.clear();
+  }
+
+  /**
+   * Runs `write` and moves everything it changed out of the server state into
+   * {@link pendingLocal}; then fails with `outcome-unknown`, as a timed-out SDK write does.
+   */
+  async divertToLocal(write: () => Promise<unknown> | unknown): Promise<never> {
+    const docs = new Map(this.docs);
+    const rtdb = new Map(this.rtdb);
+    try {
+      await write();
+    } finally {
+      for (const [prefix, before, now] of [
+        ["doc:", docs, this.docs],
+        ["rt:", rtdb, this.rtdb],
+      ] as const) {
+        for (const [k, v] of now) if (before.get(k) !== v) this.pendingLocal.set(prefix + k, v);
+        for (const k of before.keys()) if (!now.has(k)) this.pendingLocal.set(prefix + k, undefined);
+        now.clear();
+        for (const [k, v] of before) now.set(k, v);
+      }
+    }
+    throw new DataProviderError("outcome-unknown");
   }
 
   /** Direct test hook: plants a raw (possibly invalid) Firestore-like document. */
@@ -207,6 +286,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
   };
 
   const getDocOrNull = <T>(path: string, schema: { parse(v: unknown): T }): T | null => {
+    // As the real provider: a document with a write pending in the local cache is refused.
+    if (store.hasPendingDoc(path)) throw new DataProviderError("outcome-unknown");
     if (!store.docs.has(path)) return null;
     return parseStored(schema, store.docs.get(path));
   };
@@ -220,17 +301,22 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     store.docs.set(path, { ...(existing as object), ...clone(fields) });
   };
   /** Children of `prefix` one level deep: ids and values. */
-  const children = (prefix: string): [string, unknown][] =>
-    [...store.docs.entries()]
+  const children = (prefix: string): [string, unknown][] => {
+    if (store.hasPendingDocUnder(prefix)) throw new DataProviderError("outcome-unknown");
+    return [...store.docs.entries()]
       .filter(([k]) => k.startsWith(`${prefix}/`) && !k.slice(prefix.length + 1).includes("/"))
-      .map(([k, v]) => [k.slice(prefix.length + 1), v]);
+      .map(([k, v]): [string, unknown] => [k.slice(prefix.length + 1), v]);
+  };
   const listDocs = <T>(prefix: string, schema: { parse(v: unknown): T }): ListResult<T> =>
     parseEntries(children(prefix), (_k, v) => schema.parse(v));
-  const rtOf = (prefix: string): [string, unknown][] =>
-    [...store.rtdb.entries()]
+  /** Server-side RTDB read: refused while offline (a write is pending in the local cache). */
+  const rtOf = (prefix: string): [string, unknown][] => {
+    if (store.rtOffline) throw mapError(new Error("Client is offline."));
+    return [...store.rtdb.entries()]
       .filter(([k]) => k.startsWith(`${prefix}/`))
       .map(([k, v]): [string, unknown] => [k.slice(prefix.length + 1), v])
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  };
 
   const watch = <T>(
     read: () => { value: T } | { invalid: string; key: string },
@@ -570,6 +656,9 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       const closed = validate(v2.SessionSchema, { ...current, ...end }, "session end");
       store.docs.set(path, clone(closed));
     },
+    async getSession(streamId, sessionId) {
+      return getDocOrNull(`streams/${streamId}/sessions/${sessionId}`, v2.SessionSchema);
+    },
     async listSessions(streamId, opts) {
       const n = opts?.limit ?? 50;
       if (!Number.isInteger(n) || n < 1 || n > 500) fail("Invalid session limit.");
@@ -597,12 +686,18 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
             streamId,
             entries.map((e) => e.key),
           );
-          store.checkFault("writeMinutes.chunk");
-          // The real rules deny an overwrite; so does this.
-          if (entries.some((e) => store.rtdb.has(`minutes/${streamId}/${e.key}`))) {
-            throw new DataProviderError("permission-denied");
+          const write = (): void => {
+            // The real rules deny an overwrite; so does this.
+            if (entries.some((e) => store.rtdb.has(`minutes/${streamId}/${e.key}`))) {
+              throw new DataProviderError("permission-denied");
+            }
+            for (const e of entries)
+              store.rtdb.set(`minutes/${streamId}/${e.key}`, clone(e.value));
+          };
+          if (store.checkFault("writeMinutes.chunk") === "pending-local") {
+            await store.divertToLocal(write);
           }
-          for (const e of entries) store.rtdb.set(`minutes/${streamId}/${e.key}`, clone(e.value));
+          write();
         },
       });
       store.notify();
@@ -704,6 +799,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       store.notify();
     },
     async getStatus(streamId) {
+      if (store.rtOffline) throw mapError(new Error("Client is offline."));
       return store.rtdb.has(`status/${streamId}`)
         ? parseStored(v2.StreamStatusSchema, store.rtdb.get(`status/${streamId}`))
         : null;
@@ -711,6 +807,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     subscribeStatus: (streamId, handlers) =>
       statusWatcher(`status/${streamId}`, v2.StreamStatusSchema)(handlers),
     async getStatusPublic(streamId) {
+      if (store.rtOffline) throw mapError(new Error("Client is offline."));
       return store.rtdb.has(`statusPublic/${streamId}`)
         ? parseStored(v2.StreamStatusPublicSchema, store.rtdb.get(`statusPublic/${streamId}`))
         : null;
@@ -728,7 +825,9 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     if (passthrough.has(name) || name.startsWith("subscribe")) continue;
     const original = fn as (...args: unknown[]) => Promise<unknown>;
     (provider as unknown as Record<string, unknown>)[name] = async (...args: unknown[]) => {
-      store.checkFault(name);
+      if (store.checkFault(name) === "pending-local") {
+        return store.divertToLocal(() => original(...args));
+      }
       return original(...args);
     };
   }

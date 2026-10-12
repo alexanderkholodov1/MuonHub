@@ -457,6 +457,49 @@ describe("memory provider — failure injection", () => {
     await expect(provider.listPublicStations()).resolves.toBeDefined();
   });
 
+  it("pending-local: a write held in the local cache is never visible to (server) reads", async () => {
+    const { provider, store } = setup();
+    await provider.createStation(station());
+    await provider.createStream(stream());
+    store.injectFault({ op: "putDaySummary", kind: "pending-local" });
+    await expect(provider.putDaySummary(daySummary())).rejects.toMatchObject({
+      code: "outcome-unknown",
+    });
+    // the document has a pending local write: a read cannot confirm it
+    await expect(provider.getDaySummary(STREAM_ID, "2026-10-01")).rejects.toMatchObject({
+      code: "outcome-unknown",
+    });
+    store.injectFault({ op: "writeMinutes.chunk", kind: "pending-local" });
+    await expect(provider.writeMinutes(STREAM_ID, [minute(0)])).rejects.toMatchObject({
+      code: "outcome-unknown",
+    });
+    // offline: the realtime database is not read at all
+    await expect(provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 })).rejects.toMatchObject(
+      { code: "unavailable" },
+    );
+    // lost: nothing ever reached the server
+    store.dropPendingLocal();
+    expect(await provider.getDaySummary(STREAM_ID, "2026-10-01")).toBeNull();
+    expect((await provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 })).items).toEqual([]);
+  });
+
+  it("pending-local: once delivered, the write is on the server", async () => {
+    const { provider, store } = setup();
+    await provider.createStation(station());
+    await provider.createStream(stream());
+    await provider.startSession(session());
+    store.injectFault({ op: "endSession", kind: "pending-local" });
+    await expect(
+      provider.endSession(STREAM_ID, "session-1", { endedAt: T0 + 60_000, endReason: "stop" }),
+    ).rejects.toMatchObject({ code: "outcome-unknown" });
+    await expect(provider.getSession(STREAM_ID, "session-1")).rejects.toMatchObject({
+      code: "outcome-unknown",
+    });
+    store.deliverPendingLocal();
+    expect((await provider.getSession(STREAM_ID, "session-1"))?.endReason).toBe("stop");
+    expect(await provider.getSession(STREAM_ID, "absent")).toBeNull();
+  });
+
   it("clamps pruneLive's nowMs so a far-future value cannot delete live data", async () => {
     const { provider } = setup();
     await provider.pushLiveEvents(STREAM_ID, [{ t: T0 + 4_000, amplitude: 10 }]);

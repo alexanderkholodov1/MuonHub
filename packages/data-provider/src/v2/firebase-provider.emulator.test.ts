@@ -5,6 +5,9 @@
  */
 import { newStationId, newStreamId } from "./public-station.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { getApp } from "firebase/app";
+import { getDatabase, goOffline, goOnline } from "firebase/database";
+import { disableNetwork, enableNetwork, getFirestore } from "firebase/firestore";
 import { v2 } from "@muonhub/shared";
 import { createFirebaseProviderV2 } from "./firebase-provider.js";
 import type { DataProviderV2 } from "./interface.js";
@@ -25,19 +28,24 @@ function hostPort(value: string | undefined): { host: string; port: number } {
 }
 
 let appSeq = 0;
+/** The Firebase app behind each provider (to take it offline in a test). */
+const appNames = new WeakMap<DataProviderV2, string>();
 function connect(): DataProviderV2 {
   appSeq += 1;
-  return createFirebaseProviderV2({
+  const appName = `v2-test-${appSeq}-${Date.now()}`;
+  const provider = createFirebaseProviderV2({
     apiKey: "fake-api-key",
     projectId: PROJECT,
     databaseURL: `https://${DB_NS}.firebaseio.com`,
-    appName: `v2-test-${appSeq}-${Date.now()}`,
+    appName,
     emulators: {
       auth: `http://${authHost}`,
       firestore: hostPort(firestoreHost),
       database: hostPort(databaseHost),
     },
   });
+  appNames.set(provider, appName);
+  return provider;
 }
 
 /** Admin-bypass seeding through the emulators' REST APIs (`Authorization: Bearer owner`). */
@@ -221,6 +229,30 @@ describeEmu("data layer v2 against the emulators", () => {
     } while (cursor !== null);
     expect(seen).toHaveLength(25);
     expect(seen).toEqual([...seen].sort((a, b) => a - b));
+  });
+
+  it("reads only from the server: offline, a cached session or minute never answers a read", async () => {
+    const base = minuteNow() - 30 * 60_000;
+    // Online: both reads succeed (and leave the data in the SDK caches).
+    expect((await owner.provider.getSession(streamId, "session-1"))?.id).toBe("session-1");
+    expect(await owner.provider.getSession(streamId, "no-such-session")).toBeNull();
+    const online = await owner.provider.readMinutes(streamId, { fromTs: base, toTs: base + 60_000 });
+    expect(online.items).toHaveLength(1);
+    const app = getApp(appNames.get(owner.provider) as string);
+    await disableNetwork(getFirestore(app));
+    goOffline(getDatabase(app));
+    try {
+      await expect(owner.provider.getSession(streamId, "session-1")).rejects.toMatchObject({
+        code: "unavailable",
+      });
+      await expect(
+        owner.provider.readMinutes(streamId, { fromTs: base, toTs: base + 60_000 }),
+      ).rejects.toMatchObject({ code: "unavailable" });
+    } finally {
+      goOnline(getDatabase(app));
+      await enableNetwork(getFirestore(app));
+    }
+    expect((await owner.provider.getSession(streamId, "session-1"))?.id).toBe("session-1");
   });
 
   it("refuses a future minute and denies anonymous and stranger reads of minutes", async () => {

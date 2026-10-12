@@ -33,3 +33,8 @@ catalog:
   serialport: ^13.0.0
   ws: ^8.22.0
   "@types/ws": ^8.18.2
+  # Pinned EXACTLY (no caret): the agent's session restore (data-provider session-restore.ts)
+  # relies on Firebase Auth SDK internals (the persisted-user shape and the token exchange), which
+  # are not a public API and may change in any release. Upgrade deliberately and re-run the
+  # session-restore emulator tests.
+  firebase: 12.14.0

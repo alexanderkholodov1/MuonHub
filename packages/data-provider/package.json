@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "@muonhub/shared": "workspace:*",
-    "firebase": "^12.14.0"
+    "firebase": "catalog:"
   }
 }
