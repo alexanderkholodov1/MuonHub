@@ -3,6 +3,7 @@
  * (Auth + Firestore + Realtime Database). Run via `pnpm test:emulator`; skipped otherwise.
  * Real client identities (owner, editor, viewer, stranger, anonymous) go through the security rules.
  */
+import { newStationId } from "./public-station.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { v2 } from "@muonhub/shared";
 import { createFirebaseProviderV2 } from "./firebase-provider.js";
@@ -94,7 +95,7 @@ describeEmu("data layer v2 against the emulators", () => {
   beforeAll(async () => {
     [owner, viewer, stranger] = await Promise.all([newActor(), newActor(), newActor()]);
     anonymous = connect();
-    const stationId = `st-${Date.now()}`;
+    const stationId = newStationId(owner.uid);
     station = {
       schemaVersion: 2,
       id: stationId,
