@@ -36,3 +36,6 @@ export type {
   CanonicalSlimMinuteRecord,
   CanonicalSlimMinuteRecordField,
 } from "./slim-minute-record.js";
+
+/** Data layer v2 (specs 0083 and 0084). The unprefixed exports above are the first-attempt provider, removed in M1 step 7. */
+export * as v2 from "./v2/index.js";
