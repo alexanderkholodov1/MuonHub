@@ -1,10 +1,14 @@
+/**
+ * FIRST-ATTEMPT CODE — kept only for the first-attempt agent (apps/agent) until M1 step 7 replaces
+ * it. It filters events at ingest, which ADR-006 forbids; do not use it in new code. Spec 0085.
+ */
 import {
   EventSummarySchema,
   type EventSummary,
   type NoiseCalibrationMethod,
   type SignalRecord,
 } from "@muonhub/shared";
-import { buildAmplitudeHistogram, estimateMpv } from "./spectrum.js";
+import { buildAmplitudeHistogram, estimateMpv } from "./spectrum-first-attempt.js";
 
 const DEFAULT_NOISE_FRACTION = 0.25;
 const DEFAULT_MIN_NOISE_SAMPLES = 8;

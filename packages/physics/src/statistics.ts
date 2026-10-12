@@ -3,9 +3,9 @@
  *
  * Detector events are Poisson: for N raw counts, σ ≈ √N and the relative error is 1/√N.
  * Uncertainties are ALWAYS derived from raw counts (guardrail 5), never from averaged values.
- * Minute windows are noisy (~1.6% at N ≈ 3600); anomalies are defined at ≥ 3σ on corrected
- * rates over long windows; per-detector baselines are empirical (robust median/IQR), never
- * a-priori formulas.
+ * For a 25 cm² device at ≈ 2.4 s⁻¹ a minute holds ≈ 144 counts (≈ 8.3 % relative error) and an
+ * hour ≈ 8 640 (≈ 1.08 %); anomalies are defined at ≥ 3σ on corrected rates over hour-scale windows
+ * (spec 0085); per-stream baselines are empirical (robust median/IQR), never a-priori formulas.
  */
 
 function assertCounts(counts: number, name = "counts"): void {
@@ -100,4 +100,25 @@ export function robustBaseline(values: ReadonlyArray<number>): RobustBaseline {
     upper: median + 1.5 * iqr,
     n: sorted.length,
   };
+}
+
+/**
+ * Effective sample size of an autocorrelated series (AR(1) approximation):
+ * n_eff = n · (1 − ρ) / (1 + ρ), with ρ the lag-1 autocorrelation (negative ρ treated as 0).
+ */
+export function effectiveSampleSize(series: ReadonlyArray<number>): number {
+  const n = series.length;
+  if (n < 3) return n;
+  let m = 0;
+  for (const v of series) m += v;
+  m /= n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    const d = (series[i] as number) - m;
+    den += d * d;
+    if (i > 0) num += d * ((series[i - 1] as number) - m);
+  }
+  const rho = den === 0 ? 0 : Math.max(0, num / den);
+  return (n * (1 - rho)) / (1 + rho);
 }

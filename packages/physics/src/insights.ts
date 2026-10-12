@@ -1,171 +1,90 @@
-import type { HardwareVersion, MinuteRecord } from "@muonhub/shared";
-import { applyBarometricCorrection, fitBarometricBeta, type BarometricFit } from "./barometric.js";
-import { correctDeadTimeForHardware } from "./deadTime.js";
-import { countsZScore, poissonSigma, robustBaseline, type RobustBaseline } from "./statistics.js";
+/**
+ * Corrected-rate insights for a stream (spec 0085): live-time correction per hour, the barometric
+ * fit (applied only when significant), and hour-scale deviations. Built on the v2 functions; every
+ * result carries its status and provenance.
+ */
+import type { v2 } from "@muonhub/shared";
+import { detectHourScaleDeviations, type AnomalyOptions, type AnomalyResult } from "./anomalies.js";
+import {
+  applyBarometricCorrection,
+  fitBarometricBeta,
+  type BarometricCorrectedRate,
+  type BetaFitOptions,
+  type BetaFitResult,
+} from "./barometric.js";
+import { correctRateByLiveTime, uncorrectedRate } from "./live-time.js";
+import { madSigma, median } from "./math.js";
+import { provenance, type Provenance, type ResultStatus } from "./provenance.js";
 
-export const DEFAULT_BETA_MIN_POINTS = 168;
-
-export interface CorrectedRatePoint {
-  readonly ts: number;
-  readonly rawRate: number;
-  readonly pressureHpa: number;
-  readonly deadTimeCorrectedRate: number;
-  readonly barometricCorrectedRate: number | null;
-  readonly rawSigma: number;
-  readonly deadTimeSigma: number;
-  readonly barometricSigma: number | null;
-  readonly zScore: number | null;
-}
-
-export interface AnomalyFlag {
-  readonly ts: number;
-  readonly correctedRate: number;
-  readonly zScore: number;
-}
-
-export interface BetaReadout {
-  readonly fit: BarometricFit;
-  readonly fromTs: number;
-  readonly toTs: number;
-}
-
-export interface CorrectedRateInsights {
-  readonly points: ReadonlyArray<CorrectedRatePoint>;
-  readonly beta: BetaReadout | null;
-  readonly baseline: RobustBaseline | null;
-  readonly anomalies: ReadonlyArray<AnomalyFlag>;
-  readonly usableBetaSampleCount: number;
+/** One hour of a stream, as read from a day summary (spec 0083). */
+export interface InsightHour {
+  readonly hourStart: number;
+  readonly counts: number;
+  readonly completeMinutes: number;
+  readonly liveSource: v2.LiveSource;
+  readonly liveMs?: number;
+  readonly pressureHpa?: number;
+  readonly temperatureC?: number;
 }
 
 export interface CorrectedRateInsightsOptions {
-  readonly betaMinPoints?: number;
+  readonly beta?: BetaFitOptions;
+  readonly anomalies?: AnomalyOptions;
 }
 
-interface FitSample {
-  readonly ts: number;
-  readonly rate: number;
-  readonly pressureHpa: number;
+export interface CorrectedRateInsights {
+  readonly status: ResultStatus;
+  readonly hourly: ReadonlyArray<{ readonly hourStart: number; readonly corrected: BarometricCorrectedRate }>;
+  readonly beta: BetaFitResult;
+  readonly deviations: AnomalyResult;
+  readonly provenance: Provenance;
 }
 
-function propagatedSigma(rawRate: number, correctedRate: number, rawSigma: number): number {
-  return rawRate === 0 ? 0 : rawSigma * (correctedRate / rawRate);
-}
-
-/**
- * Build the station-dashboard corrected-rate series from canonical minute records.
- *
- * The correction order is mandatory: raw event rate → hardware dead-time correction →
- * station-local barometric correction. Statistical uncertainty starts from raw Poisson counts
- * and is propagated by the same scale factor as the corrected rate.
- */
 export function buildCorrectedRateInsights(
-  records: ReadonlyArray<MinuteRecord>,
-  hwVersion: HardwareVersion,
-  options: CorrectedRateInsightsOptions = {},
+  hours: readonly InsightHour[],
+  opts: CorrectedRateInsightsOptions = {},
 ): CorrectedRateInsights {
-  const betaMinPoints = options.betaMinPoints ?? DEFAULT_BETA_MIN_POINTS;
-  if (!Number.isInteger(betaMinPoints) || betaMinPoints < 2) {
-    throw new RangeError(`betaMinPoints must be an integer ≥ 2, got ${betaMinPoints}`);
-  }
-
-  const sortedRecords = [...records].sort((a, b) => a.ts - b.ts);
-  const deadTimePoints = sortedRecords.map((record) => {
-    const deadTimeCorrectedRate = correctDeadTimeForHardware(record.ec, hwVersion);
-    const rawSigma = poissonSigma(record.ec);
-    return {
-      record,
-      deadTimeCorrectedRate,
-      rawSigma,
-      deadTimeSigma: propagatedSigma(record.ec, deadTimeCorrectedRate, rawSigma),
-    };
-  });
-
-  const fitSamples: FitSample[] = deadTimePoints
-    .filter(({ record, deadTimeCorrectedRate }) => {
-      return (
-        Number.isFinite(record.pr) &&
-        record.pr > 0 &&
-        Number.isFinite(deadTimeCorrectedRate) &&
-        deadTimeCorrectedRate > 0
-      );
-    })
-    .map(({ record, deadTimeCorrectedRate }) => ({
-      ts: record.ts,
-      rate: deadTimeCorrectedRate,
-      pressureHpa: record.pr,
-    }));
-
-  const beta = fitSamples.length >= betaMinPoints ? buildBetaReadout(fitSamples) : null;
-
-  const preliminaryPoints = deadTimePoints.map(
-    ({ record, deadTimeCorrectedRate, rawSigma, deadTimeSigma }) => {
-      const barometricCorrectedRate =
-        beta == null || record.pr <= 0
-          ? null
-          : applyBarometricCorrection(deadTimeCorrectedRate, record.pr, beta.fit);
+  const durationMs = (h: InsightHour): number => h.completeMinutes * 60_000;
+  const beta = fitBarometricBeta(
+    hours.map((h) => {
+      const p = { hourStart: h.hourStart, counts: h.counts, liveMs: h.liveMs ?? durationMs(h) };
       return {
-        ts: record.ts,
-        rawRate: record.ec,
-        pressureHpa: record.pr,
-        deadTimeCorrectedRate,
-        barometricCorrectedRate,
-        rawSigma,
-        deadTimeSigma,
-        barometricSigma:
-          barometricCorrectedRate == null
-            ? null
-            : propagatedSigma(record.ec, barometricCorrectedRate, rawSigma),
+        ...p,
+        ...(h.pressureHpa === undefined ? {} : { pressureHpa: h.pressureHpa }),
+        ...(h.temperatureC === undefined ? {} : { temperatureC: h.temperatureC }),
       };
-    },
+    }),
+    opts.beta,
   );
-
-  const correctedValues = preliminaryPoints
-    .map((point) => point.barometricCorrectedRate)
-    .filter((value): value is number => value != null && Number.isFinite(value));
-  const baseline = correctedValues.length > 0 ? robustBaseline(correctedValues) : null;
-
-  const points = preliminaryPoints.map((point): CorrectedRatePoint => {
-    const zScore =
-      baseline == null || point.barometricCorrectedRate == null || baseline.median <= 0
-        ? null
-        : countsZScore(point.barometricCorrectedRate, baseline.median);
-    return { ...point, zScore };
+  const hourly = hours.map((h) => {
+    const base =
+      h.liveSource === "nominal" || h.liveMs === undefined
+        ? uncorrectedRate(h.counts, durationMs(h))
+        : { ...correctRateByLiveTime(h.counts, h.liveMs), liveSource: h.liveSource };
+    return { hourStart: h.hourStart, corrected: applyBarometricCorrection(base, h.pressureHpa, beta) };
   });
-
-  const anomalies = points
-    .filter((point) => {
-      return (
-        point.barometricCorrectedRate != null && point.zScore != null && Math.abs(point.zScore) >= 3
-      );
-    })
-    .map((point): AnomalyFlag => ({
-      ts: point.ts,
-      correctedRate: point.barometricCorrectedRate ?? 0,
-      zScore: point.zScore ?? 0,
-    }));
-
-  return {
-    points,
-    beta,
+  const usable = hourly.filter(
+    (h) => h.corrected.rate !== undefined && h.corrected.sigma !== undefined,
+  );
+  const rates = usable.map((h) => h.corrected.rate as number);
+  const baseline =
+    rates.length >= 2
+      ? { value: median(rates), sigma: (1.2533 * madSigma(rates)) / Math.sqrt(rates.length) }
+      : { value: 0, sigma: 0 };
+  const deviations = detectHourScaleDeviations(
+    usable.map((h) => ({
+      hourStart: h.hourStart,
+      rate: h.corrected.rate as number,
+      sigma: h.corrected.sigma as number,
+    })),
     baseline,
-    anomalies,
-    usableBetaSampleCount: fitSamples.length,
+    opts.anomalies,
+  );
+  return {
+    status: hours.length === 0 ? "not-computable" : "ok",
+    hourly,
+    beta,
+    deviations,
+    provenance: provenance("buildCorrectedRateInsights", { hours: hours.length }),
   };
-}
-
-function buildBetaReadout(fitSamples: ReadonlyArray<FitSample>): BetaReadout | null {
-  try {
-    const fit = fitBarometricBeta(fitSamples);
-    const first = fitSamples[0];
-    const last = fitSamples[fitSamples.length - 1];
-    if (first == null || last == null) return null;
-    return {
-      fit,
-      fromTs: first.ts,
-      toTs: last.ts,
-    };
-  } catch (error) {
-    if (error instanceof RangeError) return null;
-    throw error;
-  }
 }

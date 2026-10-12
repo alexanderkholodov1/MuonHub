@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAmplitudeHistogram, estimateMpv } from "./spectrum.js";
+import { buildAmplitudeHistogram, estimateMpv } from "./spectrum-first-attempt.js";
 
 describe("buildAmplitudeHistogram", () => {
   it("bins amplitudes uniformly and reports totals", () => {
