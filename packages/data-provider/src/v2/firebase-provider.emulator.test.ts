@@ -3,7 +3,7 @@
  * (Auth + Firestore + Realtime Database). Run via `pnpm test:emulator`; skipped otherwise.
  * Real client identities (owner, editor, viewer, stranger, anonymous) go through the security rules.
  */
-import { newStationId } from "./public-station.js";
+import { newStationId, newStreamId } from "./public-station.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { v2 } from "@muonhub/shared";
 import { createFirebaseProviderV2 } from "./firebase-provider.js";
@@ -95,7 +95,7 @@ describeEmu("data layer v2 against the emulators", () => {
   beforeAll(async () => {
     [owner, viewer, stranger] = await Promise.all([newActor(), newActor(), newActor()]);
     anonymous = connect();
-    const stationId = newStationId(owner.uid);
+    const stationId = newStationId();
     station = {
       schemaVersion: 2,
       id: stationId,
@@ -108,7 +108,7 @@ describeEmu("data layer v2 against the emulators", () => {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    streamId = `${owner.uid}_${"a1b2c3d4e5f6"}`;
+    streamId = newStreamId();
   });
 
   afterAll(async () => {
@@ -180,11 +180,11 @@ describeEmu("data layer v2 against the emulators", () => {
     });
     await owner.provider.updateDevice(deviceId, { label: "Renamed" });
     expect((await owner.provider.getDevice(deviceId))?.label).toBe("Renamed");
-    // Stranger cannot create a stream claiming the owner's prefix.
+    // Stranger cannot create a stream on the owner's station.
     await expect(
       stranger.provider.createStream({
         schemaVersion: 2,
-        id: `${owner.uid}_zzzzzzzzzzzz`,
+        id: newStreamId(),
         ownerUid: owner.uid,
         stationId: station.id,
         deviceId,

@@ -6,7 +6,9 @@ import {
   CountryCodeSchema,
   EpochMsSchema,
   IdSchema,
+  RandomIdSchema,
   SchemaVersionSchema,
+  StationIdSchema,
   UidSchema,
 } from "./primitives.js";
 
@@ -25,7 +27,7 @@ export const StationLocationSchema = z.strictObject({
 
 export const StationSchema = z.strictObject({
   schemaVersion: SchemaVersionSchema,
-  id: IdSchema,
+  id: StationIdSchema,
   ownerUid: UidSchema,
   name: z.string().min(1).max(120),
   location: StationLocationSchema,
@@ -36,7 +38,7 @@ export const StationSchema = z.strictObject({
   /** IANA time zone, e.g. "America/Guayaquil". */
   timezone: z.string().min(1).max(64),
   /** Id of the last ownership transfer, when the station has changed owner. */
-  transferId: IdSchema.optional(),
+  transferId: RandomIdSchema.optional(),
   createdAt: EpochMsSchema,
   updatedAt: EpochMsSchema,
 });
@@ -51,14 +53,14 @@ export const StationMemberSchema = z.strictObject({
   addedAt: EpochMsSchema,
 });
 
-/** Transfer id `{stationId}_{nonce}`; the station id itself is `<ownerUid>_<random>`. */
-export const TransferIdSchema = z.string().regex(/^[A-Za-z0-9_-]+_[A-Za-z0-9]{6,64}$/);
+/** Transfer id: a random id (see {@link RandomIdSchema}). */
+export const TransferIdSchema = RandomIdSchema;
 
 /** `ownershipTransfers/{id}` — immutable audit record of a transfer (ADR-009 rule 3). */
 export const OwnershipTransferSchema = z.strictObject({
   schemaVersion: SchemaVersionSchema,
   id: TransferIdSchema,
-  stationId: IdSchema,
+  stationId: StationIdSchema,
   from: UidSchema,
   to: UidSchema,
   createdAt: EpochMsSchema,
@@ -71,7 +73,7 @@ export const OwnershipTransferSchema = z.strictObject({
 export const PublicStationSchema = z
   .strictObject({
     schemaVersion: SchemaVersionSchema,
-    id: IdSchema,
+    id: StationIdSchema,
     name: z.string().min(1).max(120),
     precision: PublicPrecisionSchema,
     /** Only for `exact` and `approximate` (rounded for `approximate`). */

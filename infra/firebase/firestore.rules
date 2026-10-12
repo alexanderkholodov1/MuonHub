@@ -200,15 +200,19 @@ service cloud.firestore {
         && l.countryCode is string && l.countryCode.matches('^[A-Z]{2}$');
     }
 
-    // Station ids follow the stream-id scheme `<ownerUid>_<random>` (the creator's uid), so nobody
-    // can create (squat) an id that another user's client will later pick.
-    function isStationId(v) {
-      return v is string && v.matches('^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$');
+    // Station, stream and transfer ids are long random strings (20-64 letters and digits) that carry
+    // no uid (ADR-009: public data holds no user ids). They are unguessable, so squatting a specific
+    // future id is infeasible; creating over an existing id is impossible (`create` needs !exists).
+    function isRandomId(v) {
+      return v is string && v.matches('^[A-Za-z0-9]{20,64}$');
     }
 
-    // `{stationId}_{nonce}`; the station id itself contains one `_`.
+    function isStationId(v) {
+      return isRandomId(v);
+    }
+
     function isTransferId(v) {
-      return v is string && v.matches('^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}_[A-Za-z0-9]{6,64}$');
+      return isRandomId(v);
     }
 
     function validStation(d, sid) {
@@ -299,7 +303,7 @@ service cloud.firestore {
         && (resource.data.ownerUid == me() || isStationMember(stationId) || isAdmin());
       allow create: if signedIn()
         && request.resource.data.ownerUid == me()
-        && stationId.matches(me() + '_[A-Za-z0-9]{8,64}')
+        && isStationId(stationId)
         && validStation(request.resource.data, stationId)
         && !('transferId' in request.resource.data)
         && projectionConsistent(stationId, request.resource.data);
@@ -386,7 +390,6 @@ service cloud.firestore {
         && request.resource.data.schemaVersion == 2
         && request.resource.data.id == transferId
         && isStationId(request.resource.data.stationId)
-        && transferId.matches(request.resource.data.stationId + '_[A-Za-z0-9]{6,64}')
         && isTransferId(transferId)
         && request.resource.data.from == me()
         && isUid(request.resource.data.to)
@@ -566,7 +569,7 @@ service cloud.firestore {
     // ── Streams, sessions, day summaries (FR11, FR12) ────────────────────────────────────────
 
     function isStreamId(v) {
-      return v is string && v.matches('^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$');
+      return isRandomId(v);
     }
 
     function validStream(d, streamId) {
@@ -581,13 +584,13 @@ service cloud.firestore {
         && pastMs(d.createdAt);
     }
 
-    // Stream id `<ownerUid>_<random>` with ownerUid = the station owner; the device is installed in
-    // that station and belongs to that owner.
+    // The stream id is random (it appears in anonymously readable paths, so it carries no uid); the
+    // stream's owner is the station owner, and the device is installed in that station and belongs
+    // to that owner.
     function validStreamBinding(d, streamId) {
       let owner = get(stationPath(d.stationId)).data.ownerUid;
       let device = deviceDoc(d.deviceId).data;
       return d.ownerUid == owner
-        && streamId.matches(owner + '_[A-Za-z0-9]{8,64}')
         && device.stationId == d.stationId
         && device.ownerUid == owner;
     }

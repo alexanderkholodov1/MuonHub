@@ -18,6 +18,18 @@ export const IdSchema = z
   .max(128)
   .regex(/^[A-Za-z0-9_-]+$/, "only letters, digits, '_' and '-'");
 
+/**
+ * Random identifier of stations, streams and transfers: 20-64 letters and digits, generated with a
+ * cryptographic RNG. It carries no uid (public data must not contain user ids, ADR-009) and is
+ * unguessable, so claiming a specific future id is infeasible.
+ */
+export const RandomIdSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9]{20,64}$/, "random id (20-64 letters and digits)");
+
+/** Station id (see {@link RandomIdSchema}). */
+export const StationIdSchema = RandomIdSchema;
+
 /** Firebase Authentication uid. */
 export const UidSchema = z
   .string()

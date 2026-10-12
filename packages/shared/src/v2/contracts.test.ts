@@ -28,7 +28,6 @@ import {
   UsernameClaimSchema,
   hourOf,
   sampleBlockEnd,
-  streamOwnerUid,
   type DaySummary,
   type MinuteRecord,
 } from "./index.js";
@@ -42,10 +41,13 @@ function without<T extends object, K extends keyof T>(obj: T, ...keys: K[]): Omi
 
 const T = Date.UTC(2026, 9, 7, 12, 0, 0);
 const UID = "ownerUid123";
+const STATION = "Qx7mK2pL9vWc4RtYb8Nz";
+const STREAM = "Hd3sA6fJ1gTu5XeP0oMi";
+const TRANSFER = "Zk8nB4yC2wVr7LqE3hGa";
 
 const station = {
   schemaVersion: 2,
-  id: "usfq-roof",
+  id: STATION,
   ownerUid: UID,
   name: "USFQ rooftop",
   location: { lat: -0.1966, lon: -78.4357, altitudeM: 2391, city: "Cumbayá", countryCode: "EC" },
@@ -105,7 +107,7 @@ describe("station (CA4)", () => {
   it("public projection carries no personal data and follows the precision", () => {
     const pub = {
       schemaVersion: 2,
-      id: "usfq-roof",
+      id: STATION,
       name: "USFQ rooftop",
       precision: "city",
       city: "Cumbayá",
@@ -115,6 +117,7 @@ describe("station (CA4)", () => {
       updatedAt: T,
     };
     expect(PublicStationSchema.safeParse(pub).success).toBe(true);
+    expect(JSON.stringify(pub)).not.toContain(UID);
     expect(PublicStationSchema.safeParse({ ...pub, ownerUid: UID }).success).toBe(false);
     expect(PublicStationSchema.safeParse({ ...pub, email: "x@y.z" }).success).toBe(false);
     expect(
@@ -142,8 +145,8 @@ describe("station (CA4)", () => {
     ).toBe(false);
     const transfer = {
       schemaVersion: 2,
-      id: "usfq-roof_a1b2c3d4",
-      stationId: "usfq-roof",
+      id: TRANSFER,
+      stationId: STATION,
       from: UID,
       to: "u2",
       createdAt: T,
@@ -171,7 +174,7 @@ describe("device, assembly, calibration", () => {
     schemaVersion: 2,
     id: "cw3",
     ownerUid: UID,
-    stationId: "usfq-roof",
+    stationId: STATION,
     deviceType: { id: "munra", version: 1 },
     label: "CosmicWatch #3",
     geometry: {
@@ -197,7 +200,7 @@ describe("device, assembly, calibration", () => {
     expect(
       AssemblySchema.safeParse({
         schemaVersion: 2,
-        stationId: "s",
+        stationId: STATION,
         members: [{ deviceId: "cw3", position: { x: 0, y: 0, z: 5 }, tiltDeg: 0 }],
         updatedAt: T,
       }).success,
@@ -222,26 +225,26 @@ describe("device, assembly, calibration", () => {
 });
 
 describe("stream and session", () => {
-  it("stream id is bound to the owner", () => {
+  it("stream id is random and carries no uid", () => {
     const stream = {
       schemaVersion: 2,
-      id: `${UID}_k3j4h5g6`,
+      id: STREAM,
       ownerUid: UID,
-      stationId: "usfq-roof",
+      stationId: STATION,
       deviceId: "cw3",
       status: "active",
       createdAt: T,
     };
     expect(StreamSchema.safeParse(stream).success).toBe(true);
-    expect(StreamSchema.safeParse({ ...stream, ownerUid: "someoneElse" }).success).toBe(false);
     expect(StreamSchema.safeParse({ ...stream, id: "k3j4h5g6" }).success).toBe(false);
-    expect(streamOwnerUid(stream.id)).toBe(UID);
+    expect(StreamSchema.safeParse({ ...stream, id: `${UID}_k3j4h5g6` }).success).toBe(false);
+    expect(stream.id).not.toContain(UID);
   });
   it("session end fields go together and accept the new end reasons", () => {
     const base = {
       schemaVersion: 2,
       id: "sess1",
-      streamId: `${UID}_k3j4h5g6`,
+      streamId: STREAM,
       startedAt: T,
       agentVersion: "6.0.0-alpha.1.3",
       deviceTypeVersion: 1,
@@ -302,7 +305,7 @@ describe("day summary (CA2)", () => {
   const dayStart = Date.UTC(2026, 9, 7);
   const summary: DaySummary = {
     schemaVersion: 2,
-    streamId: `${UID}_k3j4h5g6`,
+    streamId: STREAM,
     day: "2026-10-07",
     hours: {
       "12": {
@@ -384,7 +387,7 @@ describe("live, status, multichannel, raw, access, audit", () => {
       id: "a1",
       action: "ownershipTransfer",
       actorUid: UID,
-      targetId: "usfq-roof",
+      targetId: STATION,
       createdAt: T,
     };
     expect(AuditEntrySchema.safeParse(entry).success).toBe(true);

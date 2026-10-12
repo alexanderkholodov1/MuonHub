@@ -98,34 +98,37 @@ export function stripUndefined<T>(value: T): T {
   return value;
 }
 
-const NONCE_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const ID_LENGTH = 20;
 
-/** Random id fragment (letters and digits) for stream ids and transfer ids. */
-export function randomToken(length = 12): string {
-  const bytes = new Uint8Array(length);
-  globalThis.crypto.getRandomValues(bytes);
+/**
+ * Random id from the 62-character alphabet, drawn from the platform CSPRNG with rejection
+ * sampling (no modulo bias). 20 characters carry about 119 bits.
+ */
+export function randomId(length = ID_LENGTH): string {
+  const limit = 256 - (256 % ID_ALPHABET.length);
   let out = "";
-  for (const b of bytes) out += NONCE_ALPHABET[b % NONCE_ALPHABET.length];
+  while (out.length < length) {
+    const bytes = new Uint8Array(length * 2);
+    globalThis.crypto.getRandomValues(bytes);
+    for (const b of bytes) {
+      if (b < limit && out.length < length) out += ID_ALPHABET[b % ID_ALPHABET.length];
+    }
+  }
   return out;
 }
 
-export function newTransferId(stationId: string): string {
-  return `${stationId}_${randomToken(12)}`;
+/** New transfer id: random, no station or user id inside. */
+export function newTransferId(): string {
+  return randomId();
 }
 
-/** New stream id `<ownerUid>_<random>` (spec 0083 FR7). */
-export function newStreamId(ownerUid: string): string {
-  return `${ownerUid}_${randomToken(16)}`;
+/** New stream id: random, because stream ids appear in anonymously readable paths. */
+export function newStreamId(): string {
+  return randomId();
 }
 
-/** New station id `<ownerUid>_<random>`, same shape as stream ids (spec 0084: binds the id to its owner). */
-export function newStationId(ownerUid: string): string {
-  return `${ownerUid}_${randomToken(16)}`;
-}
-
-const STATION_ID_RANDOM = /^[A-Za-z0-9]{8,64}$/;
-
-/** True when `id` is `<ownerUid>_<random>` for exactly this owner. */
-export function isOwnedStationId(id: string, ownerUid: string): boolean {
-  return id.startsWith(`${ownerUid}_`) && STATION_ID_RANDOM.test(id.slice(ownerUid.length + 1));
+/** New station id: random and unguessable; it carries no owner uid (ADR-009). */
+export function newStationId(): string {
+  return randomId();
 }

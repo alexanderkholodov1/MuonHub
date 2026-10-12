@@ -95,7 +95,6 @@ import { buildMinutePage, planMinuteRange, type MinuteRangeQuery } from "./pagin
 import {
   buildPublicStation,
   buildStationAccess,
-  isOwnedStationId,
   isPublic,
   newTransferId,
   stripUndefined,
@@ -402,9 +401,6 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
     createStation: (input) =>
       guard(async () => {
         const station = parseOrInvalid(stationSchema, input, "station");
-        if (!isOwnedStationId(station.id, station.ownerUid)) {
-          throw invalid("Station id must be <ownerUid>_<random> (use newStationId).");
-        }
         const access = buildStationAccess(station, []);
         await createMirrorNode(
           `stationAccess/${station.id}`,
@@ -654,7 +650,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         const me = requireUid();
         parseOrInvalid(v2.UidSchema, toUid, "recipient uid");
         if (toUid === me) throw invalid("The recipient already owns the station.");
-        const transferId = newTransferId(stationId);
+        const transferId = newTransferId();
         const stationRef = docRef("stations", stationId);
         const accessRef = rtRef(rt, `stationAccess/${stationId}`);
         const at = now();

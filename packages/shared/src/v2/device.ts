@@ -6,6 +6,7 @@ import {
   AmplitudeUnitSchema,
   EpochMsSchema,
   IdSchema,
+  StationIdSchema,
   SchemaVersionSchema,
   UidSchema,
 } from "./primitives.js";
@@ -23,7 +24,7 @@ export const DeviceSchema = z.strictObject({
   id: IdSchema,
   ownerUid: UidSchema,
   /** The station the device is installed in; security rules authorize by it. */
-  stationId: IdSchema,
+  stationId: StationIdSchema,
   deviceType: z.strictObject({ id: IdSchema, version: z.number().int().positive() }),
   label: z.string().min(1).max(120),
   serial: z.string().max(120).optional(),
@@ -37,7 +38,7 @@ export const DeviceSchema = z.strictObject({
 
 export const AssemblySchema = z.strictObject({
   schemaVersion: SchemaVersionSchema,
-  stationId: IdSchema,
+  stationId: StationIdSchema,
   members: z
     .array(
       z.strictObject({

@@ -40,7 +40,7 @@ streams, not under stations or profiles.
   `visibility` (`public` | `institution` | `private`, **required, no default** — D22), optional
   institutionId, timezone, createdAt, updatedAt.
 - **FR3 — Sharing and ownership:** station members { uid → `editor` | `viewer` }; an immutable
-  `OwnershipTransfer` record (id `{stationId}_{nonce}`, stationId, from, to, createdAt) — the
+  `OwnershipTransfer` record (random id, stationId, from, to, createdAt) — the
   station carries the `transferId` of its last transfer; the acceptance flow is decided in M2
   (B-M2-05). *(Proposed, deferred to M2: shared ownership / co-owners — M1 models a single owner plus
   editors and viewers.)*
@@ -61,8 +61,7 @@ streams, not under stations or profiles.
   orientation } (B-M1-07), `saturation` { value, unit } (device units — mV or ADC counts), status.
 - **FR6 — Assembly:** stationId, members [{ deviceId, position { x, y, z } cm, tiltDeg }] — stored in
   M1, edited in M3.
-- **FR7 — Stream:** id **`<ownerUid>_<random>`** (binds the id to the station owner so nobody can
-  claim another user's stream — spec 0084), stationId, deviceId (a device of the same station and
+- **FR7 — Stream:** id **random** (20–64 letters and digits, no uid: stream ids appear in anonymously readable paths; ownership comes from the station — spec 0084), stationId, deviceId (a device of the same station and
   owner), createdAt, status. One device at one station = one stream; moving the device creates a new
   stream.
 - **FR8 — Session:** streamId, id, startedAt, endedAt?, `endReason` (`stop` | `reset` | `usbLoss` |

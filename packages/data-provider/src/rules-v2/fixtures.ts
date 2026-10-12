@@ -78,20 +78,26 @@ export function dbAs(env: RulesTestEnvironment, who: Who): Rtdb {
 
 // ── Ids ──────────────────────────────────────────────────────────────────────────────────────
 
-// Station ids are `<ownerUid>_<random>` (spec 0084 FR7, same scheme as stream ids).
-export const ST_PUB = "ownerA_stationpub1";
-export const ST_PRIV = "ownerA_stationpriv1";
-export const ST_OTHER = "strangerS_stationoth1";
+// Station, stream and transfer ids are random 20-64 character ids with no uid (spec 0084 FR7).
+export const ST_PUB = "stPubQ7wK2mZx9RtLa4Vb";
+export const ST_PRIV = "stPrivH3nYc8DpUe6JfS5";
+export const ST_OTHER = "stOtherB1gXo0WiTk7NzM2";
+/** A fresh valid random id for create tests. */
+export const NEW_STATION = "stNewC4vJq9ErYu2HdA8L";
+/** Fresh valid random stream ids for create tests. */
+export const NEW_STREAM_1 = "sNewR2eYp7LdK4uVx9TbHa";
+export const NEW_STREAM_2 = "sNewT8mQz3WfJ6cNy1OgXe";
+export const NEW_STREAM_3 = "sNewU5aHs0BiD2rGk7PvLj";
 export const DEV_PUB = "devPub";
 export const DEV_PRIV = "devPriv";
 export const DEV_OTHER = "devOther";
-export const S_PUB = "ownerA_pubstream01";
-export const S_PRIV = "ownerA_privstream1";
-export const S_OTHER = "strangerS_otherstream1";
+export const S_PUB = "sPubM5xTb1KeW8oRz3QnYc";
+export const S_PRIV = "sPrivF6hUa2GyD9sPj4XtV";
+export const S_OTHER = "sOtherN7kIw3ZlE0uBq5CmA";
 export const SESSION_OPEN = "sessOpen";
 export const SESSION_CLOSED = "sessClosed";
 export const DAY = "2026-10-01";
-export const OLD_TRANSFER = `${ST_PRIV}_oldtransfer1`;
+export const OLD_TRANSFER = "xferOldP8dRv4YtGh1MsKe";
 
 // ── Time ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -248,7 +254,7 @@ export function stream(
   deviceId: string,
   ownerUid: string,
 ): v2.Stream {
-  // Built without the schema's prefix refine so tests can construct deliberately wrong ids.
+  // Built without schema validation so tests can construct deliberately wrong ids.
   return {
     schemaVersion: 2,
     id,
@@ -370,11 +376,10 @@ export function stationAccess(
 
 // ── The seeded world ─────────────────────────────────────────────────────────────────────────
 //
-//  stPub   (ownerA_stationpub1)    public  (approximate) — owner ownerA; editors editorE, agentEd; viewer viewerV
-//  stPriv  (ownerA_stationpriv1)   private (exact)       — same membership
-//  stOther (strangerS_stationoth1) private               — owner strangerS, no members
-//  Streams ownerA_pubstream01 (stPub/devPub), ownerA_privstream1 (stPriv/devPriv),
-//          strangerS_otherstream1 (stOther/devOther). admins: adminX.
+//  stPub   (stPubQ7wK2mZx9RtLa4Vb) public  (approximate) — owner ownerA; editors editorE, agentEd; viewer viewerV
+//  stPriv  (stPrivH3nYc8DpUe6JfS5) private (exact)       — same membership
+//  stOther (stOtherB1gXo0WiTk7NzM2) private               — owner strangerS, no members
+//  Streams sPub… (stPub/devPub), sPriv… (stPriv/devPriv), sOther… (stOther/devOther). admins: adminX.
 
 export const stPub = (): v2.Station => station(ST_PUB, UID.owner, "public", "approximate");
 export const stPriv = (): v2.Station => station(ST_PRIV, UID.owner, "private", "exact");

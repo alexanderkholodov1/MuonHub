@@ -24,6 +24,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import {
+  NEW_STATION,
   OLD_TRANSFER,
   ST_OTHER,
   ST_PRIV,
@@ -108,7 +109,7 @@ describeEmu("stations/{id} — reads and queries", () => {
 });
 
 describeEmu("stations/{id} — create", () => {
-  const NEW = "strangerS_stationnew1";
+  const NEW = NEW_STATION;
   const fresh = (vis: "public" | "private", id = NEW) => station(id, UID.stranger, vis, "city");
 
   it("a signed-in user creates a private station they own", async () => {
@@ -139,30 +140,50 @@ describeEmu("stations/{id} — create", () => {
   it("denies unknown keys, a transferId, a mismatched id, or a future createdAt", async () => {
     const ref = doc(fsAs(env, "stranger"), `stations/${NEW}`);
     await assertFails(setDoc(ref, { ...fresh("private"), members: { x: "editor" } }));
-    await assertFails(setDoc(ref, { ...fresh("private"), transferId: `${NEW}_abcdef12` }));
+    await assertFails(setDoc(ref, { ...fresh("private"), transferId: "xferNewD6hLp3QsWz8YvKt" }));
     await assertFails(setDoc(ref, { ...fresh("private"), id: "other" }));
     const t = now() + 3_600_000;
     await assertFails(setDoc(ref, { ...fresh("private"), createdAt: t, updatedAt: t }));
   });
-  it("denies squatting a station id that carries another user's uid", async () => {
-    const squat = "ownerA_squatted01";
+  it("denies creating over an existing station id (no overwrite, no takeover)", async () => {
+    // ST_OTHER already exists and belongs to someone else.
     await assertFails(
-      setDoc(doc(fsAs(env, "stranger"), `stations/${squat}`), fresh("private", squat)),
+      setDoc(
+        doc(fsAs(env, "owner"), `stations/${ST_OTHER}`),
+        station(ST_OTHER, UID.owner, "private", "city"),
+      ),
     );
-    const fs = fsAs(env, "stranger");
+    const fs = fsAs(env, "owner");
     const b = writeBatch(fs);
-    b.set(doc(fs, `stations/${squat}`), fresh("public", squat));
-    b.set(doc(fs, `publicStations/${squat}`), projection(fresh("public", squat), 0));
+    b.set(doc(fs, `stations/${ST_OTHER}`), station(ST_OTHER, UID.owner, "public", "approximate"));
+    b.set(
+      doc(fs, `publicStations/${ST_OTHER}`),
+      projection(station(ST_OTHER, UID.owner, "public", "approximate"), 0),
+    );
     await assertFails(b.commit());
   });
-  it("denies a station id outside the `<ownerUid>_<random>` scheme", async () => {
+  it("a public projection and its station id contain no uid", async () => {
+    const s = fresh("public");
+    expect(NEW).not.toContain(UID.stranger);
+    expect(JSON.stringify(projection(s, 0))).not.toContain(UID.stranger);
+    const fs = fsAs(env, "stranger");
+    const b = writeBatch(fs);
+    b.set(doc(fs, `stations/${NEW}`), s);
+    b.set(doc(fs, `publicStations/${NEW}`), projection(s, 0));
+    await assertSucceeds(b.commit());
+    const read = await getDoc(doc(fsAs(env, "anon"), `publicStations/${NEW}`));
+    expect(JSON.stringify(read.data())).not.toContain(UID.stranger);
+  });
+  it("denies a station id outside the random-id scheme", async () => {
     for (const id of [
       "stNew",
-      "strangerS_short",
-      "strangerS_a_b_cdefgh12",
-      "strangerSx_stationnew1",
+      "short_id_with_underscore_xx",
+      `${UID.stranger}_stationnew1`,
+      "x".repeat(65),
     ]) {
-      await assertFails(setDoc(doc(fsAs(env, "stranger"), `stations/${id}`), fresh("private", id)));
+      await assertFails(
+        setDoc(doc(fsAs(env, "stranger"), `stations/${id}`), { ...fresh("private"), id }),
+      );
     }
   });
   it("denies an invalid location", async () => {
@@ -380,9 +401,8 @@ describeEmu("publicStations/{id}", () => {
         "updatedAt",
       ].sort(),
     );
-    // The id carries the owner's uid (`<ownerUid>_<random>`, like stream ids), and the fixture's
-    // name repeats the id; no other field carries personal data.
-    expect(JSON.stringify({ ...data, id: null, name: null })).not.toMatch(
+    // The id is random and the fixture's name repeats it; no field carries a uid or personal data.
+    expect(JSON.stringify({ ...data, name: null })).not.toMatch(
       /@|ownerUid|ownerA|editorE|viewerV/,
     );
     expect(point.lat).not.toBe(exact.lat);
@@ -455,7 +475,7 @@ describeEmu("publicStations/{id}", () => {
 });
 
 describeEmu("ownershipTransfers/{id}", () => {
-  const TID = `${ST_PRIV}_nonce12345`;
+  const TID = "xferNonceG2sMb9TqXw5RyHc";
 
   it("the owner transfers: transfer record + station owner change in one batch", async () => {
     const fs = fsAs(env, "owner");
@@ -513,11 +533,14 @@ describeEmu("ownershipTransfers/{id}", () => {
       }),
     );
   });
-  it("denies a transfer id that does not start with the station id", async () => {
+  it("denies a transfer id outside the random-id scheme", async () => {
     const fs = fsAs(env, "owner");
-    const bad = `${ST_PUB}_nonce12345`;
+    const bad = `${ST_PRIV}_nonce12345`;
     const b = writeBatch(fs);
-    b.set(doc(fs, `ownershipTransfers/${bad}`), transfer(bad, ST_PRIV, UID.owner, UID.recipient));
+    b.set(doc(fs, `ownershipTransfers/${bad}`), {
+      ...transfer(TID, ST_PRIV, UID.owner, UID.recipient),
+      id: bad,
+    });
     b.update(doc(fs, `stations/${ST_PRIV}`), { ownerUid: UID.recipient, transferId: bad });
     await assertFails(b.commit());
   });

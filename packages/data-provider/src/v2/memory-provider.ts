@@ -31,7 +31,7 @@ import {
 } from "./live-window.js";
 import { writeMinutesChunked } from "./minute-writer.js";
 import { buildMinutePage, planMinuteRange } from "./pagination.js";
-import { buildPublicStation, isOwnedStationId, isPublic, newTransferId } from "./public-station.js";
+import { buildPublicStation, isPublic, newTransferId } from "./public-station.js";
 import { describeFailure, parseEntries, type ListResult, type Page } from "./quarantine.js";
 
 type Listener = () => void;
@@ -301,9 +301,6 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
 
     async createStation(input) {
       const station = validate(v2.StationSchema, input, "station");
-      if (!isOwnedStationId(station.id, station.ownerUid)) {
-        fail("Station id must be <ownerUid>_<random> (use newStationId).");
-      }
       createDoc(`stations/${station.id}`, station);
       if (isPublic(station)) {
         createDoc(
@@ -418,7 +415,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       if (station === null) throw new DataProviderError("not-found");
       if (station.ownerUid !== me) throw new DataProviderError("permission-denied");
       if (toUid === me) fail("The recipient already owns the station.");
-      const id = newTransferId(stationId);
+      const id = newTransferId();
       const at = now();
       createDoc(`ownershipTransfers/${id}`, {
         schemaVersion: 2,

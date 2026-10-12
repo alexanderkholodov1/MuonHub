@@ -3,6 +3,7 @@ import { v2 } from "@muonhub/shared";
 import {
   buildPublicStation,
   buildStationAccess,
+  newStationId,
   newStreamId,
   newTransferId,
   stripUndefined,
@@ -12,6 +13,15 @@ import { station } from "./fixtures.js";
 const stats = { deviceCount: 2, active: true };
 
 describe("buildPublicStation", () => {
+  it.each(["exact", "approximate", "city", "country", "hidden"] as const)(
+    "%s projection contains no owner uid",
+    (precision) => {
+      const s = station({ publicPrecision: precision });
+      const json = JSON.stringify(buildPublicStation(s, stats, 1));
+      expect(json).not.toContain(s.ownerUid);
+    },
+  );
+
   it.each(["exact", "approximate", "city", "country", "hidden"] as const)(
     "honours precision %s and validates against the projection schema",
     (precision) => {
@@ -76,7 +86,10 @@ describe("helpers", () => {
   });
 
   it("makes ids that satisfy the contracts", () => {
-    expect(v2.TransferIdSchema.safeParse(newTransferId("station-1")).success).toBe(true);
-    expect(v2.StreamIdSchema.safeParse(newStreamId("ownerUid1")).success).toBe(true);
+    expect(v2.TransferIdSchema.safeParse(newTransferId()).success).toBe(true);
+    expect(v2.StreamIdSchema.safeParse(newStreamId()).success).toBe(true);
+    expect(v2.StationIdSchema.safeParse(newStationId()).success).toBe(true);
+    expect(newStationId()).toMatch(/^[A-Za-z0-9]{20}$/);
+    expect(new Set(Array.from({ length: 200 }, () => newStationId())).size).toBe(200);
   });
 });

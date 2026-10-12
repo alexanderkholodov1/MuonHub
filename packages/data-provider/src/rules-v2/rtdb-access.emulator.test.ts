@@ -9,6 +9,10 @@ import {
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
+  NEW_STATION,
+  NEW_STREAM_1,
+  NEW_STREAM_2,
+  NEW_STREAM_3,
   ST_OTHER,
   ST_PRIV,
   ST_PUB,
@@ -37,7 +41,7 @@ afterAll(async () => {
   await env?.cleanup();
 });
 
-const NEW = "strangerS_stationnew1";
+const NEW = NEW_STATION;
 
 const acc = (who: Who, path = "") =>
   dbAs(env, who).ref(`stationAccess/${ST_PRIV}${path === "" ? "" : `/${path}`}`);
@@ -60,18 +64,20 @@ describeEmu("stationAccess/{stationId} — create and rewrite", () => {
       }),
     );
   });
-  it("denies squatting a station id that carries another user's uid", async () => {
+  it("denies creating a mirror over an existing station id (no takeover)", async () => {
     const db = dbAs(env, "stranger");
     await assertFails(
-      db.ref("stationAccess/ownerA_squatted01").set(stationAccess(UID.stranger, false, [], [])),
+      db.ref(`stationAccess/${ST_PRIV}`).set(stationAccess(UID.stranger, false, [], [])),
     );
     await assertFails(
-      db.ref("stationAccess/ownerA_squatted01").set(stationAccess(UID.owner, false, [], [])),
+      dbAs(env, "owner")
+        .ref(`stationAccess/${ST_OTHER}`)
+        .set(stationAccess(UID.owner, false, [], [])),
     );
   });
-  it("denies a mirror id outside the `<ownerUid>_<random>` scheme", async () => {
+  it("denies a mirror id outside the random-id scheme", async () => {
     const db = dbAs(env, "stranger");
-    for (const id of ["stNew", "strangerS_short", "strangerSx_stationnew1"]) {
+    for (const id of ["stNew", `${UID.stranger}_short`, `${UID.stranger}_stationnew1`]) {
       await assertFails(
         db.ref(`stationAccess/${id}`).set(stationAccess(UID.stranger, false, [], [])),
       );
@@ -206,45 +212,44 @@ describeEmu("streamStation/{streamId}", () => {
   const map = (who: Who, streamId: string, stationId = ST_PRIV, since = now()) =>
     dbAs(env, who).ref(`streamStation/${streamId}`).set(streamStation(stationId, since));
 
-  it("the owner registers a stream id carrying their uid", async () => {
-    await assertSucceeds(map("owner", "ownerA_newstream01"));
+  it("the owner registers a random stream id", async () => {
+    await assertSucceeds(map("owner", NEW_STREAM_1));
   });
-  it("the agent (editor) registers a stream id carrying the station owner's uid", async () => {
-    await assertSucceeds(map("agent", "ownerA_newstream02"));
+  it("the agent (editor) registers a random stream id", async () => {
+    await assertSucceeds(map("agent", NEW_STREAM_2));
   });
-  it("denies an editor registering a stream id with their own prefix", async () => {
-    await assertFails(map("editor", "editorE_newstream01"));
+  it("denies a stranger mapping a stream onto someone else's station", async () => {
+    await assertFails(map("stranger", NEW_STREAM_1));
+    await assertFails(map("stranger", NEW_STREAM_1, ST_PUB));
   });
-  it("denies a stranger claiming a stream id of another user", async () => {
-    await assertFails(map("stranger", "ownerA_newstream01"));
-  });
-  it("denies a stranger mapping their own prefix onto someone else's station", async () => {
-    await assertFails(map("stranger", "strangerS_newstream01"));
+  it("denies registering a stream id that is already mapped (no overwrite)", async () => {
+    await assertFails(map("stranger", S_PRIV, ST_OTHER));
+    await assertFails(map("owner", S_PRIV));
   });
   it("denies re-pointing an existing stream to another station", async () => {
     await assertFails(map("owner", S_PRIV, ST_PUB));
     await assertFails(map("stranger", S_PRIV, ST_OTHER));
   });
   it("denies a mapping without `since`, with extra keys, or as a bare station id", async () => {
-    const ref = dbAs(env, "owner").ref("streamStation/ownerA_newstream01");
+    const ref = dbAs(env, "owner").ref(`streamStation/${NEW_STREAM_1}`);
     await assertFails(ref.set({ stationId: ST_PRIV }));
     await assertFails(ref.set({ ...streamStation(ST_PRIV, now()), extra: 1 }));
     await assertFails(ref.set(ST_PRIV));
   });
   it("denies a `since` more than 7 days back, in the future, or not an integer", async () => {
-    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() - 8 * 86_400_000));
-    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() + 3_600_000));
-    await assertFails(map("owner", "ownerA_newstream01", ST_PRIV, now() - 0.5));
+    await assertFails(map("owner", NEW_STREAM_1, ST_PRIV, now() - 8 * 86_400_000));
+    await assertFails(map("owner", NEW_STREAM_1, ST_PRIV, now() + 3_600_000));
+    await assertFails(map("owner", NEW_STREAM_1, ST_PRIV, now() - 0.5));
   });
   it("accepts a `since` up to 7 days back (agent buffered offline before registering)", async () => {
-    await assertSucceeds(map("owner", "ownerA_newstream01", ST_PRIV, now() - 6 * 86_400_000));
+    await assertSucceeds(map("owner", NEW_STREAM_1, ST_PRIV, now() - 6 * 86_400_000));
   });
   it("denies deleting a mapping", async () => {
     await assertFails(dbAs(env, "owner").ref(`streamStation/${S_PRIV}`).remove());
   });
   it("denies a malformed stream id or a viewer registering a stream", async () => {
-    await assertFails(map("owner", "ownerA_short"));
-    await assertFails(map("viewer", "ownerA_newstream03"));
+    await assertFails(map("owner", "short"));
+    await assertFails(map("viewer", NEW_STREAM_3));
   });
   it("members read a mapping; anonymous and strangers cannot", async () => {
     await assertSucceeds(dbAs(env, "viewer").ref(`streamStation/${S_PRIV}`).once("value"));

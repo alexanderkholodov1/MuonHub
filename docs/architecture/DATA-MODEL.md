@@ -26,15 +26,15 @@
 | User | `UserSchema` | email private (owner-readable only) |
 | Username claim | `UsernameClaimSchema` | one username per user |
 | Institution | `InstitutionSchema` | optional grouping |
-| Station | `StationSchema` | id `<ownerUid>_<random>` (creator's uid); exact `location` private; `visibility` required, no default; `publicPrecision` |
+| Station | `StationSchema` | random id (20 characters from a 62-character alphabet, no uid); exact `location` private; `visibility` required, no default; `publicPrecision` |
 | Station member | `StationMemberSchema` | `editor` / `viewer` |
-| Ownership transfer | `OwnershipTransferSchema` | id `{stationId}_{nonce}`, immutable; the station id itself contains `_` |
+| Ownership transfer | `OwnershipTransferSchema` | random id, immutable |
 | Public station | `PublicStationSchema` | projection for anonymous visitors; fields follow the precision; no personal data |
 | Device type | `DeviceTypeSchema` | declarative format definition; built-ins `cosmicwatch-v2`, `cosmicwatch-v3x`, `munra` |
 | Device | `DeviceSchema` | physical unit; carries `stationId`, geometry, saturation with unit |
 | Assembly | `AssemblySchema` | positions/tilt of a station's devices (edited in M3) |
 | Calibration | `CalibrationSchema` | versioned, append-only; each parameter has origin, uncertainty, lock |
-| Stream | `StreamSchema` | id `<ownerUid>_<random>` |
+| Stream | `StreamSchema` | random id (no uid; stream ids are publicly visible) |
 | Session | `SessionSchema` | end reasons incl. `storageError`, `clockStep`; time provenance; counters |
 | Minute record | `MinuteRecordSchema` | complete minutes only (§4) |
 | Day summary | `DaySummarySchema` | one document per stream-day; hours present only with data |
@@ -54,7 +54,7 @@
 | `usernames/{username}` | Username claim |
 | `stations/{stationId}` | Station |
 | `stations/{stationId}/members/{uid}` | Station member |
-| `ownershipTransfers/{stationId}_{nonce}` | Ownership transfer (immutable) |
+| `ownershipTransfers/{transferId}` | Ownership transfer (immutable) |
 | `deviceTypes/{id}` (+ versions subcollection) | Device type |
 | `devices/{deviceId}` | Device |
 | `devices/{deviceId}/calibrations/{version}` | Calibration (append-only) |

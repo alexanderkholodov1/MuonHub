@@ -3,7 +3,13 @@
  * so each station's access list is mirrored. Admins (Firestore) and audit entries are here too.
  */
 import { z } from "zod";
-import { EpochMsSchema, IdSchema, SchemaVersionSchema, UidSchema } from "./primitives.js";
+import {
+  EpochMsSchema,
+  IdSchema,
+  SchemaVersionSchema,
+  StationIdSchema,
+  UidSchema,
+} from "./primitives.js";
 
 const UidSet = z.record(UidSchema, z.literal(true));
 
@@ -21,7 +27,7 @@ export const StationAccessSchema = z.strictObject({
  * time (ms). The rules deny minutes with a timestamp before `since`.
  */
 export const StreamStationSchema = z.strictObject({
-  stationId: IdSchema,
+  stationId: StationIdSchema,
   since: EpochMsSchema,
 });
 

@@ -70,7 +70,7 @@ export interface StationOwnerPatch extends StationMetadataPatch {
 export interface StationsApi {
   /**
    * Creates a station: mirror first, then station (+ projection when public). The id must be
-   * `<ownerUid>_<random>` (see `newStationId`). Fails with `already-exists` when the id is taken.
+   * a random id without the owner uid (see `newStationId`). Fails with `already-exists` when the id is taken.
    * Ordering: grants (addMember, role upgrade, visibility to public) write Firestore first and then
    * the mirror; revocations write the mirror first; the first write is rolled back if the second
    * fails.

@@ -12,6 +12,7 @@ import {
   FRESH_LIVE_KEY,
   OLD_LIVE_KEY,
   S_OTHER,
+  NEW_STREAM_1,
   S_PRIV,
   S_PUB,
   ST_PRIV,
@@ -73,7 +74,7 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
     await assertFails(writeMinute("stranger", S_PUB, lastMinute()));
   });
   it("denies writing to a stream with no station mapping", async () => {
-    await assertFails(writeMinute("owner", "ownerA_unmappedstream", lastMinute()));
+    await assertFails(writeMinute("owner", "sUnmappedZ4xCv8BnMq1LkJh", lastMinute()));
   });
 
   it("denies overwriting an existing minute (write-once)", async () => {
@@ -133,7 +134,7 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
     await assertFails(writeMinute("agent", S_PRIV, ts));
   });
   it("denies a minute older than the stream's `since` (no backfill before creation)", async () => {
-    const id = "ownerA_sincestream1";
+    const id = NEW_STREAM_1;
     const since = lastMinute() - 5 * 60_000;
     await assertSucceeds(
       dbAs(env, "owner").ref(`streamStation/${id}`).set(streamStation(ST_PRIV, since)),

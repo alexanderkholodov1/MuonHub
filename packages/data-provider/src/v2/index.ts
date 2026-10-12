@@ -38,6 +38,8 @@ export {
   buildStationAccess,
   newStationId,
   newStreamId,
+  newTransferId,
+  randomId,
 } from "./public-station.js";
 export { createFirebaseProviderV2 } from "./firebase-provider.js";
 export type { FirebaseV2Config, HostPort } from "./firebase-provider.js";

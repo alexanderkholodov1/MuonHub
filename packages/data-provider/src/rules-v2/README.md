@@ -35,7 +35,7 @@ test for the same operation (anonymous reads of every path included).
 | `usernames/{name}` | signed-in (L: —) | self, only if the user doc names it after the batch | — | self, only when the user doc no longer names it | identity |
 | `admins/{uid}` | admin; a user reads their own entry (L: admin) | admin | admin | admin | identity |
 | `audit/{id}` | admin | signed-in, own actorUid, defined action with its fixed `details` shape, matching the target's state after the batch (spec 0084 FR14), server time ±5 min | — | — | identity |
-| `stations/{id}` | owner, members, admin (L: `where ownerUid == me`) | signed-in as owner; id `<myUid>_<random>`; public ⇒ projection in batch | owner (not ownerUid/transferId); editor: name/timezone only; transfer: owner + new transfer record | owner; projection deleted in batch | stations |
+| `stations/{id}` | owner, members, admin (L: `where ownerUid == me`) | signed-in as owner; random id (no uid), create-only; public ⇒ projection in batch | owner (not ownerUid/transferId); editor: name/timezone only; transfer: owner + new transfer record | owner; projection deleted in batch | stations |
 | `stations/{id}/members/{uid}` | owner, admin; self (collection group `where uid == me`) | owner (never self) | owner | owner; the member (leave) | stations |
 | `publicStations/{id}` | **anyone** (L: anyone, `limit <= 100`) | owner/admin, must match the station's precision | same | owner/admin, only when the station is not public | stations |
 | `ownershipTransfers/{id}` | from, to, admin (L: `where to == me`) | current owner, in the batch that changes the station owner | — | — | stations, transfer-flow |
@@ -43,7 +43,7 @@ test for the same operation (anonymous reads of every path included).
 | `devices/{id}` | owner, members, admin (L: `where stationId == X`) | owner/editor; device owned by the station owner | owner/editor of old and new station | owner | devices |
 | `devices/{id}/calibrations/{v}` | owner, members, admin | owner/editor (append-only, authorUid = self) | — | — | devices |
 | `assemblies/{stationId}` | owner, members, admin | owner/editor | owner/editor | owner | devices |
-| `streams/{id}` | owner, members, admin (L: `where stationId == X`) | owner/editor; id `<stationOwnerUid>_<random>`; device of the same station and owner | owner/editor, `status` only | — | streams |
+| `streams/{id}` | owner, members, admin (L: `where stationId == X`) | owner/editor; random id (no uid); device of the same station and owner | owner/editor, `status` only | — | streams |
 | `streams/{id}/sessions/{sid}` | owner, members, admin (L: ordered by startedAt) | owner/editor | owner/editor: counters grow; endedAt/endReason once | — | streams |
 | `streams/{id}/days/{day}` | **anyone for public stations** (L: `limit <= 100`); owner, members, admin (L: by id range) | owner/editor; day ≤ today (UTC) | owner/editor; day ≤ today | — | streams |
 
@@ -51,8 +51,8 @@ test for the same operation (anonymous reads of every path included).
 
 | Path | Read | Write | Suite |
 |---|---|---|---|
-| `stationAccess/{stationId}` | owner, pending owner | create-once by its owner, id `<myUid>_<random>`; while no `pendingOwner` exists the owner rewrites keeping ownership and manages `editors`/`viewers`/`public`; the owner sets `pendingOwner` (same value again: allowed) but never clears or re-points it; a member removes itself; only the pending owner clears it, by claiming `ownerUid` with `editors`/`viewers` removed; no delete | rtdb-access, transfer-flow |
-| `streamStation/{streamId}` | owner, editors, viewers | `{stationId, since}` create-once by the station owner or an editor, id prefixed with the station owner's uid; `since` within now − 7 days … now + 2 min | rtdb-access |
+| `stationAccess/{stationId}` | owner, pending owner | create-once by its owner (`!data.exists()`), random id; while no `pendingOwner` exists the owner rewrites keeping ownership and manages `editors`/`viewers`/`public`; the owner sets `pendingOwner` (same value again: allowed) but never clears or re-points it; a member removes itself; only the pending owner clears it, by claiming `ownerUid` with `editors`/`viewers` removed; no delete | rtdb-access, transfer-flow |
+| `streamStation/{streamId}` | owner, editors, viewers | `{stationId, since}` create-once by the station owner or an editor, random id; `since` within now − 7 days … now + 2 min | rtdb-access |
 | `minutes/{streamId}/{ts}` | owner, editors, viewers (range queries by key) — **never anonymous** | create-once by owner/editors; 13-digit key on a whole minute, not in the future, not before the stream's `since`; compact keys only | rtdb-series |
 | `live/{streamId}/events/{key}` | owner, editors, viewers | owner/editors: create with `t` within now ± 60 s; delete only entries older than 10 min | rtdb-series |
 | `status/{streamId}` | owner, editors, viewers | owner/editors | rtdb-series |

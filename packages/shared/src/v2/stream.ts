@@ -2,37 +2,30 @@
  * Streams and sessions (spec 0083 FR7, FR8).
  */
 import { z } from "zod";
-import { EpochMsSchema, IdSchema, SchemaVersionSchema, UidSchema } from "./primitives.js";
+import {
+  EpochMsSchema,
+  IdSchema,
+  RandomIdSchema,
+  SchemaVersionSchema,
+  StationIdSchema,
+  UidSchema,
+} from "./primitives.js";
 
 /**
- * Stream id `<ownerUid>_<random>`: binds the id to the station owner, so nobody can claim another
- * user's stream in the Realtime Database (spec 0084).
+ * Stream id: a random id with no uid, because stream ids appear in anonymously readable paths
+ * (`statusPublic`, day summaries). Ownership comes from the station (`streamStation` mirror).
  */
-export const StreamIdSchema = z
-  .string()
-  .regex(/^[A-Za-z0-9]{1,128}_[A-Za-z0-9]{8,64}$/, "<ownerUid>_<random>");
+export const StreamIdSchema = RandomIdSchema;
 
-/** Owner uid encoded in a stream id. */
-export function streamOwnerUid(streamId: string): string {
-  const i = streamId.lastIndexOf("_");
-  if (i <= 0) throw new Error(`not a stream id: ${streamId}`);
-  return streamId.slice(0, i);
-}
-
-export const StreamSchema = z
-  .strictObject({
-    schemaVersion: SchemaVersionSchema,
-    id: StreamIdSchema,
-    ownerUid: UidSchema,
-    stationId: IdSchema,
-    deviceId: IdSchema,
-    status: z.enum(["active", "stopped"]),
-    createdAt: EpochMsSchema,
-  })
-  .refine((s) => s.id.lastIndexOf("_") > 0 && streamOwnerUid(s.id) === s.ownerUid, {
-    message: "stream id must start with the owner's uid",
-    path: ["id"],
-  });
+export const StreamSchema = z.strictObject({
+  schemaVersion: SchemaVersionSchema,
+  id: StreamIdSchema,
+  ownerUid: UidSchema,
+  stationId: StationIdSchema,
+  deviceId: IdSchema,
+  status: z.enum(["active", "stopped"]),
+  createdAt: EpochMsSchema,
+});
 
 export const EndReasonSchema = z.enum([
   "stop",

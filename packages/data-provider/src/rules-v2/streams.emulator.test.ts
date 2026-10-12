@@ -30,6 +30,8 @@ import {
   SESSION_OPEN,
   ST_OTHER,
   ST_PRIV,
+  NEW_STREAM_1,
+  ST_PUB,
   S_PRIV,
   S_PUB,
   UID,
@@ -58,7 +60,7 @@ afterAll(async () => {
   await env?.cleanup();
 });
 
-const NEW_STREAM = "ownerA_newstream01";
+const NEW_STREAM = NEW_STREAM_1;
 
 describeEmu("streams/{id}", () => {
   const ref = (who: Who, id = S_PRIV) => doc(fsAs(env, who), `streams/${id}`);
@@ -82,25 +84,35 @@ describeEmu("streams/{id}", () => {
     await assertFails(getDocs(collection(fsAs(env, "owner"), "streams")));
   });
   for (const who of ["owner", "agent"] as const) {
-    it(`${who} creates a stream id prefixed with the station owner's uid`, async () => {
+    it(`${who} creates a stream with a random id (no uid in it)`, async () => {
       await assertSucceeds(
         setDoc(ref(who, NEW_STREAM), stream(NEW_STREAM, ST_PRIV, DEV_PRIV, UID.owner)),
       );
     });
   }
-  it("denies an editor claiming a stream id with their own prefix", async () => {
-    const id = "editorE_newstream01";
-    await assertFails(setDoc(ref("editor", id), stream(id, ST_PRIV, DEV_PRIV, UID.editor)));
-    await assertFails(setDoc(ref("editor", id), stream(id, ST_PRIV, DEV_PRIV, UID.owner)));
+  it("denies an editor recording themselves as the stream owner", async () => {
+    await assertFails(
+      setDoc(ref("editor", NEW_STREAM), stream(NEW_STREAM, ST_PRIV, DEV_PRIV, UID.editor)),
+    );
   });
-  it("denies a stranger claiming a stream id with another user's prefix", async () => {
+  it("denies a stranger creating a stream on someone else's station", async () => {
     await assertFails(
       setDoc(ref("stranger", NEW_STREAM), stream(NEW_STREAM, ST_PRIV, DEV_PRIV, UID.owner)),
     );
-    // Even for the stranger's own station: the prefix must be the station owner's uid.
+    // Even for the stranger's own station: the stream owner must be the station owner.
     await assertFails(
       setDoc(ref("stranger", NEW_STREAM), stream(NEW_STREAM, ST_OTHER, DEV_OTHER, UID.owner)),
     );
+  });
+  it("denies creating over an existing stream id (no takeover or re-homing)", async () => {
+    await assertFails(
+      setDoc(ref("stranger", S_PRIV), stream(S_PRIV, ST_OTHER, DEV_OTHER, UID.stranger)),
+    );
+    await assertFails(setDoc(ref("owner", S_PRIV), stream(S_PRIV, ST_PUB, DEV_PUB, UID.owner)));
+  });
+  it("denies a stream id that carries a uid prefix", async () => {
+    const id = `${UID.owner}_newstream01`;
+    await assertFails(setDoc(ref("owner", id), stream(id, ST_PRIV, DEV_PRIV, UID.owner)));
   });
   it("denies a stream for a device of another owner", async () => {
     await assertFails(
@@ -116,9 +128,7 @@ describeEmu("streams/{id}", () => {
     await assertFails(
       setDoc(ref("viewer", NEW_STREAM), stream(NEW_STREAM, ST_PRIV, DEV_PRIV, UID.owner)),
     );
-    await assertFails(
-      setDoc(ref("owner", "ownerA_short"), stream("ownerA_short", ST_PRIV, DEV_PRIV, UID.owner)),
-    );
+    await assertFails(setDoc(ref("owner", "short"), stream("short", ST_PRIV, DEV_PRIV, UID.owner)));
     await assertFails(
       setDoc(ref("owner", NEW_STREAM), {
         ...stream(NEW_STREAM, ST_PRIV, DEV_PRIV, UID.owner),

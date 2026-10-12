@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { v2 } from "@muonhub/shared";
+import { newStationId } from "./public-station.js";
 import { createMemoryProviderV2, MemoryStore } from "./memory-provider.js";
 import {
   DEVICE_ID,
@@ -85,7 +86,7 @@ describe("memory provider — stations", () => {
   it("transfers ownership with an immutable transfer record", async () => {
     const { provider, store } = setup();
     const me = await provider.createAccount("a@example.org", "secret1");
-    const sid = `${me.uid}_station12345`;
+    const sid = newStationId();
     await provider.createStation(station({ id: sid, ownerUid: me.uid }));
     const id = await provider.transferOwnership(sid, "newOwner1");
     expect((await provider.getStation(sid))?.ownerUid).toBe("newOwner1");
@@ -103,7 +104,7 @@ describe("memory provider — stations", () => {
     const guest = createMemoryProviderV2({ store, now: () => T0 });
     const o = await owner.createAccount("o@example.org", "secret1");
     const g = await guest.createAccount("g@example.org", "secret1");
-    const sid = `${o.uid}_station12345`;
+    const sid = newStationId();
     await owner.createStation(station({ id: sid, ownerUid: o.uid, visibility: "private" }));
     await owner.addMember(sid, g.uid, "viewer");
     await expect(owner.addMember(sid, g.uid, "editor")).rejects.toMatchObject({
@@ -463,7 +464,7 @@ describe("memory provider — failure injection", () => {
     expect(r.removed).toBe(0);
   });
 
-  it("requires a station id of the form <ownerUid>_<random>", async () => {
+  it("requires a random station id", async () => {
     const { provider } = setup();
     await expect(provider.createStation(station({ id: "station-1" }))).rejects.toMatchObject({
       code: "invalid-argument",

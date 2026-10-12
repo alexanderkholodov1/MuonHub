@@ -42,11 +42,7 @@ query with real client identities. It does **not** deploy anything by itself: th
   requires the username claim to be deleted in the same batch (`!existsAfter(usernames/…)`), so no
   orphaned claim remains.
 - **FR7 — `stations/{stationId}`:** create by a signed-in user with `ownerUid == auth.uid` and an
-  explicit `visibility` (no default). **Station ids are `<ownerUid>_<random>`** (the creator's uid,
-  then 8–64 alphanumerics — the same scheme as stream ids), enforced on the Firestore create and on
-  the RTDB mirror create (FR15), so nobody can squat an id another user's client will pick. The id
-  keeps the creator's uid after a transfer, and it appears in the public projection's id (like stream
-  ids in day-summary paths; a uid is not personal data under FR5); read by owner, members, admins, and (for `visibility ==
+  explicit `visibility` (no default). **Station ids are random** (20–64 letters and digits; generated with 20 characters of a 62-character alphabet from a cryptographic RNG), carrying no uid (ADR-009: public data holds no user ids; station ids appear in the public projection). The id is unguessable, so squatting a specific future id is infeasible; creating over an existing id is impossible (Firestore `create` needs `!exists`; the RTDB `stationAccess` create needs `!data.exists()` and `ownerUid == auth.uid`, written first by the established mirror-first flow); read by owner, members, admins, and (for `visibility ==
   institution`) members of the institution — *(institution membership check: Proposed, may be
   deferred to M2 if no institution exists yet)*; update metadata by owner and editors **except**
   `ownerUid`, `visibility`, and `publicPrecision`, which only the owner changes; delete only by the
@@ -55,9 +51,9 @@ query with real client identities. It does **not** deploy anything by itself: th
   (role `editor` | `viewer`); a member can delete their own membership (leave). A collection-group
   rule `match /{path=**}/members/{uid}` allows reading a membership only when `uid == auth.uid`
   (so "stations I belong to" is a constrained collection-group query).
-  **Transfer:** the transfer id is `{stationId}_{nonce}` (so it contains two `_`). The current owner creates
-  `ownershipTransfers/{stationId}_{nonce}` = `{stationId, from: auth.uid, to, createdAt}` and, in the
-  same batch, updates the station with `ownerUid: to` and `transferId: "{stationId}_{nonce}"`. The
+  **Transfer:** the transfer id is a random id. The current owner creates
+  `ownershipTransfers/{transferId}` = `{stationId, from: auth.uid, to, createdAt}` and, in the
+  same batch, updates the station with `ownerUid: to` and `transferId: {transferId}`. The
   station update is allowed only if `getAfter(ownershipTransfers/$(transferId))` has
   `from == resource.data.ownerUid`, `to == request.resource.data.ownerUid`, `stationId == stationId`,
   and `exists(users/$(to))`. Transfer documents are **immutable** (no update, no delete) — they are
@@ -76,7 +72,7 @@ query with real client identities. It does **not** deploy anything by itself: th
 - **FR11 — `devices/{id}`, `devices/{id}/calibrations/{v}`, `assemblies/{stationId}`,
   `streams/{id}`, `streams/{id}/sessions/{sid}`:** owner/editor of the linked station write (devices
   carry `stationId`, spec 0083 FR5, so the check is one `get()`); members and admins read. **Stream
-  ids are `<ownerUid>_<random>`:** a stream create is allowed only when the id prefix equals the
+  ids are random, with no uid** (they appear in anonymously readable paths: `statusPublic` and day summaries); a stream create is allowed only for the station owner or an editor, the stream's `ownerUid` equals the
   station's `ownerUid`, the referenced device's `stationId` equals the stream's station, and the
   device belongs to the station owner. Calibrations are append-only (a new version is a new document; no update/delete).
   Sessions: created and closed (set `endedAt` once) by owner/editor; fields otherwise immutable.
@@ -185,7 +181,7 @@ query with real client identities. It does **not** deploy anything by itself: th
   list query the agent performs (and those M2 is known to need: my stations, memberships
   (collection group), public stations, day summaries, minutes range). Includes negative tests:
   self-membership, self-admin, a second username for the same user, editor changing
-  `ownerUid`/`visibility`/`location`/members, claiming a stream id with another user's prefix,
+  `ownerUid`/`visibility`/`location`/members, creating over an existing station or stream id, a uid-prefixed id,
   creating a stream for a device of another owner, overwriting a minute, writing a partial or future
   minute, live entries outside `now ± 60s`, writing unknown keys, reading personal fields or minutes
   anonymously, former owner and removed editor writing minutes, a transfer without a matching

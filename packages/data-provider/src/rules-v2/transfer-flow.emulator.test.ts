@@ -13,6 +13,8 @@ import {
 } from "@firebase/rules-unit-testing";
 import { deleteDoc, doc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import {
+  NEW_STREAM_1,
+  NEW_STREAM_2,
   DEV_PRIV,
   SESSION_OPEN,
   ST_PRIV,
@@ -50,7 +52,7 @@ afterAll(async () => {
   await env?.cleanup();
 });
 
-const TID = `${ST_PRIV}_handover001`;
+const TID = "xferHandoverJ3kPq8WsRb5TnXc";
 
 async function transferToRecipient(): Promise<void> {
   // 1. Mirror first: the owner names the pending owner.
@@ -151,13 +153,13 @@ describeEmu("ownership transfer — former owner loses every right", () => {
   it("denies the former owner registering new streams for the station", async () => {
     await transferToRecipient();
     await assertFails(
-      dbAs(env, "owner").ref("streamStation/ownerA_afterxfer01").set(streamStation(ST_PRIV, now())),
+      dbAs(env, "owner").ref(`streamStation/${NEW_STREAM_2}`).set(streamStation(ST_PRIV, now())),
     );
   });
   it("denies the former owner re-running the transfer back to themselves", async () => {
     await transferToRecipient();
     const fs = fsAs(env, "owner");
-    const back = `${ST_PRIV}_takeback001`;
+    const back = "xferTakebackV6dLm2YzHe9QgAo";
     const b = writeBatch(fs);
     b.set(doc(fs, `ownershipTransfers/${back}`), transfer(back, ST_PRIV, UID.recipient, UID.owner));
     b.update(doc(fs, `stations/${ST_PRIV}`), { ownerUid: UID.owner, transferId: back });
@@ -189,13 +191,13 @@ describeEmu("ownership transfer — the new owner takes over", () => {
     );
     await assertSucceeds(writeMinute("agent", lastMinute() - 120_000));
   });
-  it("the new owner re-homes the device and starts a stream under their own prefix", async () => {
+  it("the new owner re-homes the device and starts a stream", async () => {
     await transferToRecipient();
     const fs = fsAs(env, "recipient");
     await assertSucceeds(
       setDoc(doc(fs, `devices/${DEV_PRIV}`), device(DEV_PRIV, ST_PRIV, UID.recipient)),
     );
-    const id = "recipientN_newstream01";
+    const id = NEW_STREAM_1;
     await assertSucceeds(
       dbAs(env, "recipient").ref(`streamStation/${id}`).set(streamStation(ST_PRIV, now())),
     );

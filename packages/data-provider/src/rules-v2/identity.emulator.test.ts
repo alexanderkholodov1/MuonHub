@@ -336,7 +336,7 @@ describeEmu("audit/{id}", () => {
       put("recipient", audit("a3", UID.recipient, "ownershipTransfer", OLD_TRANSFER, d)),
     );
     await assertFails(
-      put("owner", audit("a4", UID.owner, "ownershipTransfer", `${ST_PRIV}_nosuchxfer1`, d)),
+      put("owner", audit("a4", UID.owner, "ownershipTransfer", "xferNoSuchK9sTb4RqWe7YpLz", d)),
     );
   });
   it("adminChange: only an admin, matching the admins collection after the batch", async () => {

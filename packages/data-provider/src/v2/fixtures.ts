@@ -2,8 +2,8 @@
 import type { v2 } from "@muonhub/shared";
 
 export const OWNER = "ownerUid1";
-export const STATION_ID = `${OWNER}_station12345`;
-export const STREAM_ID = `${OWNER}_abcdefgh1234`;
+export const STATION_ID = "stationFixtureAb12Cd34Ef";
+export const STREAM_ID = "streamFixtureGh56Ij78Kl90";
 export const DEVICE_ID = "device-1";
 export const T0 = Date.UTC(2026, 9, 1, 0, 0, 0);
 
