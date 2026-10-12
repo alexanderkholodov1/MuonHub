@@ -85,8 +85,7 @@ export function createPressureSeries(config: PressureConfig, startMs = 0): Serie
       };
       return (t) => {
         const tide =
-          config.semidiurnalAmplitudeHpa *
-          Math.cos((2 * Math.PI * (t / HOUR_MS - phase)) / 12);
+          config.semidiurnalAmplitudeHpa * Math.cos((2 * Math.PI * (t / HOUR_MS - phase)) / 12);
         if (sigma === 0) return config.meanHpa + tide;
         const h = Math.max(0, (t - startMs) / HOUR_MS);
         const i = Math.floor(h);
@@ -164,7 +163,10 @@ export function createRateModel(config: RateModelConfig): Series {
     let r = config.baseRatePerS;
     if (beta !== 0 && pressure) r *= Math.exp((beta / 100) * (pressure(t) - p0));
     if (config.diurnal) {
-      r *= 1 + config.diurnal.amplitude * Math.cos(2 * Math.PI * (t / DAY_MS - config.diurnal.phaseHours / 24));
+      r *=
+        1 +
+        config.diurnal.amplitude *
+          Math.cos(2 * Math.PI * (t / DAY_MS - config.diurnal.phaseHours / 24));
     }
     if (config.forbush && config.forbush.length > 0) r *= forbushFactor(config.forbush, t);
     return Math.max(0, r);

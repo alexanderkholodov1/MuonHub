@@ -59,7 +59,9 @@ export class Rng {
 
   /** An independent stream derived from this stream's seed and a label (does not consume state). */
   fork(label: string): Rng {
-    return new Rng((Math.imul(this.seed ^ hashLabel(label), 0x9e3779b1) >>> 0) ^ hashLabel(label));
+    return new Rng(
+      ((Math.imul(this.seed ^ hashLabel(label), 0x9e3779b1) >>> 0) ^ hashLabel(label)) >>> 0,
+    );
   }
 
   nextUint32(): number {
@@ -132,7 +134,9 @@ export function erfc(x: number): number {
                       (-0.18628806 +
                         t *
                           (0.27886807 +
-                            t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))),
+                            t *
+                              (-1.13520398 +
+                                t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))),
     );
   return x >= 0 ? r : 2 - r;
 }

@@ -10,7 +10,7 @@
  */
 import { parseScenario, type DeviceConfig, type ScenarioConfig } from "./config.js";
 import { deviceElapsedMs, hostReceivedAt, wrapCounter } from "./clock.js";
-import { applyDeadTime, sampleNoiseAmplitude, sampleSignalAmplitude } from "./device.js";
+import { sampleNoiseAmplitude, sampleSignalAmplitude } from "./device.js";
 import { baseRate } from "./flux.js";
 import {
   createPressureSeries,
@@ -117,7 +117,9 @@ export function simulate(input: ScenarioConfig): SimulationResult {
   const rates = config.devices.map((d) =>
     createRateModel({
       baseRatePerS: baseRate(d.rate),
-      ...(config.betaPercentPerHpa !== undefined ? { betaPercentPerHpa: config.betaPercentPerHpa } : {}),
+      ...(config.betaPercentPerHpa !== undefined
+        ? { betaPercentPerHpa: config.betaPercentPerHpa }
+        : {}),
       p0Hpa: p0,
       pressure,
       ...(config.diurnal ? { diurnal: config.diurnal } : {}),
@@ -158,14 +160,28 @@ export function simulate(input: ScenarioConfig): SimulationResult {
       for (const t of poissonArrivals(arrivalsRng, singlesRate, start, end, step)) {
         singles.push({ t, groupId: nextGroup++, noise: false });
       }
-      own = mergeByTime(carried.map((a) => ({ ...a })), singles);
+      own = mergeByTime(
+        carried.map((a) => ({ ...a })),
+        singles,
+      );
     }
     signals.push(own);
   }
 
   // 2. Per-device detection.
   const devices = config.devices.map((device, i) =>
-    detectDevice(device, i, signals[i] ?? [], root, start, end, step, pressure, temperature, rates[i] ?? (() => 0)),
+    detectDevice(
+      device,
+      i,
+      signals[i] ?? [],
+      root,
+      start,
+      end,
+      step,
+      pressure,
+      temperature,
+      rates[i] ?? (() => 0),
+    ),
   );
 
   // 3. Hardware coincidence flags.
@@ -179,7 +195,8 @@ export function simulate(input: ScenarioConfig): SimulationResult {
         let j = 0;
         for (const e of own) {
           while (j < other.length && (other[j] ?? 0) < e.trueMs - halfWindowMs) j++;
-          if (j < other.length && Math.abs((other[j] ?? 0) - e.trueMs) <= halfWindowMs) e.coincidenceFlag = 1;
+          if (j < other.length && Math.abs((other[j] ?? 0) - e.trueMs) <= halfWindowMs)
+            e.coincidenceFlag = 1;
         }
       }
     }
@@ -237,11 +254,16 @@ function detectDevice(
   const gaps = [...(device.disruptions?.gaps ?? [])].sort((a, b) => a.startMs - b.startMs);
   const powerGaps = gaps.filter((g) => g.kind === "power");
   const usbGaps = gaps.filter((g) => g.kind === "usb");
-  const inside = (gs: typeof gaps, t: number): boolean => gs.some((g) => t >= g.startMs && t < g.endMs);
+  const inside = (gs: typeof gaps, t: number): boolean =>
+    gs.some((g) => t >= g.startMs && t < g.endMs);
 
   // Sessions: boundaries at explicit resets and at power gaps.
   const boundaries: { at: number; reason: "reset" | "powerLoss"; resume: number }[] = [
-    ...(device.disruptions?.resets ?? []).map((t) => ({ at: t, reason: "reset" as const, resume: t })),
+    ...(device.disruptions?.resets ?? []).map((t) => ({
+      at: t,
+      reason: "reset" as const,
+      resume: t,
+    })),
     ...powerGaps.map((g) => ({ at: g.startMs, reason: "powerLoss" as const, resume: g.endMs })),
   ]
     .filter((b) => b.at > start && b.at < end)
@@ -249,10 +271,20 @@ function detectDevice(
   const sessions: SessionTruth[] = [];
   let sessionStart = start;
   for (const b of boundaries) {
-    sessions.push({ index: sessions.length, startTrueMs: sessionStart, endTrueMs: b.at, endReason: b.reason });
+    sessions.push({
+      index: sessions.length,
+      startTrueMs: sessionStart,
+      endTrueMs: b.at,
+      endReason: b.reason,
+    });
     sessionStart = Math.min(end, b.resume);
   }
-  sessions.push({ index: sessions.length, startTrueMs: sessionStart, endTrueMs: end, endReason: "end" });
+  sessions.push({
+    index: sessions.length,
+    startTrueMs: sessionStart,
+    endTrueMs: end,
+    endReason: "end",
+  });
   const sessionOf = (t: number): number => {
     for (const s of sessions) if (t >= s.startTrueMs && t < s.endTrueMs) return s.index;
     return -1;
@@ -270,11 +302,24 @@ function detectDevice(
   let sessionReading = 0;
   for (const a of arrivals) {
     const amp = a.noise
-      ? sampleNoiseAmplitude(ampRng, device.noiseTriggers ?? { ratePerS: 0, meanAmplitude: 1 }, saturation)
+      ? sampleNoiseAmplitude(
+          ampRng,
+          device.noiseTriggers ?? { ratePerS: 0, meanAmplitude: 1 },
+          saturation,
+        )
       : sampleSignalAmplitude(ampRng, device.amplitude);
     const s = sessionOf(a.t);
     if (s < 0 || inside(powerGaps, a.t)) {
-      truth.push({ trueMs: a.t, amplitude: amp.value, noise: a.noise, saturated: amp.saturated, lost: false, off: true, undelivered: false, groupId: a.groupId });
+      truth.push({
+        trueMs: a.t,
+        amplitude: amp.value,
+        noise: a.noise,
+        saturated: amp.saturated,
+        lost: false,
+        off: true,
+        undelivered: false,
+        groupId: a.groupId,
+      });
       continue;
     }
     if (s !== current) {
@@ -308,7 +353,13 @@ function detectDevice(
       groupId: a.groupId,
       sessionIndex: s,
       eventId,
-      deviceMs: deviceElapsedMs(a.t, session?.startTrueMs ?? start, sessionReading, clock, clockRng),
+      deviceMs: deviceElapsedMs(
+        a.t,
+        session?.startTrueMs ?? start,
+        sessionReading,
+        clock,
+        clockRng,
+      ),
       cumulativeDeadMs: deadSoFar,
       pressureHpa: pressure(a.t),
       temperatureC: temperature(a.t),
@@ -318,7 +369,17 @@ function detectDevice(
     deadSoFar += tauMs;
   }
 
-  const intervals = buildIntervals(start, end, step, recorded, sessions, powerGaps, tauMs, pressure, rate);
+  const intervals = buildIntervals(
+    start,
+    end,
+    step,
+    recorded,
+    sessions,
+    powerGaps,
+    tauMs,
+    pressure,
+    rate,
+  );
   return {
     id: device.id,
     config: device,

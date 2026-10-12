@@ -56,7 +56,10 @@ export function encodeLines(
     const body = encoder.encode(line.text);
     switch (kind) {
       case "truncated":
-        out.push({ bytes: concat(body.subarray(0, Math.floor(body.length / 2)), term), hostMs: line.hostMs });
+        out.push({
+          bytes: concat(body.subarray(0, Math.floor(body.length / 2)), term),
+          hostMs: line.hostMs,
+        });
         break;
       case "otherTerminator":
         out.push({ bytes: concat(body, otherTerm), hostMs: line.hostMs });

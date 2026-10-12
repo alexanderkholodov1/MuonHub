@@ -26,9 +26,9 @@ export interface LineSource extends AsyncIterable<SourceLine> {
 export const SYNTHETIC_COMMENT = "# MuonHub virtual detector - synthetic data, not a real device";
 
 /** Device-type ids this package can render, taken from the v2 built-in device types. */
-export const RENDERABLE_DEVICE_TYPES: readonly string[] = v2.BUILTIN_DEVICE_TYPES.map((t) => t.id).filter(
-  (id) => id === "cosmicwatch-v3x" || id === "munra",
-);
+export const RENDERABLE_DEVICE_TYPES: readonly string[] = v2.BUILTIN_DEVICE_TYPES.map(
+  (t) => t.id,
+).filter((id) => id === "cosmicwatch-v3x" || id === "munra");
 
 /** Render every line a device delivers, in order, with host reception times. */
 export function renderDeviceLines(sim: SimulationResult, deviceIndex = 0): SourceLine[] {
@@ -55,7 +55,11 @@ export function renderDeviceLines(sim: SimulationResult, deviceIndex = 0): Sourc
       const e = dev.recorded[k];
       k++;
       if (!e || !e.delivered || inUsbGap(e.trueMs)) continue;
-      push(cfg.deviceType === "munra" ? renderMunraLine(e, cfg) : renderV3xLine(e, cfg), e.trueMs, true);
+      push(
+        cfg.deviceType === "munra" ? renderMunraLine(e, cfg) : renderV3xLine(e, cfg),
+        e.trueMs,
+        true,
+      );
     }
   }
   const malformed = new Map<number, MalformedKind>();
@@ -111,7 +115,8 @@ export function realTimePacing(speed = 1): Pacing {
 export function createVirtualDetector(config: VirtualDetectorConfig): VirtualDetector {
   const scenario = parseScenario(config.scenario);
   if (config.pacing) PacingSchema.parse(config.pacing);
-  const index = config.deviceId === undefined ? 0 : scenario.devices.findIndex((d) => d.id === config.deviceId);
+  const index =
+    config.deviceId === undefined ? 0 : scenario.devices.findIndex((d) => d.id === config.deviceId);
   if (index < 0) throw new RangeError(`unknown device id ${config.deviceId ?? ""}`);
   const deviceId = scenario.devices[index]?.id ?? "";
   let closed = false;

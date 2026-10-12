@@ -18,7 +18,10 @@ export function expectedAccidentalRate(
  * upper device (index `upper`) and the next device, counted among the upper device's true signal
  * events (FR9: fraction of the upper device's true events that also cross the lower one).
  */
-export function trueCoincidenceCount(sim: SimulationResult, upper = 0): { upperEvents: number; shared: number } {
+export function trueCoincidenceCount(
+  sim: SimulationResult,
+  upper = 0,
+): { upperEvents: number; shared: number } {
   const top = sim.devices[upper]?.truth ?? [];
   const lowerIds = new Set<number>();
   for (const e of sim.devices[upper + 1]?.truth ?? []) if (!e.noise) lowerIds.add(e.groupId);

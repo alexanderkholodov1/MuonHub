@@ -97,7 +97,9 @@ export const DeviceConfigSchema = z.strictObject({
         .optional(),
       resets: z.array(Finite).optional(),
       malformed: z
-        .array(z.strictObject({ lineIndex: z.number().int().nonnegative(), kind: MalformedKindSchema }))
+        .array(
+          z.strictObject({ lineIndex: z.number().int().nonnegative(), kind: MalformedKindSchema }),
+        )
         .optional(),
     })
     .optional(),
@@ -118,7 +120,9 @@ export const ScenarioConfigSchema = z
     p0Hpa: Positive.optional(),
     diurnal: z.strictObject({ amplitude: Finite, phaseHours: Finite }).optional(),
     forbush: z
-      .array(z.strictObject({ onsetMs: Finite, depthPercent: NonNegative, recoveryHours: Positive }))
+      .array(
+        z.strictObject({ onsetMs: Finite, depthPercent: NonNegative, recoveryHours: Positive }),
+      )
       .optional(),
     temperature: z
       .strictObject({

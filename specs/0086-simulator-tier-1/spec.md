@@ -159,40 +159,40 @@ The Moyal density `f(λ) = exp(−(λ + e^(−λ))/2)/√(2π)` with `λ = (x �
 
 ## Acceptance criteria (verifiable)
 
-- [ ] CA1: same seed + config → identical output (`toEqual` on 10⁵ lines across two runs; a stored
+- [x] CA1: same seed + config → identical output (`toEqual` on 10⁵ lines across two runs; a stored
   hash of a reference scenario matches in CI).
-- [ ] CA2: Poisson arrivals — for a constant true rate, the measured rate over 10⁶ events is within
+- [x] CA2: Poisson arrivals — for a constant true rate, the measured rate over 10⁶ events is within
   3σ of the input; the inter-arrival distribution passes a KS test vs exponential (p > 0.01).
-- [ ] CA3: dead time — for n·τ ∈ {0.001, 0.05, 0.2} the measured **loss fraction** (n − m)/n is within
+- [x] CA3: dead time — for n·τ ∈ {0.001, 0.05, 0.2} the measured **loss fraction** (n − m)/n is within
   3σ of the expected nτ/(1 + nτ), with N = 10⁷ true events per case (≈ 10⁴ lost events at nτ = 0.001,
   so the case actually tests the loss); the cumulative dead-time column divided by elapsed device time
   equals the ground-truth dead fraction within 3σ.
-- [ ] CA4: pressure modulation — with a fixed seed and a fixed pressure series (±1.5 hPa semidiurnal tide
+- [x] CA4: pressure modulation — with a fixed seed and a fixed pressure series (±1.5 hPa semidiurnal tide
   plus synoptic noise σ = 1 hPa), fitting `ln R` vs `P` on hourly bins of a 60-day generated series
   recovers the input β within 3 σ_β (σ_β from the fit); the same series is shared with spec 0085's β
   tests.
-- [ ] CA4b: base rate — `R = A · I_v · π/2`: A = 25 cm², I_v = 0.0070 cm⁻² s⁻¹ sr⁻¹ → 0.2749 s⁻¹
+- [x] CA4b: base rate — `R = A · I_v · π/2`: A = 25 cm², I_v = 0.0070 cm⁻² s⁻¹ sr⁻¹ → 0.2749 s⁻¹
   (±0.1 %), and a generated run reproduces it within 3σ.
-- [ ] CA5: amplitudes — with **noise = 0** (Gaussian noise convolved with the asymmetric Moyal shifts the
+- [x] CA5: amplitudes — with **noise = 0** (Gaussian noise convolved with the asymmetric Moyal shifts the
   mode), a local fit of the peak of 10⁶ events recovers the configured MPV within 2 %; the sampler
   matches the Moyal CDF (KS test, p > 0.01); no amplitude exceeds the saturation level; saturated
   events are flagged.
-- [ ] CA6: coincidences — for a stacked pair, the true-coincidence count in ground truth matches the
+- [x] CA6: coincidences — for a stacked pair, the true-coincidence count in ground truth matches the
   configured fraction (as defined in FR9) within 3σ; accidentals match `2·τ_c·R₁·R₂` (half-window τ_c,
   recorded singles rates) within 3σ in a run with zero true fraction and **raised rates** —
   R₁ = R₂ = 100 s⁻¹, τ_c = 1 ms, 10⁴ s → expected 20 s⁻¹ (2 × 10⁵ accidentals).
-- [ ] CA7: clock — a 32-bit `millis` counter rolls over at 4 294 967 296 ms in a scenario starting
+- [x] CA7: clock — a 32-bit `millis` counter rolls over at 4 294 967 296 ms in a scenario starting
   near the limit; drift of 50 ppm produces a 4.32 s offset per day (±1 %).
-- [ ] CA8: disruptions — a scheduled gap yields no lines in its window; a reset makes the event
+- [x] CA8: disruptions — a scheduled gap yields no lines in its window; a reset makes the event
   counter, device clock, and dead-time counter restart at 0; concatenated, truncated, CRLF, and
   invalid-UTF-8 cases appear exactly as configured.
-- [ ] CA9: rendering — rendered CosmicWatch v3X and MuNRa lines round-trip through a reference parser
+- [x] CA9: rendering — rendered CosmicWatch v3X and MuNRa lines round-trip through a reference parser
   in the test suite (field by field), and the MuNRa header line equals the one in SERIAL-FORMATS §2.
-- [ ] CA10: `createVirtualDetector` in paced mode with an injected fake clock emits lines at the
+- [x] CA10: `createVirtualDetector` in paced mode with an injected fake clock emits lines at the
   expected host times (±1 ms) and stops cleanly on `close()`.
-- [ ] CA11: coverage ≥ 80 % (statements, branches, functions, lines).
+- [x] CA11: coverage ≥ 80 % (statements, branches, functions, lines).
 - [ ] CA12: typecheck · lint · build · test green; `format:check` green.
-- [ ] CA13: only `packages/simulator/**`, the workspace wiring (`pnpm-lock.yaml`), and the documents
+- [x] CA13: only `packages/simulator/**`, the workspace wiring (`pnpm-lock.yaml`), and the documents
   listed in the tasks are touched.
 
 ## Validation in practice
@@ -215,18 +215,18 @@ The Moyal density `f(λ) = exp(−(λ + e^(−λ))/2)/√(2π)` with `λ = (x �
 
 ## Tasks
 
-- [ ] T1: package scaffold (`packages/simulator`), catalog versions, tsconfig reference.
-- [ ] T2: `rng.ts` with distributions and known-answer tests (CA1, CA2).
-- [ ] T3: `flux.ts`, `modulation.ts` (CA4).
-- [ ] T4: `device.ts` (dead time, amplitudes, noise, saturation) (CA3, CA5).
-- [ ] T5: `clock.ts`, `disruptions.ts` (CA7, CA8).
-- [ ] T6: `assembly.ts` (CA6).
-- [ ] T7: renderers and ground truth (CA9).
-- [ ] T8: `line-source.ts`, presets (CA10).
+- [x] T1: package scaffold (`packages/simulator`), catalog versions, tsconfig reference.
+- [x] T2: `rng.ts` with distributions and known-answer tests (CA1, CA2).
+- [x] T3: `flux.ts`, `modulation.ts` (CA4).
+- [x] T4: `device.ts` (dead time, amplitudes, noise, saturation) (CA3, CA5).
+- [x] T5: `clock.ts`, `disruptions.ts` (CA7, CA8).
+- [x] T6: `assembly.ts` (CA6).
+- [x] T7: renderers and ground truth (CA9).
+- [x] T8: `line-source.ts`, presets (CA10).
 - [ ] T9: `physicist` review of models, defaults, and known-answer tolerances.
 - [ ] T10: update the affected documentation (`docs/architecture/ARCHITECTURE.md` containers table,
   README repository structure, `docs/science/RESEARCH-NOTES-2026-10.md` tier-1 status).
-- [ ] T11: changelog fragment in `changelog.d/`.
+- [x] T11: changelog fragment in `changelog.d/`.
 
 **Proposed (not yet decided):** the PRNG algorithm; the default β (−0.12 %/hPa) and noise rates in
 the presets; the default hardware coincidence window (≈ 30 µs); the default MuNRa dead-time

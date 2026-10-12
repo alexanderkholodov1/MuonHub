@@ -33,7 +33,13 @@ function munraDevice(id: string, overrides: Partial<DeviceConfig> = {}): DeviceC
     deviceType: "munra",
     // 2.3 s⁻¹ of triggers plus 0.1 s⁻¹ of noise triggers ≈ 2.4 s⁻¹ total trigger rate.
     rate: { kind: "totalTriggerRate", ratePerS: 2.3 },
-    amplitude: { mpv: 180, width: 25, unit: "mV", noiseSigma: 5, saturation: { value: 3300, unit: "mV" } },
+    amplitude: {
+      mpv: 180,
+      width: 25,
+      unit: "mV",
+      noiseSigma: 5,
+      saturation: { value: 3300, unit: "mV" },
+    },
     noiseTriggers: { ratePerS: 0.1, meanAmplitude: 40 },
     deadTimeUs: 200,
     clock: { offsetMs: 0, driftPpm: 20, jitterMs: 0.5 },
@@ -98,7 +104,9 @@ export function preset(name: PresetName, options: PresetOptions = {}): ScenarioC
     }
     case "forbush":
       return {
-        ...base({ ...options, durationMs: options.durationMs ?? 72 * HOUR }, [munraDevice("munra-1")]),
+        ...base({ ...options, durationMs: options.durationMs ?? 72 * HOUR }, [
+          munraDevice("munra-1"),
+        ]),
         forbush: [{ onsetMs: start + 6 * HOUR, depthPercent: 3, recoveryHours: 24 }],
       };
   }
