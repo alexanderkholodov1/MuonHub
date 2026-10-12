@@ -63,9 +63,7 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 - Command: `pnpm --filter @muonhub/data-provider test:emulator` (starts
   `--only auth,firestore,database`). It runs the security-rules v2 matrix
   (`packages/data-provider/src/rules-v2/`, spec 0084) and the v2 data-layer tests.
-- The first-attempt emulator tests (`*.legacy-emulator.test.ts`) were written for the first-attempt
-  RTDB rules that the v2 rules replaced; they are excluded from every run and are removed with the
-  first-attempt provider in M1 step 7. Cloud Storage is not part of the architecture (ADR-005): its
+- Cloud Storage is not part of the architecture (ADR-005): its
   emulator and rules were removed.
 
 ## Keys and secrets

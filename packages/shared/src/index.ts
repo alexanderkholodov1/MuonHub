@@ -9,9 +9,5 @@
  */
 export const MUONHUB_VERSION = "6.0.0-alpha.1.6" as const;
 
-export * from "./schemas/index.js";
-export * from "./constants.js";
-export * from "./calibration.js";
-
-/** Contracts v2 (spec 0083). The unprefixed exports above are first-attempt contracts, removed in M1 step 7. */
+/** Contracts (spec 0083), exported as the `v2` namespace. */
 export * as v2 from "./v2/index.js";

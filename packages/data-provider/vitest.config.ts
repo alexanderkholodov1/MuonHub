@@ -13,13 +13,6 @@ export default defineConfig({
   test: {
     environment: "node",
     passWithNoTests: true,
-    exclude: [
-      ...configDefaults.exclude,
-      "**/dist/**",
-      "**/*.emulator.test.ts",
-      // First-attempt emulator tests (first-attempt RTDB rules, replaced by spec 0084); they are
-      // removed with the first-attempt provider in M1 step 7.
-      "**/*.legacy-emulator.test.ts",
-    ],
+    exclude: [...configDefaults.exclude, "**/dist/**", "**/*.emulator.test.ts"],
   },
 });

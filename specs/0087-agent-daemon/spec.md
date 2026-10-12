@@ -348,5 +348,5 @@ contracts (6.x); auto-update (Proposed for M4).
 - [x] T4: serial source with reconnect; clock provenance.
 - [x] T5: panel and setup wizard; raw mirror; capture tool; v5 bridge.
 - [x] T6: systemd unit and installer; installation guide in `docs/operations/`.
-- [x] T7: remove the first-attempt agent core; update `apps/agent/README.md`. (`packages/physics/src/legacy` is removed too. The first-attempt v1 contracts in `packages/shared` and the first-attempt provider in `packages/data-provider` are no longer imported by any package and remain to be deleted by the owner of those packages.)
+- [x] T7: remove the first-attempt agent core; update `apps/agent/README.md`. (`packages/physics/src/legacy` is removed too. The first-attempt v1 contracts in `packages/shared` and the first-attempt provider in `packages/data-provider` are removed too.)
 - [x] T8: changelog fragment in `changelog.d/`.

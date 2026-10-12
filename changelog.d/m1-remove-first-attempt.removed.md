@@ -1,0 +1,1 @@
+- Removed the first-attempt v1 contracts (`@muonhub/shared`, non-v2), the first-attempt Firebase provider and its serializer and legacy emulator tests (`@muonhub/data-provider`, non-v2), and the unused `firebase-admin` dependency; nothing imported them since the v2 rebuild.
