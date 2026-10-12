@@ -44,12 +44,15 @@ export const FirebaseConfigSchema = z.strictObject({
     .optional(),
 });
 
-/** v5 site origins allowed to open the compatibility bridge (Proposed list, spec 0087 FR19). */
+/**
+ * v5 site origins allowed to open the compatibility bridge (spec 0087 FR19). `"null"` (file:// pages
+ * and sandboxed frames, which any web page can produce) is deliberately NOT here: an administrator
+ * who needs it adds it explicitly to `bridge.allowedOrigins`.
+ */
 export const DEFAULT_BRIDGE_ORIGINS: readonly string[] = [
   "https://munhub-lab.web.app",
   "https://munhub-1.web.app",
   "https://munhub-1.firebaseapp.com",
-  "null",
 ];
 
 export const AgentConfigSchema = z.strictObject({

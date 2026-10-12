@@ -45,7 +45,7 @@ async function daemonWith(
       bridge: {
         enabled: opts.bridge ?? true,
         port: opts.bridgePort ?? 0,
-        allowedOrigins: ["https://munhub-lab.web.app", "null"],
+        allowedOrigins: ["https://munhub-lab.web.app"],
       },
       mirror: { enabled: opts.mirror ?? true },
     },
@@ -60,9 +60,12 @@ async function daemonWith(
   return { daemon, h, factory, src: factory.sources[0]!, dir, token };
 }
 
-function ws(url: string, origin?: string): Promise<{ socket: WebSocket; messages: unknown[] }> {
+function ws(
+  url: string,
+  origin: string = "https://munhub-lab.web.app",
+): Promise<{ socket: WebSocket; messages: unknown[] }> {
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket(url, origin === undefined ? {} : { origin });
+    const socket = new WebSocket(url, { origin });
     const messages: unknown[] = [];
     socket.on("message", (d) => messages.push(JSON.parse(String(d))));
     socket.on("open", () => resolve({ socket, messages }));

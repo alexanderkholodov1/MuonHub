@@ -3,12 +3,18 @@
 #
 # Installs, as root:
 #   - the official Node.js runtime bundle, after verifying its SHA-256 checksum against the
-#     SHASUMS256.txt published next to it (and its GPG signature when `gpg` is available);
+#     SHASUMS256.txt published next to it and, when `gpg` is installed, that file's GPG signature
+#     (a failed verification stops the install; import the Node release keys first, see below);
 #   - the agent bundle (a tarball made by `pnpm deploy`, see docs/operations/AGENT.md);
 #   - the `muonhub` system user (group dialout), the directories, the hardened systemd unit.
 #
 # Usage:
-#   sudo ./install.sh --bundle agent-bundle.tar.gz --serial /dev/serial/by-id/usb-... [--node-version 24.x.y]
+#   sudo ./install.sh --bundle agent-bundle.tar.gz --serial /dev/serial/by-id/usb-... \
+#        [--node-version 24.x.y] [--bundle-sha256 <hex>] [--skip-gpg]
+#
+# --bundle-sha256  refuse the agent bundle unless its SHA-256 matches (record it when you build it).
+# --skip-gpg       explicit opt-out of the GPG check (the SHA-256 check always runs).
+# Node release keys: https://github.com/nodejs/release-keys (import them with gpg before installing).
 #
 # Nothing is started until a configuration with a real serial path exists.
 set -euo pipefail
@@ -16,6 +22,8 @@ set -euo pipefail
 NODE_VERSION=""
 BUNDLE=""
 SERIAL=""
+BUNDLE_SHA256=""
+SKIP_GPG=0
 PREFIX=/opt/muonhub
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -26,7 +34,9 @@ while [[ $# -gt 0 ]]; do
     --node-version) NODE_VERSION="${2:-}"; shift 2 ;;
     --bundle) BUNDLE="${2:-}"; shift 2 ;;
     --serial) SERIAL="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    --bundle-sha256) BUNDLE_SHA256="${2:-}"; shift 2 ;;
+    --skip-gpg) SKIP_GPG=1; shift ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
 done
@@ -37,6 +47,12 @@ command -v systemctl >/dev/null || die "systemd is required"
 command -v curl >/dev/null || die "curl is required (apt install curl)"
 command -v sha256sum >/dev/null || die "sha256sum is required"
 command -v xz >/dev/null || die "xz is required (apt install xz-utils)"
+if [[ -n "$SERIAL" ]]; then
+  [[ "$SERIAL" =~ ^/dev/serial/by-id/[A-Za-z0-9._:+-]+$ ]] || die "--serial must match ^/dev/serial/by-id/[A-Za-z0-9._:+-]+$ (got '$SERIAL')"
+fi
+if [[ -n "$BUNDLE_SHA256" ]]; then
+  [[ "$BUNDLE_SHA256" =~ ^[0-9a-fA-F]{64}$ ]] || die "--bundle-sha256 must be 64 hex digits"
+fi
 [[ -n "$BUNDLE" && -f "$BUNDLE" ]] || die "--bundle <agent tarball> is required (see docs/operations/AGENT.md)"
 if [[ -r /etc/os-release ]] && ! grep -qi '^ID=ubuntu' /etc/os-release; then
   echo "install: warning: this is tested on Ubuntu only" >&2
@@ -57,16 +73,19 @@ TARBALL="node-v${NODE_VERSION}-linux-x64.tar.xz"
 echo "install: downloading Node.js v${NODE_VERSION}"
 curl -fsSL "$BASE/v${NODE_VERSION}/${TARBALL}" -o "$TMP/${TARBALL}"
 curl -fsSL "$BASE/v${NODE_VERSION}/SHASUMS256.txt" -o "$TMP/SHASUMS256.txt"
-if command -v gpg >/dev/null && curl -fsSL "$BASE/v${NODE_VERSION}/SHASUMS256.txt.sig" -o "$TMP/SHASUMS256.txt.sig" 2>/dev/null; then
-  if gpg --verify "$TMP/SHASUMS256.txt.sig" "$TMP/SHASUMS256.txt" >/dev/null 2>&1; then
-    echo "install: SHASUMS256.txt signature verified"
-  else
-    echo "install: note: could not verify the SHASUMS256.txt signature (Node release keys not imported); continuing with the checksum only" >&2
-  fi
+if [[ $SKIP_GPG -eq 0 ]] && command -v gpg >/dev/null; then
+  curl -fsSL "$BASE/v${NODE_VERSION}/SHASUMS256.txt.sig" -o "$TMP/SHASUMS256.txt.sig" \
+    || die "could not download SHASUMS256.txt.sig (use --skip-gpg to rely on the checksum only)"
+  gpg --verify "$TMP/SHASUMS256.txt.sig" "$TMP/SHASUMS256.txt" >/dev/null 2>&1 \
+    || die "GPG verification of SHASUMS256.txt failed (are the Node release keys imported? https://github.com/nodejs/release-keys; or pass --skip-gpg)"
+  echo "install: SHASUMS256.txt signature verified"
+elif [[ $SKIP_GPG -eq 0 ]]; then
+  echo "install: note: gpg is not installed; the Node.js download is verified by SHA-256 only" >&2
 fi
 ( cd "$TMP" && grep " ${TARBALL}\$" SHASUMS256.txt | sha256sum -c - ) || die "SHA-256 checksum of ${TARBALL} does not match SHASUMS256.txt; refusing to install"
 mkdir -p "$PREFIX"
-tar -xJf "$TMP/${TARBALL}" -C "$PREFIX"
+tar --no-same-owner -xJf "$TMP/${TARBALL}" -C "$PREFIX"
+chown -R root:root "$PREFIX/node-v${NODE_VERSION}-linux-x64"
 ln -sfn "$PREFIX/node-v${NODE_VERSION}-linux-x64" "$PREFIX/node"
 "$PREFIX/node/bin/node" --version
 
@@ -79,9 +98,12 @@ install -d -m 0755 "$PREFIX/agent"
 install -d -o root -g muonhub -m 0750 /etc/muonhub
 
 # --- agent bundle --------------------------------------------------------------------------------
+if [[ -n "$BUNDLE_SHA256" ]]; then
+  echo "${BUNDLE_SHA256}  ${BUNDLE}" | sha256sum -c - >/dev/null || die "SHA-256 of the agent bundle does not match --bundle-sha256; refusing to install"
+fi
 rm -rf "$PREFIX/agent.new"
 mkdir -p "$PREFIX/agent.new"
-tar -xzf "$BUNDLE" -C "$PREFIX/agent.new" --strip-components=1
+tar --no-same-owner -xzf "$BUNDLE" -C "$PREFIX/agent.new" --strip-components=1
 [[ -f "$PREFIX/agent.new/dist/cli.js" ]] || die "the bundle has no dist/cli.js"
 rm -rf "$PREFIX/agent.old"
 [[ -d "$PREFIX/agent" ]] && mv "$PREFIX/agent" "$PREFIX/agent.old"
@@ -104,8 +126,10 @@ exec /opt/muonhub/node/bin/node /opt/muonhub/agent/dist/cli.js "$@"
 WRAP
 chmod 0755 /usr/local/bin/muonhub-agent
 install -m 0644 "$HERE/muonhub-agent.service" /etc/systemd/system/muonhub-agent.service
+install -m 0644 "$HERE/muonhub-agent-panel.socket" /etc/systemd/system/muonhub-agent-panel.socket
 systemctl daemon-reload
-systemctl enable muonhub-agent.service
+systemctl enable muonhub-agent-panel.socket muonhub-agent.service
+systemctl start muonhub-agent-panel.socket
 
 if grep -q REPLACE /etc/muonhub/agent.json; then
   echo "install: the configuration still has REPLACE placeholders; the service was enabled but NOT started."

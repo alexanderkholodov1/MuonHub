@@ -5,6 +5,9 @@ Description=MuonHub agent (cosmic-ray detector daemon)
 Documentation=https://github.com/alexanderkholodov/MuonHub/blob/main/docs/operations/AGENT.md
 After=network-online.target time-sync.target
 Wants=network-online.target
+# The panel port is held by the socket unit so it survives restarts (see muonhub-agent-panel.socket).
+Requires=muonhub-agent-panel.socket
+After=muonhub-agent-panel.socket
 # Never give up after repeated quick failures: a detector that must record 24/7 comes back by itself.
 StartLimitIntervalSec=0
 
@@ -23,7 +26,8 @@ Environment=NODE_ENV=production
 # State: /var/lib/muonhub (SQLite, credential file, panel token, raw logs) - private to the service.
 StateDirectory=muonhub
 StateDirectoryMode=0700
-# Runtime: /run/muonhub (the raw mirror socket raw.sock, mode 0660, group muonhub).
+# Runtime: /run/muonhub (0750, group muonhub): the raw mirror socket raw.sock and the control socket
+# control.sock used by `muonhub-agent status` (both mode 0660).
 RuntimeDirectory=muonhub
 RuntimeDirectoryMode=0750
 UMask=0077
@@ -47,6 +51,13 @@ ProtectHostname=yes
 RestrictNamespaces=yes
 RestrictRealtime=yes
 LockPersonality=yes
+RestrictSUIDSGID=yes
+ProtectProc=invisible
+ProcSubset=pid
+PrivateIPC=yes
+RemoveIPC=yes
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
 SystemCallArchitectures=native
 # MemoryDenyWriteExecute is NOT set: V8's JIT needs writable+executable memory.
 

@@ -13,7 +13,8 @@ Spec: [`specs/0087-agent-daemon/spec.md`](../../specs/0087-agent-daemon/spec.md)
 | Agent code | `/opt/muonhub/agent` |
 | Configuration | `/etc/muonhub/agent.json` (root:muonhub, 0640) |
 | State (private, 0700) | `/var/lib/muonhub`: `agent.db` (SQLite, all raw lines), `credentials` (refresh token, 0600), `panel-token` (0600), `binding.json`, `raw/*.log` |
-| Runtime | `/run/muonhub/raw.sock` (raw mirror, 0660, group `muonhub`) |
+| Runtime (0750, group `muonhub`) | `/run/muonhub/raw.sock` (raw mirror) and `control.sock` (used by `muonhub-agent status`), both 0660 |
+| Panel port | `muonhub-agent-panel.socket` holds `127.0.0.1:8787` and passes it to the daemon (socket activation), so the port stays reserved across restarts |
 | Command | `/usr/local/bin/muonhub-agent` |
 
 ## Install (Ubuntu x64)
@@ -31,11 +32,16 @@ Copy `agent-bundle.tar.gz` and `apps/agent/deploy/` to the target and run:
 ```bash
 sudo ./deploy/install.sh --bundle agent-bundle.tar.gz \
      --serial /dev/serial/by-id/usb-...      # stable path of the detector
+     [--bundle-sha256 <hex>]                  # refuse the bundle unless this SHA-256 matches
 ```
 
+`--serial` must match `^/dev/serial/by-id/[A-Za-z0-9._:+-]+$`. Record the bundle hash when you build it
+(`sha256sum agent-bundle.tar.gz`) and pass it with `--bundle-sha256` when the file travels.
+
 The installer downloads the Node.js 24 bundle and **refuses to continue unless its SHA-256 matches the
-published `SHASUMS256.txt`** (it also checks the GPG signature when the Node release keys are
-present), creates the `muonhub` user (group `dialout`), installs the hardened unit, and starts the
+published `SHASUMS256.txt`** and, when `gpg` is installed, **stops if the GPG signature of that file cannot be verified**
+(import the [Node release keys](https://github.com/nodejs/release-keys) first; `--skip-gpg` is an
+explicit opt-out). It extracts the runtime without the archive's owners and makes it `root:root`, creates the `muonhub` user (group `dialout`), installs the hardened unit, and starts the
 service once `/etc/muonhub/agent.json` has no `REPLACE` placeholders left. Find the serial path with
 `ls -l /dev/serial/by-id/`. Never configure `/dev/ttyACM0`: the number changes on replug.
 
@@ -48,8 +54,17 @@ is set.
 
 ```bash
 sudo muonhub-agent panel-url        # prints http://127.0.0.1:8787/auth?token=...
+muonhub-agent status                # status JSON over /run/muonhub/control.sock (root or group muonhub)
 ssh -L 8787:localhost:8787 <host>   # from your laptop, then open the printed address
 ```
+
+**Panel port protection.** The installer enables `muonhub-agent-panel.socket`; systemd keeps
+`127.0.0.1:8787` bound and passes it to the daemon, so another local user cannot take the port while
+the daemon restarts and collect the token. If you change `panel.port`, edit `ListenStream` in the
+socket unit as well. Without systemd (development), `panel-url` verifies through `/proc` that the
+process listening on the port runs as `muonhub` (or is systemd) and refuses to print the token
+otherwise; `--skip-listener-check` disables this for a dev run. A wrong token costs the caller a
+short delay; there is no lockout, so nobody can lock the administrator out.
 
 The token is exchanged once for a session cookie and disappears from the address bar. It is never
 written to the journal; do not share the URL. In **Setup**: sign in, pick or create a station
@@ -87,7 +102,7 @@ v5 bridge), restarts.
 | Parked items (panel > Outbox, alarm after 1 h) | The backend rejected a write with a valid session (permission, validation, conflict). Never retried blindly, never dropped, does not block later items. | Read the reason; fix rights/data; **Retry** in the panel or `sudo -u muonhub muonhub-agent outbox retry`. **Export** as JSON lines with `outbox export file.jsonl`. |
 | "disk low" | Free space under 2 GB (configurable). | Free space. At 200 MB the session ends with `storageError` and acquisition stops cleanly (no restart loop); it resumes when space is available again. Raw data is never deleted by the agent. |
 | "device silent" | Port open, nothing arriving. | Check the detector power and cable; the agent reopens the port by itself. |
-| "v5 bridge port busy" / panel port busy | Another process holds 8765 / 8787 (for example the old Python bridge). Recording is unaffected. | Stop the other process; the agent retries every 10 s. |
+| "v5 bridge port busy" / panel port busy | Another process holds 8765 (for example the old Python bridge), or 8787 in a run without the socket unit. Recording is unaffected. | Stop the other process; the agent retries every 10 s. |
 | Machine rebooted, clock not yet synchronized | Minutes are **held** until `timedatectl` reports `NTPSynchronized=yes` (up to 10 min); after that they are produced with `timeProvenance.source: "none"`, never labelled `ntp`. | Check NTP (`timedatectl`, `chronyc tracking`). |
 | Process killed or power cut | On start the open session is closed (`powerLoss` if the last raw line predates the boot, otherwise `unknown`), the minute that was only in memory is counted as discarded, and the hour summary is rebuilt from the minutes stored locally. Raw lines remain. | None. |
 
@@ -116,7 +131,7 @@ raw bytes as a test fixture. It refuses to run while the daemon holds the same p
 For the period until the M5 cutover the agent can serve the v5 website: set
 `"bridge": {"enabled": true, "port": 8765}`. It speaks exactly the v5 protocol
 (`bridge_info`, one `serial_data` per raw line, `ping`/`pong`, `status`), listens on `127.0.0.1` only,
-checks `Host` and `Origin` (allowlist `bridge.allowedOrigins`), accepts only `ping` and `status`, caps
+checks `Host` and `Origin` (allowlist `bridge.allowedOrigins`; a missing `Origin` is refused and `"null"` is not allowed unless you add it explicitly), accepts only `ping` and `status`, caps
 frames at 4 KB and clients at 4, and disconnects slow clients. Stop the old Python bridge first: both
 cannot hold port 8765.
 

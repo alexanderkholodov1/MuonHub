@@ -1,0 +1,16 @@
+# MuonHub agent - panel listening socket (spec 0087 FR15).
+# systemd, not the daemon, owns 127.0.0.1:8787: the port stays reserved across daemon restarts and
+# crashes, so no other local user can bind it and capture the panel token. The daemon receives the
+# listening descriptor (LISTEN_FDS/LISTEN_PID, fd 3). Installed to /etc/systemd/system/.
+# If you change panel.port in /etc/muonhub/agent.json, change ListenStream here too.
+[Unit]
+Description=MuonHub agent panel socket (127.0.0.1 only)
+
+[Socket]
+ListenStream=127.0.0.1:8787
+FreeBind=no
+Accept=no
+Service=muonhub-agent.service
+
+[Install]
+WantedBy=sockets.target

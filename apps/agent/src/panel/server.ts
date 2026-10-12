@@ -21,6 +21,10 @@ const COOKIE = "mh_session";
 export interface PanelDeps {
   port: number;
   host?: string;
+  /** Listening socket passed by systemd (socket activation); when set, `port`/`host` are not bound. */
+  listenFd?: number | null;
+  /** Delay before answering a wrong token, per connection (default 500 ms). No global lockout. */
+  failDelayMs?: number;
   token: string;
   reporter: Reporter;
   status: () => AgentStatus;
@@ -50,7 +54,6 @@ export class PanelServer {
   private retry: NodeJS.Timeout | null = null;
   private stopped = false;
   private readonly sessions = new Map<string, Session>();
-  private failures: number[] = [];
   state: PanelState = "off";
 
   constructor(private readonly d: PanelDeps) {}
@@ -87,11 +90,16 @@ export class PanelServer {
       );
       this.scheduleRetry();
     });
-    server.listen(this.d.port, this.d.host ?? "127.0.0.1", () => {
+    const onListening = (): void => {
       this.server = server;
       this.state = "listening";
       this.d.reporter.clear("panel-port-busy");
-    });
+    };
+    if (this.d.listenFd !== undefined && this.d.listenFd !== null) {
+      server.listen({ fd: this.d.listenFd }, onListening);
+    } else {
+      server.listen(this.d.port, this.d.host ?? "127.0.0.1", onListening);
+    }
   }
 
   private scheduleRetry(): void {
@@ -189,7 +197,7 @@ export class PanelServer {
 
     // Token exchange: the only route that works without a session.
     if (url.pathname === "/auth" && method === "GET") {
-      this.exchange(url, res);
+      await this.exchange(url, res);
       return;
     }
     const session = this.cookieSession(req);
@@ -231,16 +239,13 @@ export class PanelServer {
     await this.get(url.pathname, session.s, res);
   }
 
-  private exchange(url: URL, res: ServerResponse): void {
+  private async exchange(url: URL, res: ServerResponse): Promise<void> {
     const now = (this.d.now ?? Date.now)();
-    this.failures = this.failures.filter((t) => now - t < 600_000);
-    if (this.failures.length >= 20) {
-      this.send(res, 429, "text/plain", "Too many attempts");
-      return;
-    }
     const token = url.searchParams.get("token") ?? "";
     if (!safeEqual(token, this.d.token)) {
-      this.failures.push(now);
+      // A short delay per connection slows guessing without a global lockout, which any local
+      // process could otherwise use to keep the administrator out of the panel.
+      await new Promise<void>((r) => setTimeout(r, this.d.failDelayMs ?? 500));
       this.send(res, 403, "text/plain", "Forbidden");
       return;
     }

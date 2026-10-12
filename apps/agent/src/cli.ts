@@ -9,9 +9,13 @@
  *   version
  */
 import { createWriteStream } from "node:fs";
+import { join } from "node:path";
 import { loadConfig, DEFAULT_CONFIG_PATH } from "./config.js";
 import { runCapture } from "./capture/capture.js";
+import { fetchControlStatus } from "./panel/control-client.js";
+import { verifyPanelListener } from "./panel/listener-check.js";
 import { readPanelToken } from "./panel/token.js";
+import { createShutdown } from "./shutdown.js";
 import { buildDaemon, AGENT_VERSION, stateFile } from "./runtime.js";
 import { openLocalStore } from "./store/sqlite.js";
 
@@ -38,23 +42,22 @@ async function run(args: string[]): Promise<number> {
   };
   process.on("unhandledRejection", (e) => die("unhandled rejection", e));
   process.on("uncaughtException", (e) => die("uncaught exception", e));
+  let shutdown: ((reason: string) => void) | null = null;
   const { daemon } = await buildDaemon(configPath(args), {
+    // After a binding the daemon restarts to pick it up: flush first, then exit (systemd restarts it).
+    // The short delay lets the panel finish answering the request that saved the binding.
     onRestartRequested: () => {
-      setTimeout(() => process.exit(0), 1500).unref();
+      setTimeout(() => shutdown?.("binding saved, restarting"), 1500);
     },
   });
-  let stopping = false;
-  const stop = (signal: string): void => {
-    if (stopping) return;
-    stopping = true;
-    out(`received ${signal}; stopping`);
-    daemon
-      .stop()
-      .catch((e: unknown) => process.stderr.write(`stop failed: ${String(e)}\n`))
-      .finally(() => process.exit(0));
-  };
-  process.on("SIGTERM", () => stop("SIGTERM"));
-  process.on("SIGINT", () => stop("SIGINT"));
+  shutdown = createShutdown({
+    stop: () => daemon.stop(),
+    exit: (code) => process.exit(code),
+    log: out,
+  });
+  const stop = shutdown;
+  process.on("SIGTERM", () => stop("received SIGTERM"));
+  process.on("SIGINT", () => stop("received SIGINT"));
   await daemon.start();
   await daemon.agentFinished();
   // A finite (virtual) source ended: shut down cleanly.
@@ -85,19 +88,26 @@ async function main(argv: string[]): Promise<number> {
     }
     case "panel-url": {
       const config = await loadConfig(configPath(args));
+      // Without socket activation, make sure the process on the port is the service before
+      // revealing the token. (Under muonhub-agent-panel.socket systemd itself holds the port.)
+      if (!args.includes("--skip-listener-check")) {
+        const check = verifyPanelListener(config.panel.port);
+        if (!check.ok) {
+          process.stderr.write(
+            `refusing to print the panel token: ${check.reason}\n(for a development run use --skip-listener-check)\n`,
+          );
+          return 1;
+        }
+      }
       const token = readPanelToken(stateFile(config, "panel-token"));
       out(`http://127.0.0.1:${String(config.panel.port)}/auth?token=${token}`);
       out("From another machine: ssh -L 8787:localhost:8787 <host>, then open the address above.");
       return 0;
     }
     case "status": {
+      // Over the Unix control socket: no TCP, no token.
       const config = await loadConfig(configPath(args));
-      const token = readPanelToken(stateFile(config, "panel-token"));
-      const base = `http://127.0.0.1:${String(config.panel.port)}`;
-      const auth = await fetch(`${base}/auth?token=${token}`, { redirect: "manual" });
-      const cookie = auth.headers.get("set-cookie")?.split(";")[0] ?? "";
-      const res = await fetch(`${base}/status.json`, { headers: { cookie } });
-      out(JSON.stringify(await res.json(), null, 2));
+      out(await fetchControlStatus(join(config.runtimeDir, "control.sock")));
       return 0;
     }
     case "outbox": {

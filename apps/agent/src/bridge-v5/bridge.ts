@@ -126,14 +126,15 @@ export class V5Bridge {
       reject(403, "Forbidden");
       return;
     }
-    // Browsers always send Origin on WebSocket handshakes; a missing Origin is a non-browser client.
+    // Browsers always send Origin on WebSocket handshakes; a missing Origin is a non-browser client
+    // (any local process) and is refused like a disallowed one.
     const origin = req.headers.origin;
-    if (origin !== undefined && !this.o.allowedOrigins.includes(origin)) {
+    if (origin === undefined || !this.o.allowedOrigins.includes(origin)) {
       this.counters.rejectedOrigin += 1;
       this.o.reporter.report(
         "warn",
         "bridge-origin-rejected",
-        "v5 bridge refused a disallowed Origin",
+        "v5 bridge refused a missing or disallowed Origin",
       );
       reject(403, "Forbidden");
       return;

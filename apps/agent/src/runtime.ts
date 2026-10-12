@@ -10,6 +10,7 @@ import { BindingSchema, loadConfig, type AgentConfig, type Binding } from "./con
 import { Daemon } from "./daemon.js";
 import { createStatfsProbe } from "./disk.js";
 import { createLogger } from "./log.js";
+import { adoptListenFd } from "./panel/activation.js";
 import { loadOrCreatePanelToken } from "./panel/token.js";
 import { createSetupApi } from "./panel/setup.js";
 import { builtinDeviceType } from "./parsing/parser.js";
@@ -128,6 +129,7 @@ export async function buildDaemon(
     config,
     panelToken: loadOrCreatePanelToken(stateFile(config, "panel-token")),
     setup,
+    panelFd: adoptListenFd(),
   });
   return { daemon, config };
 }

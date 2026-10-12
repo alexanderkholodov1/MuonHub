@@ -8,6 +8,7 @@ import type { Agent } from "./agent.js";
 import { V5Bridge } from "./bridge-v5/bridge.js";
 import type { AgentConfig } from "./config.js";
 import { RawMirror } from "./mirror/mirror.js";
+import { ControlServer } from "./panel/control.js";
 import { PanelServer } from "./panel/server.js";
 import type { SetupApi } from "./panel/setup.js";
 
@@ -19,6 +20,11 @@ export interface DaemonOptions {
   /** Test knobs. */
   mirrorSocket?: string | null;
   mirrorLogDir?: string | null;
+  /** Control socket path (default `<runtimeDir>/control.sock`); `null` disables it. */
+  controlSocket?: string | null;
+  /** Listening descriptor passed by systemd socket activation, if any. */
+  panelFd?: number | null;
+  panelFailDelayMs?: number;
   retryMs?: number;
 }
 
@@ -26,6 +32,7 @@ export class Daemon {
   readonly mirror: RawMirror | null;
   readonly bridge: V5Bridge | null;
   readonly panel: PanelServer | null;
+  readonly control: ControlServer | null;
 
   constructor(private readonly o: DaemonOptions) {
     const { agent, config } = o;
@@ -66,9 +73,21 @@ export class Daemon {
             },
           },
           setup: o.setup,
+          ...(o.panelFd === undefined ? {} : { listenFd: o.panelFd }),
+          ...(o.panelFailDelayMs === undefined ? {} : { failDelayMs: o.panelFailDelayMs }),
           ...(o.retryMs === undefined ? {} : { retryMs: o.retryMs }),
         })
       : null;
+    const controlPath =
+      o.controlSocket === undefined ? join(config.runtimeDir, "control.sock") : o.controlSocket;
+    this.control =
+      controlPath === null
+        ? null
+        : new ControlServer({
+            path: controlPath,
+            status: () => agent.status(),
+            reporter: agent.reporter,
+          });
     if (this.bridge !== null) {
       agent.registerStatus("bridge", () => ({
         state: this.bridge?.state,
@@ -86,6 +105,7 @@ export class Daemon {
     // The mirror must exist before the first line arrives; bridge and panel only listen. A surface
     // that cannot start logs, shows it in status, and retries — it never prevents recording.
     await this.mirror?.start();
+    await this.control?.start();
     this.bridge?.start();
     this.panel?.start();
     await this.o.agent.start();
@@ -98,6 +118,11 @@ export class Daemon {
 
   async stop(): Promise<void> {
     await this.o.agent.stop();
-    await Promise.allSettled([this.panel?.stop(), this.bridge?.stop(), this.mirror?.stop()]);
+    await Promise.allSettled([
+      this.panel?.stop(),
+      this.bridge?.stop(),
+      this.control?.stop(),
+      this.mirror?.stop(),
+    ]);
   }
 }

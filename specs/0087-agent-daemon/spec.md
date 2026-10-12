@@ -181,7 +181,16 @@ bundle packager (M4), or a cloud raw uploader (admin-gated, M4).
     appears in URLs after that exchange or in logs;
   - every request validates the `Host` header (`127.0.0.1:<port>` / `localhost:<port>` only — blocks
     DNS rebinding) and, for state-changing requests, the `Origin`; state-changing requests (including
-    the sign-in POST) carry a CSRF token.
+    the sign-in POST) carry a CSRF token;
+  - the port is held by systemd (`muonhub-agent-panel.socket`, `ListenStream=127.0.0.1:8787`) and
+    handed to the daemon as fd 3 (`LISTEN_PID`/`LISTEN_FDS`), so no other local user can bind it
+    while the daemon restarts; without socket activation (development) the daemon binds the port
+    itself, and `panel-url` refuses to print the token unless every holder of the listening socket
+    is the `muonhub` user (or systemd, pid 1);
+  - a wrong token is answered after a short per-connection delay; there is no global lockout (which
+    any local process could trigger to keep the administrator out);
+  - `muonhub-agent status` does not use TCP or the token: it reads `/run/muonhub/control.sock`
+    (mode `0660`, directory `0750`, group `muonhub`).
   The panel runs isolated from acquisition: a panel crash or an `EADDRINUSE` on its port is logged,
   shown in status, and retried; it never stops recording.
 - **FR16 — Raw mirror:** every raw line is teed to a rotating text log (`/var/lib/muonhub/raw/*.log`,
@@ -203,7 +212,11 @@ bundle packager (M4), or a cloud raw uploader (admin-gated, M4).
   port state, `clients`, `serial_port`). Bound to `127.0.0.1` only. Enabled by configuration until
   the M5 cutover. **Safety and isolation:**
   - binding to localhost does not stop browser pages (WebSockets ignore CORS), so the `Origin` header
-    is checked against an allowlist (the v5 site origin(s) and `null`/local file *(Proposed list)*);
+    is checked against an allowlist (the v5 site origins `https://munhub-lab.web.app`,
+    `https://munhub-1.web.app`, `https://munhub-1.firebaseapp.com` *(Proposed list)*); a **missing**
+    `Origin` is refused, and `"null"` (file pages, sandboxed frames — which any web page can
+    produce) is not in the default list: it is an explicit administrator opt-in in
+    `bridge.allowedOrigins`;
   - only `ping` and `status` messages are accepted; anything else is ignored; frame size capped
     (4 KB *(Proposed)*), at most 4 clients *(Proposed)*, per-client send buffer capped — a slow
     client is disconnected and counted, never allowed to grow memory;
