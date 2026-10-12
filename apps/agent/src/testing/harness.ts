@@ -166,6 +166,9 @@ export interface HarnessOptions {
   disk?: { lowBytes: number; floorBytes: number };
   intervals?: AgentDeps["intervals"];
   clockHoldMs?: number;
+  wrapProvider?: (p: dp.DataProviderV2) => dp.DataProviderV2;
+  credentials?: ReturnType<typeof createMemoryCredentialStore>;
+  refresh?: Harness["refresh"];
 }
 
 export async function makeHarness(o: HarnessOptions): Promise<Harness> {
@@ -174,8 +177,8 @@ export async function makeHarness(o: HarnessOptions): Promise<Harness> {
   const provider = dp.createMemoryProviderV2({ store: memory });
   const logger = memoryLogger();
   const reporter = new Reporter(logger, o.now ?? Date.now);
-  const credentials = createMemoryCredentialStore();
-  const refresh: Harness["refresh"] = {
+  const credentials = o.credentials ?? createMemoryCredentialStore();
+  const refresh: Harness["refresh"] = o.refresh ?? {
     revoked: false,
     getRefreshToken: () => "refresh-token-1",
     signInWithRefreshToken: async () => {
@@ -199,7 +202,7 @@ export async function makeHarness(o: HarnessOptions): Promise<Harness> {
     store,
     reporter,
     factory: o.factory,
-    provider: o.withProvider === false ? null : provider,
+    provider: o.withProvider === false ? null : (o.wrapProvider?.(provider) ?? provider),
     refresh,
     credentials,
     clockProbe: clock,
@@ -231,4 +234,42 @@ export async function cloudMinutes(h: Harness): Promise<v2.MinuteRecord[]> {
     cursor = page.nextCursor;
   } while (cursor !== null);
   return out;
+}
+
+export interface ChunkPlan {
+  fromHost: number;
+  count: number;
+  firstId: number;
+  stepMs?: number;
+  /** Monotonic clock reading at the first line (ms). */
+  monoStart?: number;
+  /** Added to the wall clock only (a clock step). */
+  wallShift?: number;
+  amp?: number;
+}
+
+/** One MuNRa event line per `stepMs` (default 1 s → 60 events per minute). */
+export function dataChunks(plan: ChunkPlan): AgentChunk[] {
+  const step = plan.stepMs ?? 1000;
+  const out: AgentChunk[] = [];
+  for (let i = 0; i < plan.count; i++) {
+    const id = plan.firstId + i;
+    out.push(
+      chunk(
+        munraLine(id, id * step, { amp: plan.amp ?? 100 + (id % 5) }),
+        plan.fromHost + i * step + (plan.wallShift ?? 0),
+        (plan.monoStart ?? 0) + i * step,
+      ),
+    );
+  }
+  return out;
+}
+
+/** Waits until `fn` is true (polling the event loop), or fails after `ms`. */
+export async function until(fn: () => boolean | Promise<boolean>, ms = 3000): Promise<void> {
+  const t0 = Date.now();
+  while (!(await fn())) {
+    if (Date.now() - t0 > ms) throw new Error("timed out waiting for a condition");
+    await new Promise((r) => setTimeout(r, 5));
+  }
 }
