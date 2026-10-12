@@ -52,19 +52,21 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 
 ## Local emulator (tests)
 
-- Configuration lives in `infra/firebase/`: `firebase.json` (Realtime Database, Auth, and Storage
-  emulators on ports 9000 / 9099 / 9199, single-project mode), the database and storage rules, and
+- Configuration lives in `infra/firebase/`: `firebase.json` (Auth, Cloud Firestore, and Realtime
+  Database emulators on ports 9099 / 8080 / 9000, single-project mode), the security rules
+  (`firestore.rules`, `database.rules.json`), the Firestore indexes (`firestore.indexes.json`), and
   `.firebaserc` (default project `muonhub`).
 - Tests run against the demo project **`demo-muonhub`**: the `demo-` prefix guarantees no real
   project is contacted.
-- The emulator is a Java application and needs **Java 21**. CI provides it (job
+- The emulators are Java applications and need **Java 21**. CI provides it (job
   "data-provider · emulator tests"); locally, a portable JDK 21 works.
-- Command: `pnpm --filter @muonhub/data-provider test:emulator`.
-- **Known issue [verified]:** the test "keeps realtime storage capped to the newest records" takes
-  ~12 s in CI and exceeds its 20 s timeout on slower machines. The cause is the realtime-pruning
-  design recorded in the 2026-10-02 audit; that code is replaced in M1.
-- The Storage emulator and rules are first-attempt leftovers: Cloud Storage is not available on
-  Spark, and the M1 rebuild removes blob storage.
+- Command: `pnpm --filter @muonhub/data-provider test:emulator` (starts
+  `--only auth,firestore,database`). It runs the security-rules v2 matrix
+  (`packages/data-provider/src/rules-v2/`, spec 0084) and the v2 data-layer tests.
+- The first-attempt emulator tests (`*.legacy-emulator.test.ts`) were written for the first-attempt
+  RTDB rules that the v2 rules replaced; they are excluded from every run and are removed with the
+  first-attempt provider in M1 step 7. Cloud Storage is not part of the architecture (ADR-005): its
+  emulator and rules were removed.
 
 ## Keys and secrets
 
@@ -82,11 +84,33 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 
 - **No deploy workflow exists yet.** The previous automatic deploy from `main` was removed; v6
   deployment is designed in the M1/M2 plans.
-- **Do not run `firebase deploy` until the M1 rules exist.** `infra/firebase/.firebaserc` defaults to
-  the live `muonhub` project, and the rules currently in `infra/firebase/` are the first-attempt set
-  with known security holes (no field validation, editor takeover, self-assigned roles — see the
-  audit record). A deploy from `infra/firebase/` would publish them. The root-level v5 Firebase files
-  were removed in M0, so a deploy from the repository root no longer targets anything.
+- **Nothing has been deployed to `muonhub` yet.** The security rules v2 (spec 0084) exist in
+  `infra/firebase/` and are tested in the emulator; their first deploy is M1 plan step 8.
+- **Deploy procedure (rules and indexes)** — only with the maintainer's explicit go-ahead, and only
+  after the emulator matrix is green on the exact commit being deployed:
+  1. `pnpm --filter @muonhub/data-provider test:emulator` passes (and CI is green).
+  2. From `infra/firebase/` (never from the repository root):
+     `firebase deploy --only firestore:rules,firestore:indexes,database --project muonhub`.
+     Cloud Firestore must exist first (location `nam5`, see [`FIREBASE-SETUP.md`](FIREBASE-SETUP.md)).
+  3. Record the commit hash and date in the session record under `docs/audit/`.
+  4. Probe the denials from a second account and an anonymous client (spec 0084, "Validation in
+     practice").
+- **First admin (trusted script):** admins are documents `admins/{uid}` = `{uid, addedBy, addedAt}`
+  that only existing admins can write. The first one is created once with the Firebase Admin SDK
+  (which bypasses the rules), run by the maintainer on the development machine with the
+  `muonhub` service-account key from `private/` — never on an agent machine and never committed:
+
+  ```js
+  // node first-admin.mjs <uid>   (GOOGLE_APPLICATION_CREDENTIALS=private/<muonhub key>.json)
+  import { initializeApp, applicationDefault } from "firebase-admin/app";
+  import { getFirestore } from "firebase-admin/firestore";
+  const uid = process.argv[2];
+  initializeApp({ credential: applicationDefault(), projectId: "muonhub" });
+  await getFirestore().doc(`admins/${uid}`).create({ uid, addedBy: uid, addedAt: Date.now() });
+  ```
+
+  `create()` fails if the entry already exists. Further admins are added by admins from the admin
+  area; the rules never trust a role field a user can write (ADR-009 rule 4).
 
 ## Staging — open question
 
