@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:emulator": "firebase emulators:exec --only database,auth,storage --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\"",
+    "test:emulator": "firebase emulators:exec --only auth,firestore,database --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\"",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo"
