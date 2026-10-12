@@ -2,7 +2,7 @@
  * Rules v2 — Realtime Database series: minutes, live window, status, public status
  * (spec 0084 FR16–FR19; acceptance criteria CA3, CA4).
  */
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -15,16 +15,18 @@ import {
   S_PRIV,
   S_PUB,
   dbAs,
-  describeEmu,
+  emulatorOn,
   initEnv,
   lastMinute,
   minute,
   minuteKey,
   now,
+  omit,
   seed,
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {
@@ -57,7 +59,7 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
   });
   it("accepts a nominal minute with n = 0 (no amplitude, no live time)", async () => {
     const t = lastMinute();
-    const { am: _am, an: _an, ax: _ax, au: _au, lm: _lm, dm: _dm, ...rest } = minute(t);
+    const rest = omit(minute(t), "am", "an", "ax", "au", "lm", "dm");
     await assertSucceeds(writeMinute("agent", S_PRIV, t, { ...rest, n: 0, l: "n" }));
   });
   for (const who of ["viewer", "stranger", "admin", "recipient", "anon"] as const) {
@@ -145,7 +147,7 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
   it("denies amplitude with n = 0 and a missing amplitude with n > 0", async () => {
     const ts = lastMinute();
     await assertFails(writeMinute("agent", S_PRIV, ts, minute(ts, { n: 0 })));
-    const { am: _am, an: _an, ax: _ax, au: _au, ...noAmplitude } = minute(ts);
+    const noAmplitude = omit(minute(ts), "am", "an", "ax", "au");
     await assertFails(writeMinute("agent", S_PRIV, ts, noAmplitude));
   });
   it("denies an amplitude summary with min > mean", async () => {
@@ -155,13 +157,13 @@ describeEmu("minutes/{streamId}/{ts} — writes", () => {
   it("denies live-time fields that contradict the live source", async () => {
     const ts = lastMinute();
     await assertFails(writeMinute("agent", S_PRIV, ts, minute(ts, { l: "n" })));
-    const { dm: _dm, ...noDead } = minute(ts);
+    const noDead = omit(minute(ts), "dm");
     await assertFails(writeMinute("agent", S_PRIV, ts, noDead));
   });
   it("denies a wrong schema version and missing required keys", async () => {
     const ts = lastMinute();
     await assertFails(writeMinute("agent", S_PRIV, ts, minute(ts, { v: 1 })));
-    const { qg: _qg, ...noQuality } = minute(ts);
+    const noQuality = omit(minute(ts), "qg");
     await assertFails(writeMinute("agent", S_PRIV, ts, noQuality));
   });
 });

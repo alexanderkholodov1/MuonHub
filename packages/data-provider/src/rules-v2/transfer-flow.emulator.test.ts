@@ -5,7 +5,7 @@
  * Order used by the data layer: mirror first (pendingOwner / member removal), then Firestore, so a
  * desync can only leave rights removed, never granted.
  */
-import { afterAll, beforeAll, beforeEach, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -19,7 +19,7 @@ import {
   S_PRIV,
   UID,
   dbAs,
-  describeEmu,
+  emulatorOn,
   device,
   fsAs,
   initEnv,
@@ -35,6 +35,7 @@ import {
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {

@@ -1,7 +1,7 @@
 /**
  * Rules v2 — device types, devices, calibrations, assemblies (spec 0084 FR10, FR11).
  */
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -26,7 +26,7 @@ import {
   UID,
   assembly,
   calibration,
-  describeEmu,
+  emulatorOn,
   device,
   deviceType,
   fsAs,
@@ -35,6 +35,7 @@ import {
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {

@@ -1,7 +1,7 @@
 /**
  * Rules v2 — users, usernames, admins, audit (spec 0084 FR6, FR9, FR14).
  */
-import { afterAll, beforeAll, beforeEach, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -20,7 +20,7 @@ import {
 import {
   UID,
   audit,
-  describeEmu,
+  emulatorOn,
   fsAs,
   fsUid,
   initEnv,
@@ -30,6 +30,7 @@ import {
   usernameOf,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {

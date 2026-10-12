@@ -8,7 +8,6 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { describe } from "vitest";
 import {
   initializeTestEnvironment,
   type RulesTestContext,
@@ -17,12 +16,10 @@ import {
 import { doc, setDoc, type Firestore } from "firebase/firestore";
 import { v2 } from "@muonhub/shared";
 
-const emulatorOn =
+/** True inside `firebase emulators:exec` (Firestore and Realtime Database emulators running). */
+export const emulatorOn =
   Boolean(process.env["FIRESTORE_EMULATOR_HOST"]) &&
   Boolean(process.env["FIREBASE_DATABASE_EMULATOR_HOST"]);
-
-/** `describe` that runs only inside `firebase emulators:exec`. */
-export const describeEmu = emulatorOn ? describe : describe.skip;
 
 const rulesFile = (name: string): string =>
   readFileSync(
@@ -36,6 +33,11 @@ export function initEnv(): Promise<RulesTestEnvironment> {
     firestore: { rules: rulesFile("firestore.rules") },
     database: { rules: rulesFile("database.rules.json") },
   });
+}
+
+/** Copy of `obj` without `keys` (to build documents with a required field missing). */
+export function omit<T extends object>(obj: T, ...keys: string[]): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([k]) => !keys.includes(k)));
 }
 
 // ── Identities ───────────────────────────────────────────────────────────────────────────────

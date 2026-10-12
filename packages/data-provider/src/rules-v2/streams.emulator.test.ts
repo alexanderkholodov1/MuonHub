@@ -1,7 +1,7 @@
 /**
  * Rules v2 — streams, sessions, day summaries (spec 0084 FR11, FR12).
  */
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -34,7 +34,7 @@ import {
   S_PUB,
   UID,
   daySummary,
-  describeEmu,
+  emulatorOn,
   fsAs,
   hour,
   initEnv,
@@ -45,6 +45,7 @@ import {
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {

@@ -2,7 +2,7 @@
  * Rules v2 — stations, members, public projection, ownership transfers
  * (spec 0084 FR7, FR8, FR13; acceptance criteria CA4, CA5b).
  */
-import { afterAll, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -28,11 +28,12 @@ import {
   ST_PRIV,
   ST_PUB,
   UID,
-  describeEmu,
+  emulatorOn,
   fsAs,
   initEnv,
   member,
   now,
+  omit,
   projection,
   seed,
   station,
@@ -42,6 +43,7 @@ import {
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {
@@ -129,7 +131,7 @@ describeEmu("stations/{id} — create", () => {
     );
   });
   it("denies a station without visibility (no default)", async () => {
-    const { visibility: _v, ...noVisibility } = fresh("private");
+    const noVisibility = omit(fresh("private"), "visibility");
     await assertFails(setDoc(doc(fsAs(env, "stranger"), "stations/stNew"), noVisibility));
   });
   it("denies unknown keys, a transferId, a mismatched id, or a future createdAt", async () => {

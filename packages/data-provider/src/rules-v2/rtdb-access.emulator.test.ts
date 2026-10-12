@@ -2,7 +2,7 @@
  * Rules v2 — Realtime Database authorization mirror: stationAccess and streamStation
  * (spec 0084 FR15; acceptance criterion CA5b).
  */
-import { afterAll, beforeAll, beforeEach, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, it, describe } from "vitest";
 import {
   assertFails,
   assertSucceeds,
@@ -14,13 +14,14 @@ import {
   S_PRIV,
   UID,
   dbAs,
-  describeEmu,
+  emulatorOn,
   initEnv,
   seed,
   stationAccess,
   type Who,
 } from "./fixtures.js";
 
+const describeEmu = emulatorOn ? describe : describe.skip;
 let env: RulesTestEnvironment;
 
 beforeAll(async () => {
