@@ -35,23 +35,45 @@ export function suggestNoiseThreshold(
 ): ThresholdSuggestion {
   const valleyDepth = opts.valleyDepth ?? 0.5;
   const prov = provenance("suggestNoiseThreshold", { valleyDepth, bins: binning.edges.length - 1 });
-  const h = buildAmplitudeHistogram(amplitudes, binning, { value: Infinity, unit: binning.unit });
+  const h = buildAmplitudeHistogram(amplitudes, binning, {
+    value: Number.MAX_VALUE,
+    unit: binning.unit,
+  });
   const base = { inputCount: h.total, provenance: prov };
   if (h.status !== "ok" || h.counts.length < 3) {
-    return { ...base, status: "not-computable", reason: "histogram not available", diagnostics: {} };
+    return {
+      ...base,
+      status: "not-computable",
+      reason: "histogram not available",
+      diagnostics: {},
+    };
   }
-  const c = h.counts;
+  // 3-bin moving average so single-bin fluctuations are not read as lobes or valleys.
+  const raw = h.counts;
+  const c = raw.map((_, i) => {
+    const lo = Math.max(0, i - 1);
+    const hi = Math.min(raw.length - 1, i + 1);
+    let s = 0;
+    for (let j = lo; j <= hi; j++) s += raw[j] as number;
+    return s / (hi - lo + 1);
+  });
   let main = 0;
   for (let i = 1; i < c.length; i++) if ((c[i] as number) > (c[main] as number)) main = i;
-  // Search below the main peak for the deepest valley followed (towards lower amplitudes) by a lobe.
+  const mainCount = c[main] as number;
+  // Walk down from the main peak: track the running minimum (valley) and, below it, the highest lobe.
   let best: { valley: number; noise: number } | undefined;
   let valley = main;
+  let lobe = -1;
   for (let i = main - 1; i >= 0; i--) {
-    if ((c[i] as number) < (c[valley] as number)) valley = i;
-    const lobe = c[i] as number;
-    const smaller = Math.min(lobe, c[main] as number);
-    if (lobe > (c[valley] as number) && (c[valley] as number) < valleyDepth * smaller && valley > i) {
-      best = { valley, noise: i };
+    const v = c[i] as number;
+    if (v < (c[valley] as number) && lobe < 0) valley = i;
+    else if (v > (c[valley] as number) && (lobe < 0 || v > (c[lobe] as number))) lobe = i;
+  }
+  if (lobe >= 0 && valley > lobe) {
+    const lobeCount = c[lobe] as number;
+    const significant = lobeCount >= 10 && lobeCount >= 0.02 * mainCount;
+    if (significant && (c[valley] as number) < valleyDepth * Math.min(lobeCount, mainCount)) {
+      best = { valley, noise: lobe };
     }
   }
   if (best === undefined) {

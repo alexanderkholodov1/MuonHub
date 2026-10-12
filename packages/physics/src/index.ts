@@ -35,14 +35,15 @@ export type {
 } from "./barometric.js";
 
 export { detectHourScaleDeviations } from "./anomalies.js";
-export type { AnomalyOptions, AnomalyResult, Baseline, Deviation, HourlyRate } from "./anomalies.js";
+export type {
+  AnomalyOptions,
+  AnomalyResult,
+  Baseline,
+  Deviation,
+  HourlyRate,
+} from "./anomalies.js";
 
-export {
-  buildAmplitudeHistogram,
-  fitMpv,
-  mergeHistograms,
-  moyalPdf,
-} from "./spectrum.js";
+export { buildAmplitudeHistogram, fitMpv, mergeHistograms, moyalPdf } from "./spectrum.js";
 export type { AmplitudeHistogram, AmplitudeUnit, Binning, MpvFit, Saturation } from "./spectrum.js";
 
 export { suggestNoiseThreshold } from "./noise.js";
@@ -59,7 +60,11 @@ export {
 export type { RobustBaseline } from "./statistics.js";
 
 export { buildCorrectedRateInsights } from "./insights.js";
-export type { CorrectedRateInsights, CorrectedRateInsightsOptions, InsightHour } from "./insights.js";
+export type {
+  CorrectedRateInsights,
+  CorrectedRateInsightsOptions,
+  InsightHour,
+} from "./insights.js";
 
 export { rateToFlux } from "./flux.js";
 

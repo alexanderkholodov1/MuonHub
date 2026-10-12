@@ -64,7 +64,13 @@ export function detectHourScaleDeviations(
   const falseAlarmsPerYear = HOURS_PER_YEAR * 2 * Math.pow(pTail, persistence);
   const prov = provenance("detectHourScaleDeviations", { threshold, persistence, baseline });
   if (windows.length < 2) {
-    return { status: "not-computable", deviations: [], sigmaOverdispersion: 0, falseAlarmsPerYear, provenance: prov };
+    return {
+      status: "not-computable",
+      deviations: [],
+      sigmaOverdispersion: 0,
+      falseAlarmsPerYear,
+      provenance: prov,
+    };
   }
   const sorted = [...windows].sort((a, b) => a.hourStart - b.hourStart);
   const residuals = sorted.map((w) => w.rate - baseline.value);
@@ -74,7 +80,8 @@ export function detectHourScaleDeviations(
   const sigmaOverdispersion = Math.sqrt(Math.max(0, observedVar - expectedVar));
 
   const deviations: Deviation[] = [];
-  let run: { start: number; last: number; sign: 1 | -1; count: number; maxAbsZ: number } | undefined;
+  let run:
+    { start: number; last: number; sign: 1 | -1; count: number; maxAbsZ: number } | undefined;
   const close = (): void => {
     if (run !== undefined && run.count >= persistence) {
       deviations.push({
@@ -90,7 +97,9 @@ export function detectHourScaleDeviations(
   for (let i = 0; i < sorted.length; i++) {
     const w = sorted[i] as HourlyRate;
     const s = Math.sqrt(
-      w.sigma * w.sigma + baseline.sigma * baseline.sigma + sigmaOverdispersion * sigmaOverdispersion,
+      w.sigma * w.sigma +
+        baseline.sigma * baseline.sigma +
+        sigmaOverdispersion * sigmaOverdispersion,
     );
     const z = (residuals[i] as number) / s;
     const sign: 1 | -1 = z >= 0 ? 1 : -1;

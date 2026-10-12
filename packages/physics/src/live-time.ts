@@ -28,7 +28,10 @@ export interface DeadFractionResult {
   readonly provenance: Provenance;
 }
 
-export function deadFractionFromCounter(start: CounterSample, end: CounterSample): DeadFractionResult {
+export function deadFractionFromCounter(
+  start: CounterSample,
+  end: CounterSample,
+): DeadFractionResult {
   const prov = provenance("deadFractionFromCounter", {
     startDeadTimeUs: start.deadTimeUs,
     endDeadTimeUs: end.deadTimeUs,

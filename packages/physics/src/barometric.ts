@@ -77,7 +77,8 @@ function wls(rows: number[][], y: number[], w: number[]): Wls | undefined {
     for (let a = 0; a < p; a++) {
       xtwy[a] = (xtwy[a] as number) + wi * (x[a] as number) * (y[i] as number);
       const ra = xtwx[a] as number[];
-      for (let b = 0; b < p; b++) ra[b] = (ra[b] as number) + wi * (x[a] as number) * (x[b] as number);
+      for (let b = 0; b < p; b++)
+        ra[b] = (ra[b] as number) + wi * (x[a] as number) * (x[b] as number);
     }
   }
   const inv = invert(xtwx);
@@ -107,7 +108,13 @@ export function fitBarometricBeta(
   const gateSigma = opts.gateSigma ?? 3;
   const [betaMin, betaMax] = opts.betaRange ?? [-0.4, 0];
   const outlierMad = opts.outlierMad ?? 5;
-  const params = { minSpanDays, minPressureStdHpa, gateSigma, betaRange: [betaMin, betaMax], outlierMad };
+  const params = {
+    minSpanDays,
+    minPressureStdHpa,
+    gateSigma,
+    betaRange: [betaMin, betaMax],
+    outlierMad,
+  };
 
   const usable = hours
     .filter(
@@ -134,11 +141,17 @@ export function fitBarometricBeta(
   const periodEnd = (usable[usable.length - 1] as HourlyPoint).hourStart + 3_600_000;
   const spanDays = (periodEnd - periodStart) / 86_400_000;
   if (spanDays < minSpanDays) {
-    return notComputable(`data span ${spanDays.toFixed(2)} d < ${minSpanDays} d`, { periodStart, periodEnd });
+    return notComputable(`data span ${spanDays.toFixed(2)} d < ${minSpanDays} d`, {
+      periodStart,
+      periodEnd,
+    });
   }
   const pressures = usable.map((h) => h.pressureHpa as number);
   if (Math.sqrt(variance(pressures)) < minPressureStdHpa) {
-    return notComputable(`pressure standard deviation < ${minPressureStdHpa} hPa`, { periodStart, periodEnd });
+    return notComputable(`pressure standard deviation < ${minPressureStdHpa} hPa`, {
+      periodStart,
+      periodEnd,
+    });
   }
   const useT =
     (opts.useTemperature ?? true) &&
@@ -174,7 +187,7 @@ export function fitBarometricBeta(
   const rho = Math.max(0, lag1Autocorrelation(fit.res.stdResiduals));
   const inflation = Math.sqrt((1 + rho) / (1 - Math.min(rho, 0.99)));
   const beta = 100 * (fit.res.coef[1] as number);
-  const sigmaBeta = 100 * Math.sqrt(((fit.res.cov[1] as number[])[1] as number)) * inflation;
+  const sigmaBeta = 100 * Math.sqrt((fit.res.cov[1] as number[])[1] as number) * inflation;
   const significance = Math.abs(beta) / sigmaBeta;
   const inRange = beta >= betaMin && beta <= betaMax;
   const applied = significance >= gateSigma && inRange;
@@ -219,11 +232,17 @@ export function applyBarometricCorrection(
   pressureHpa: number | undefined,
   fit: BetaFitResult,
 ): BarometricCorrectedRate {
-  if (rate.rate === undefined || rate.sigma === undefined) return { ...rate, barometric: "not-computable" };
+  if (rate.rate === undefined || rate.sigma === undefined)
+    return { ...rate, barometric: "not-computable" };
   if (pressureHpa === undefined || !Number.isFinite(pressureHpa)) {
     return { ...rate, barometric: "not-computable" };
   }
-  if (!fit.applied || fit.beta === undefined || fit.sigmaBeta === undefined || fit.p0Hpa === undefined) {
+  if (
+    !fit.applied ||
+    fit.beta === undefined ||
+    fit.sigmaBeta === undefined ||
+    fit.p0Hpa === undefined
+  ) {
     return { ...rate, barometric: "not-applied" };
   }
   const dp = pressureHpa - fit.p0Hpa;

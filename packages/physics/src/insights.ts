@@ -34,7 +34,10 @@ export interface CorrectedRateInsightsOptions {
 
 export interface CorrectedRateInsights {
   readonly status: ResultStatus;
-  readonly hourly: ReadonlyArray<{ readonly hourStart: number; readonly corrected: BarometricCorrectedRate }>;
+  readonly hourly: ReadonlyArray<{
+    readonly hourStart: number;
+    readonly corrected: BarometricCorrectedRate;
+  }>;
   readonly beta: BetaFitResult;
   readonly deviations: AnomalyResult;
   readonly provenance: Provenance;
@@ -61,7 +64,10 @@ export function buildCorrectedRateInsights(
       h.liveSource === "nominal" || h.liveMs === undefined
         ? uncorrectedRate(h.counts, durationMs(h))
         : { ...correctRateByLiveTime(h.counts, h.liveMs), liveSource: h.liveSource };
-    return { hourStart: h.hourStart, corrected: applyBarometricCorrection(base, h.pressureHpa, beta) };
+    return {
+      hourStart: h.hourStart,
+      corrected: applyBarometricCorrection(base, h.pressureHpa, beta),
+    };
   });
   const usable = hourly.filter(
     (h) => h.corrected.rate !== undefined && h.corrected.sigma !== undefined,

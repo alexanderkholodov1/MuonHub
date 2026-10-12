@@ -82,7 +82,11 @@ export function buildAmplitudeHistogram(
     total: 0,
     provenance: prov,
   });
-  if (!validEdges(binning.edges) || saturation.unit !== binning.unit || !Number.isFinite(saturation.value)) {
+  if (
+    !validEdges(binning.edges) ||
+    saturation.unit !== binning.unit ||
+    !Number.isFinite(saturation.value)
+  ) {
     return empty("invalid");
   }
   const edges = binning.edges;
@@ -148,14 +152,26 @@ export function mergeHistograms(hs: readonly AmplitudeHistogram[]): AmplitudeHis
   let nonFinite = 0;
   let total = 0;
   for (const h of hs) {
-    for (let i = 0; i < counts.length; i++) counts[i] = (counts[i] as number) + (h.counts[i] as number);
+    for (let i = 0; i < counts.length; i++)
+      counts[i] = (counts[i] as number) + (h.counts[i] as number);
     underflow += h.underflow;
     overflow += h.overflow;
     saturated += h.saturated;
     nonFinite += h.nonFinite;
     total += h.total;
   }
-  return { status: "ok", edges: firstH.edges, unit: firstH.unit, counts, underflow, overflow, saturated, nonFinite, total, provenance: prov };
+  return {
+    status: "ok",
+    edges: firstH.edges,
+    unit: firstH.unit,
+    counts,
+    underflow,
+    overflow,
+    saturated,
+    nonFinite,
+    total,
+    provenance: prov,
+  };
 }
 
 /** Moyal density with location μ (its mode = MPV) and scale σ. */
@@ -175,7 +191,12 @@ export interface MpvFit {
   readonly provenance: Provenance;
 }
 
-function nelderMead(f: (p: number[]) => number, start: number[], step: number[], iterations = 400): number[] {
+function nelderMead(
+  f: (p: number[]) => number,
+  start: number[],
+  step: number[],
+  iterations = 400,
+): number[] {
   const n = start.length;
   let simplex: number[][] = [start];
   for (let i = 0; i < n; i++) {
@@ -192,7 +213,9 @@ function nelderMead(f: (p: number[]) => number, start: number[], step: number[],
     const worst = values[n] as number;
     if (Math.abs(worst - best) < 1e-10 * (1 + Math.abs(best))) break;
     const centroid = new Array<number>(n).fill(0);
-    for (let i = 0; i < n; i++) for (let d = 0; d < n; d++) centroid[d] = (centroid[d] as number) + ((simplex[i] as number[])[d] as number) / n;
+    for (let i = 0; i < n; i++)
+      for (let d = 0; d < n; d++)
+        centroid[d] = (centroid[d] as number) + ((simplex[i] as number[])[d] as number) / n;
     const w = simplex[n] as number[];
     const at = (t: number): number[] => centroid.map((c, d) => c + t * (c - (w[d] as number)));
     const r = at(1);
@@ -219,14 +242,17 @@ function nelderMead(f: (p: number[]) => number, start: number[], step: number[],
       } else {
         const b = simplex[0] as number[];
         for (let i = 1; i <= n; i++) {
-          simplex[i] = (simplex[i] as number[]).map((v, d) => (b[d] as number) + 0.5 * (v - (b[d] as number)));
+          simplex[i] = (simplex[i] as number[]).map(
+            (v, d) => (b[d] as number) + 0.5 * (v - (b[d] as number)),
+          );
           values[i] = f(simplex[i] as number[]);
         }
       }
     }
   }
   let bi = 0;
-  for (let i = 1; i < values.length; i++) if ((values[i] as number) < (values[bi] as number)) bi = i;
+  for (let i = 1; i < values.length; i++)
+    if ((values[i] as number) < (values[bi] as number)) bi = i;
   return simplex[bi] as number[];
 }
 
@@ -237,16 +263,23 @@ function nelderMead(f: (p: number[]) => number, start: number[], step: number[],
  */
 export function fitMpv(h: AmplitudeHistogram, regionFraction = 0.25): MpvFit {
   const prov = provenance("fitMpv", { regionFraction, unit: h.unit, bins: h.counts.length });
-  const fail = (status: ResultStatus, binsUsed = 0): MpvFit => ({ status, unit: h.unit, binsUsed, provenance: prov });
+  const fail = (status: ResultStatus, binsUsed = 0): MpvFit => ({
+    status,
+    unit: h.unit,
+    binsUsed,
+    provenance: prov,
+  });
   if (h.status !== "ok" || h.counts.length < 4) return fail("not-computable");
   let peak = 0;
-  for (let i = 1; i < h.counts.length; i++) if ((h.counts[i] as number) > (h.counts[peak] as number)) peak = i;
+  for (let i = 1; i < h.counts.length; i++)
+    if ((h.counts[i] as number) > (h.counts[peak] as number)) peak = i;
   const peakCount = h.counts[peak] as number;
   if (peakCount < 10) return fail("not-computable");
   let lo = peak;
   while (lo > 0 && (h.counts[lo - 1] as number) >= regionFraction * peakCount) lo--;
   let hi = peak;
-  while (hi < h.counts.length - 1 && (h.counts[hi + 1] as number) >= regionFraction * peakCount) hi++;
+  while (hi < h.counts.length - 1 && (h.counts[hi + 1] as number) >= regionFraction * peakCount)
+    hi++;
   if (hi - lo + 1 < 4) return fail("not-computable", hi - lo + 1);
 
   const centers: number[] = [];

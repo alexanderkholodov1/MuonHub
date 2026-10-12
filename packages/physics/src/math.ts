@@ -1,6 +1,6 @@
 /**
  * Small numeric helpers. Loops only — never spread large arrays into function arguments
- * (`Math.max(...a)` overflows the call stack above ~10⁵ elements).
+ * (spreading an array into Math.max overflows the call stack above ~10⁵ elements).
  */
 
 export function sum(values: readonly number[]): number {
@@ -71,7 +71,9 @@ export function erfc(x: number): number {
                       (-0.18628806 +
                         t *
                           (0.27886807 +
-                            t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))),
+                            t *
+                              (-1.13520398 +
+                                t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))),
     );
   return x >= 0 ? r : 2 - r;
 }
@@ -88,7 +90,9 @@ export function solveLinear(a: number[][], b: number[]): number[] | undefined {
   for (let col = 0; col < n; col++) {
     let piv = col;
     for (let r = col + 1; r < n; r++) {
-      if (Math.abs((m[r] as number[])[col] as number) > Math.abs((m[piv] as number[])[col] as number))
+      if (
+        Math.abs((m[r] as number[])[col] as number) > Math.abs((m[piv] as number[])[col] as number)
+      )
         piv = r;
     }
     const pivotRow = m[piv] as number[];
