@@ -474,13 +474,15 @@ describe("memory provider — failure injection", () => {
       code: "outcome-unknown",
     });
     // offline: the realtime database is not read at all
-    await expect(provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 })).rejects.toMatchObject(
-      { code: "unavailable" },
-    );
+    await expect(
+      provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 }),
+    ).rejects.toMatchObject({ code: "unavailable" });
     // lost: nothing ever reached the server
     store.dropPendingLocal();
     expect(await provider.getDaySummary(STREAM_ID, "2026-10-01")).toBeNull();
-    expect((await provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 })).items).toEqual([]);
+    expect((await provider.readMinutes(STREAM_ID, { fromTs: 0, toTs: T0 + 1e9 })).items).toEqual(
+      [],
+    );
   });
 
   it("pending-local: once delivered, the write is on the server", async () => {

@@ -89,8 +89,8 @@ export class Pipeline {
   private lastMinuteHour: number | null = null;
   private halted = false;
   private lastEventHost: number | null = null;
-  /** A `storageError` session end that could not be written yet (see {@link abortSession}). */
-  private unrecordedEnd: SessionRow | null = null;
+  /** `storageError` session ends that could not be written yet (see {@link abortSession}). */
+  private readonly unrecordedEnds: SessionRow[] = [];
 
   constructor(private readonly o: PipelineOptions) {
     o.gate.onRelease((how) => {
@@ -133,9 +133,9 @@ export class Pipeline {
    * halted and the error is thrown (the caller retries later; a restart's recovery closes it).
    */
   resume(): void {
-    if (this.unrecordedEnd !== null) {
-      this.recordEnd(this.unrecordedEnd);
-      this.unrecordedEnd = null;
+    while (this.unrecordedEnds.length > 0) {
+      this.recordEnd(this.unrecordedEnds[0] as SessionRow);
+      this.unrecordedEnds.shift();
     }
     this.halted = false;
     this.start();
@@ -156,31 +156,42 @@ export class Pipeline {
     const discarded = this.o.aggregator.end().filter((o) => o.kind === "discard").length;
     this.current = null;
     this.lastMinuteHour = null;
+    // Sessions stored (stage 1) but never activated because the batch failed: closed too, so no
+    // row is left open behind the next session.
+    for (const orphan of [...this.rows.values()]) {
+      if (orphan.id === row?.id) continue;
+      this.rows.delete(orphan.id);
+      this.closeOnStorageError(orphan, at, 0);
+    }
     if (row === null) return;
     this.rows.delete(row.id);
     const held = this.takeHeld(row.id);
+    row.counters.eventIdGaps = this.o.aggregator.eventIdGapTotal;
+    this.o.onSession?.(null);
+    this.closeOnStorageError(row, at, discarded + held);
+  }
+
+  private closeOnStorageError(row: SessionRow, at: number, discarded: number): void {
     const ended: SessionRow = {
       ...row,
       endedAt: Math.max(at, row.startedAt),
       endReason: "storageError",
       counters: {
         ...row.counters,
-        discardedPartialMinutes: row.counters.discardedPartialMinutes + discarded + held,
-        eventIdGaps: this.o.aggregator.eventIdGapTotal,
+        discardedPartialMinutes: row.counters.discardedPartialMinutes + discarded,
       },
     };
-    this.o.onSession?.(null);
     try {
       this.recordEnd(ended);
     } catch (error) {
-      this.unrecordedEnd = ended;
+      this.unrecordedEnds.push(ended);
       this.o.reporter.report(
         "error",
         "session-end-unrecorded",
         "the session end could not be stored; it is retried on resume, or closed by recovery",
         {
           sessionId: row.id,
-          discardedMinutes: discarded + held,
+          discardedMinutes: discarded,
           error: error instanceof Error ? error.message : String(error),
         },
       );

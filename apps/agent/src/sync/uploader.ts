@@ -150,14 +150,20 @@ export class Uploader {
       const auth = await this.o.auth.validate();
       if (auth !== "valid") {
         if (auth === "invalid") this.pause(SIGNED_OUT);
-        this.authFailures += 1;
-        this.authRetryAt = this.now() + this.jittered(this.authFailures);
+        this.deferAuth();
         return;
       }
-      this.resume();
+      // Probe: the pause is lifted for this pass, but the alert stays until a whole pass runs
+      // without being paused again (no raise/clear flapping on a persistent denial).
+      this.paused = null;
       for (const kind of OUTBOX_KINDS) {
         if (this.paused !== null) return;
         await this.flushKind(kind);
+      }
+      if (this.paused === null) {
+        this.authFailures = 0;
+        this.authRetryAt = 0;
+        this.o.reporter.clear("outbox-paused");
       }
     } catch (error) {
       // Nothing may escape the loop: log and carry on at the next interval.
@@ -168,9 +174,14 @@ export class Uploader {
   }
 
   private pause(reason: string): void {
-    if (this.paused !== null) return;
     this.paused = reason;
     this.o.reporter.raise("outbox-paused", reason);
+  }
+
+  /** The next session re-check waits with exponential backoff. */
+  private deferAuth(): void {
+    this.authFailures += 1;
+    this.authRetryAt = this.now() + this.jittered(this.authFailures);
   }
 
   private jittered(count: number): number {
@@ -266,6 +277,7 @@ export class Uploader {
         const auth = err.code === "permission-denied" ? await this.o.auth.validate() : "invalid";
         if (auth === "invalid") {
           this.pause(SIGNED_OUT);
+          this.deferAuth();
           return "paused";
         }
         if (auth === "unknown") {

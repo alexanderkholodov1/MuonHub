@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { v2 as dp } from "@muonhub/data-provider";
+import { v2 } from "@muonhub/shared";
 import {
   cloudMinutes,
   dataChunks,
@@ -222,5 +223,73 @@ describe("CA12: lost acknowledgement", () => {
     expect(new Set(cloud.map((m) => m.ts)).size).toBe(cloud.length);
     expect(h.store.outboxCounts().pending.minute).toBe(0);
     expect(h.store.outboxCounts().parked).toBe(0);
+  });
+
+  it("absent on read-back → written again: no park, no duplicate", async () => {
+    let lost = 0;
+    const { h, src, clock } = await setup({
+      wrapProvider: (p) => ({
+        ...p,
+        writeMinutes: async (streamId, records) => {
+          // the write never reached the server, and its acknowledgement is "lost"
+          if (lost === 0) {
+            lost += 1;
+            throw new dp.DataProviderError("outcome-unknown");
+          }
+          return p.writeMinutes(streamId, records);
+        },
+      }),
+    });
+    await feed(h, src, { fromHost: T0, count: 3 * 60 + 5, firstId: 1 });
+    await h.agent.drain();
+    expect(h.store.outboxCounts().pending.minute).toBe(h.store.minuteCount(STREAM_ID));
+    expect(await cloudMinutes(h)).toHaveLength(0);
+    clock.t += 10 * MIN;
+    await h.agent.drain();
+    const cloud = await cloudMinutes(h);
+    expect(cloud.length).toBe(h.store.minuteCount(STREAM_ID));
+    expect(new Set(cloud.map((m) => m.ts)).size).toBe(cloud.length);
+    expect(h.store.outboxCounts().pending.minute).toBe(0);
+    expect(h.store.outboxCounts().parked).toBe(0);
+  });
+
+  it("different on read-back → parked as a conflict, never overwritten; the rest uploads", async () => {
+    const memory = new dp.MemoryStore();
+    let lost = 0;
+    let planted: v2.MinuteRecord | null = null;
+    const { h, src, clock } = await setup({
+      memory,
+      wrapProvider: (p) => ({
+        ...p,
+        writeMinutes: async (streamId, records) => {
+          if (lost === 0) {
+            lost += 1;
+            // another writer stored a DIFFERENT minute at the first timestamp
+            const first = records[0]!;
+            planted = { ...first, n: first.n + 7 };
+            const { key, value } = v2.serializeMinute(planted);
+            memory.plantRt(`minutes/${streamId}/${key}`, value);
+            throw new dp.DataProviderError("outcome-unknown");
+          }
+          return p.writeMinutes(streamId, records);
+        },
+      }),
+    });
+    await feed(h, src, { fromHost: T0, count: 4 * 60 + 5, firstId: 1 });
+    await h.agent.drain();
+    clock.t += 10 * MIN;
+    await h.agent.drain();
+    clock.t += 10 * MIN;
+    await h.agent.drain();
+    const parked = h.store.parkedItems(10);
+    expect(parked).toHaveLength(1);
+    expect(parked[0]!.ts).toBe(planted!.ts);
+    expect(parked[0]!.lastError).toMatch(/conflict/);
+    expect(h.agent.status().sync.lastRejected?.code).toBe("conflict");
+    const cloud = await cloudMinutes(h);
+    // the stored minute was not overwritten, and every other minute arrived
+    expect(cloud.find((m) => m.ts === planted!.ts)?.n).toBe(planted!.n);
+    expect(cloud.length).toBe(h.store.minuteCount(STREAM_ID));
+    expect(h.store.outboxCounts().pending.minute).toBe(0);
   });
 });

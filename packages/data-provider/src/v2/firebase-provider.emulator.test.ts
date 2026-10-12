@@ -236,7 +236,10 @@ describeEmu("data layer v2 against the emulators", () => {
     // Online: both reads succeed (and leave the data in the SDK caches).
     expect((await owner.provider.getSession(streamId, "session-1"))?.id).toBe("session-1");
     expect(await owner.provider.getSession(streamId, "no-such-session")).toBeNull();
-    const online = await owner.provider.readMinutes(streamId, { fromTs: base, toTs: base + 60_000 });
+    const online = await owner.provider.readMinutes(streamId, {
+      fromTs: base,
+      toTs: base + 60_000,
+    });
     expect(online.items).toHaveLength(1);
     const app = getApp(appNames.get(owner.provider) as string);
     await disableNetwork(getFirestore(app));

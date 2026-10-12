@@ -99,17 +99,25 @@ describe("CA5: sign-in persistence", () => {
   });
 });
 
-/** A store that fails its writes on demand, like a full disk. */
-function faulty(inner: LocalStore): LocalStore & { failWrites: boolean } {
-  const f = { failWrites: false } as LocalStore & { failWrites: boolean };
+/**
+ * A store that fails its writes on demand, like a full disk: `failWrites` fails raw lines and
+ * minutes; `failAll` also fails every transaction (the session end cannot be recorded either).
+ */
+function faulty(inner: LocalStore): LocalStore & { failWrites: boolean; failAll: boolean } {
+  const f = { failWrites: false, failAll: false } as LocalStore & {
+    failWrites: boolean;
+    failAll: boolean;
+  };
   const err = (): never => {
     throw Object.assign(new Error("database or disk is full"), { code: "ERR_SQLITE_ERROR" });
   };
   return Object.assign(f, inner, {
     appendRawLines: (rows: Parameters<LocalStore["appendRawLines"]>[0]) =>
-      f.failWrites ? err() : inner.appendRawLines(rows),
+      f.failWrites || f.failAll ? err() : inner.appendRawLines(rows),
     commitMinute: (...a: Parameters<LocalStore["commitMinute"]>) =>
-      f.failWrites ? err() : inner.commitMinute(...a),
+      f.failWrites || f.failAll ? err() : inner.commitMinute(...a),
+    transaction: <T>(fn: () => T): T => (f.failAll ? err() : inner.transaction(fn)),
+    setMeta: (k: string, v: string) => (f.failAll ? err() : inner.setMeta(k, v)),
   });
 }
 
@@ -150,7 +158,7 @@ describe("CA13: disk low and SQLite errors", () => {
     src.push(...dataChunks({ fromHost: T0, count: 30, firstId: 1 }));
     await settle(h);
     store.failWrites = true;
-    src.push(...dataChunks({ fromHost: T0 + 40_000, count: 30, firstId: 31 }));
+    src.push(...dataChunks({ fromHost: T0 + 40_000, count: 30, firstId: 31, monoStart: 40_000 }));
     await settle(h);
     await until(() => h.agent.status().device.label === "stopped");
     expect(h.logger.lines.some((l) => l.code === "storage-error" && l.level === "error")).toBe(
@@ -158,6 +166,51 @@ describe("CA13: disk low and SQLite errors", () => {
     );
     await new Promise((r) => setTimeout(r, 60));
     expect(factory.sources).toHaveLength(1);
+    // the session is closed with storageError, its partial minute counted, and its end queued
+    expect(h.agent.pipeline.activeSession).toBeNull();
+    const session = h.store.listSessions(STREAM_ID, 1)[0]!;
+    expect(session.endReason).toBe("storageError");
+    expect(session.endedAt).not.toBeNull();
+    expect(session.counters.discardedPartialMinutes).toBeGreaterThanOrEqual(1);
+    const end = inner
+      .pendingItems("session-end", Number.MAX_SAFE_INTEGER, 10)
+      .find((i) => i.sessionId === session.id);
+    expect(end).toBeDefined();
+    const payload = JSON.parse(end!.payload) as {
+      endReason: string;
+      counters: { discardedPartialMinutes: number };
+    };
+    expect(payload.endReason).toBe("storageError");
+    expect(payload.counters.discardedPartialMinutes).toBe(session.counters.discardedPartialMinutes);
+  });
+
+  it("when even the session end cannot be stored, the session stays open for recovery", async () => {
+    const inner = await openLocalStore({ path: ":memory:" });
+    const store = faulty(inner);
+    const { h, src } = await boot({ store });
+    src.push(...dataChunks({ fromHost: T0, count: 30, firstId: 1 }));
+    await settle(h);
+    const id = h.agent.pipeline.activeSession!.id;
+    store.failAll = true;
+    src.push(...dataChunks({ fromHost: T0 + 40_000, count: 30, firstId: 31, monoStart: 40_000 }));
+    await settle(h);
+    await until(() => h.agent.status().device.label === "stopped");
+    expect(h.agent.pipeline.activeSession).toBeNull();
+    expect(h.logger.lines.some((l) => l.code === "session-end-unrecorded")).toBe(true);
+    // ended_at stays NULL in SQLite: nothing claims the session ended cleanly
+    expect(inner.getSession(id)?.endedAt).toBeNull();
+    expect(inner.openSessions().map((s) => s.id)).toContain(id);
+    // a restart's recovery closes it and queues its end
+    await h.agent.stop();
+    const next = await makeHarness({ factory: scriptedFactory(), store: inner, intervals: quick });
+    harnesses.push(next);
+    await next.agent.start();
+    expect(inner.getSession(id)?.endReason).toBe("unknown");
+    expect(
+      inner
+        .pendingItems("session-end", Number.MAX_SAFE_INTEGER, 10)
+        .some((i) => i.sessionId === id),
+    ).toBe(true);
   });
 });
 

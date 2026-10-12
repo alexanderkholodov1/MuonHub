@@ -217,7 +217,8 @@ export class MemoryStore {
         ["rt:", rtdb, this.rtdb],
       ] as const) {
         for (const [k, v] of now) if (before.get(k) !== v) this.pendingLocal.set(prefix + k, v);
-        for (const k of before.keys()) if (!now.has(k)) this.pendingLocal.set(prefix + k, undefined);
+        for (const k of before.keys())
+          if (!now.has(k)) this.pendingLocal.set(prefix + k, undefined);
         now.clear();
         for (const [k, v] of before) now.set(k, v);
       }
@@ -691,8 +692,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
             if (entries.some((e) => store.rtdb.has(`minutes/${streamId}/${e.key}`))) {
               throw new DataProviderError("permission-denied");
             }
-            for (const e of entries)
-              store.rtdb.set(`minutes/${streamId}/${e.key}`, clone(e.value));
+            for (const e of entries) store.rtdb.set(`minutes/${streamId}/${e.key}`, clone(e.value));
           };
           if (store.checkFault("writeMinutes.chunk") === "pending-local") {
             await store.divertToLocal(write);
