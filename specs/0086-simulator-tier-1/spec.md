@@ -213,7 +213,7 @@ The Moyal density `f(λ) = exp(−(λ + e^(−λ))/2)/√(2π)` with `λ = (x �
 
 - Tier 2/3 simulations (EcoMug, CRY, PUMAS, Geant4) — later milestones, offline.
 - Writing to pseudo-terminals, serial ports, files, or Firebase — the agent (spec 0087) does I/O.
-- Sampled streams (seismometer) and multichannel muograph hodoscopes — after 6.0.0; the interfaces
+- Sampled streams (seismometer) and multichannel muograph hodoscopes — M5 and M6, before 6.0.0; the interfaces
   here do not preclude them.
 - Comparison and coincidence analysis tools — M3 (they will consume this package's ground truth).
 

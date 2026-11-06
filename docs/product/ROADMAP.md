@@ -5,7 +5,7 @@
 
 ## Rules of the road
 
-- **Six milestones, one pull request each.** A milestone's PR opens only when everything in it is
+- **Eight milestones, one pull request each** (M5 and M6 added on 2026-11-06). A milestone's PR opens only when everything in it is
   planned, tested (unit and integration), **validated in real practice with real hardware**, and
   corrected along the way. Inside each PR there are many commits carrying minor versions
   (ADR-008).
@@ -91,20 +91,15 @@ recovered.
 **Validation before the PR opens:** a new detector configured from scratch; a backup actually
 restored.
 
-### Seismic channel and muography — before `6.0.0` (placement **Proposed**)
+### The seismic channel and muography in v6
 
-> **Maintainer decision (2026-11-05):** "quisiera que lo probemos integrar EN la v6, antes de sacar
-> el release oficial" — integrate the seismic channel and muography into v6 before the official
-> `6.0.0` release, instead of leaving them for 6.x.
+> **Maintainer decisions:** "quisiera que lo probemos integrar EN la v6, antes de sacar el release
+> oficial" (2026-11-05) — integrate the seismic channel and muography into v6 before the official
+> `6.0.0` release, instead of leaving them for 6.x. The placement below was approved on 2026-11-06
+> ("Me gusta"), and so was the software-only fallback for muography ("Si, perfecto, e idealmente los
+> datos deben comprobarse y no tener un error demasiado grande").
 
-**Proposed placement:** two milestones after M4 and before Migration + launch, which becomes the
-last one:
-
-| Proposed | Milestone | Versions |
-|---|---|---|
-| M5 | Seismic channel | `6.0.0-alpha.5.x` |
-| M6 | Muography | `6.0.0-alpha.6.x` |
-| M7 | Migration + launch (today's M5) | `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** |
+They are two milestones after M4, and Migration + launch becomes the last one (M7).
 
 Why this placement:
 - **Both come after M4** because they reuse what M2–M4 build. Bring Your Own Detector (M4) defines
@@ -118,33 +113,40 @@ Why this placement:
   can start early, in parallel with M2–M4, and its result fixes the demonstrator's geometry and
   target before M6 starts.
 
-Until the maintainer approves this placement, the milestone numbers below stay as they are; the
-renumbering (here, ADR-008, the backlog, and the documents that cite "M5") is done in one pass after
-approval. Items: [`BACKLOG.md`](BACKLOG.md#before-600--seismic-channel-and-muography-placement-proposed).
+Items: [`BACKLOG.md`](BACKLOG.md#m5--seismic-channel) and
+[`BACKLOG.md`](BACKLOG.md#m6--muography).
 
-**Seismic channel (proposed M5):** identify the sensor from its output and define it as a sampled
-device type; raw samples stay on the agent machine and only per-minute features and an event
-catalogue reach the cloud; the seismometer also serves as a systematics channel for the particle
-detectors; an exploratory correlation analysis with a pre-registered protocol and controls — never
-presented as earthquake prediction.
-**Validation (Proposed):** the real sensor beside the CosmicWatch for 72 hours as an acquisition and
-systematics test — the cloud features recomputed independently from the local samples with a
-versioned recipe, complete-minute coverage with every gap explained, and the correlation protocol
-committed and checked on synthetic data before any correlation result is inspected. A positive
-correlation is not a pass condition.
+### M5 — Seismic channel · `6.0.0-alpha.5.x`
 
-**Muography (proposed M6):** feasibility simulation (EcoMug, PUMAS) → the muograph identified from
-its output as a multichannel device type → event building and tracks in the agent → open-sky angular
-rate maps compared with an acceptance-folded flux model → transmission ratio maps with counting
-uncertainty from both exposures and an exposure-time estimate → a first-order line-of-sight opacity;
-heavy inversion stays in an offline service on free compute.
-**Validation (Proposed):** quantitative criteria fixed by the feasibility study before acquisition;
-the open-sky counts tested against the acceptance-folded prediction, and the transmission of an
-independently characterized target measured to the declared precision. If the hardware is not
-ready, the maintainer may accept a clearly labelled software-only milestone on simulated data, with
-the physical validation left explicitly outstanding.
+**Goal:** the seismic sensor, identified from its output, is defined as a sampled device type; raw
+samples stay on the agent machine and only per-minute features and an event catalogue reach the
+cloud; the seismometer also serves as a systematics channel for the particle detectors; an
+exploratory correlation analysis with a pre-registered protocol and controls — never presented as
+earthquake prediction.
 
-### M5 — Migration + launch · `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** (stages **Proposed**; becomes M7 under the proposal above)
+**Validation before the PR opens:** the real sensor beside the CosmicWatch for 72 hours as an
+acquisition and systematics test — the cloud features recomputed independently from the local
+samples with a versioned recipe, complete-minute coverage with every gap explained, and the
+correlation protocol committed and checked on synthetic data before any correlation result is
+inspected. A positive correlation is not a pass condition.
+
+### M6 — Muography · `6.0.0-alpha.6.x`
+
+**Goal:** feasibility simulation (EcoMug, PUMAS) → the muograph identified from its output as a
+multichannel device type → event building and tracks in the agent → open-sky angular rate maps
+compared with an acceptance-folded flux model → transmission ratio maps with counting uncertainty
+from both exposures and an exposure-time estimate → a first-order line-of-sight opacity; heavy
+inversion stays in an offline service on free compute.
+
+**Validation before the PR opens:** quantitative criteria (including the maximum acceptable error)
+fixed by the feasibility study before acquisition; the open-sky counts tested against the
+acceptance-folded prediction, and the transmission of an independently characterized target
+measured to the declared precision. If the hardware is not ready, the milestone may close as a
+clearly labelled software-only milestone (approved 2026-11-06): simulated open-sky and target data
+whose planted values are recovered within the declared error, with the physical validation left
+explicitly outstanding.
+
+### M7 — Migration + launch · `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** (stages **Proposed**)
 
 **Goal:** v5 users and data move to v6; MuonHub 6 launches.
 
@@ -156,8 +158,8 @@ the sources; real users signing in to v6 and finding their history.
 
 ## After 6.0.0 (6.x)
 
-- The seismic channel and muography moved before `6.0.0` (maintainer decision of 2026-11-05; see
-  above). The multichannel and sampled data model was designed in M1 so that neither forces a
+- The seismic channel and muography moved before `6.0.0` (M5 and M6; maintainer decision of
+  2026-11-05). The multichannel and sampled data model was designed in M1 so that neither forces a
   rewrite.
 - Other candidates (Proposed): LLM assistance, machine learning, station networks, public API — see
   the backlog.

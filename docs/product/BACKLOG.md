@@ -122,7 +122,7 @@ network cuts, plus the virtual detector.
 | B-M2-12 | **App Check enforced** (after a monitoring period); Analytics optional with a privacy notice. | Products approved: session record §1.4; monitor-then-enforce approach: A.1 (Proposed) |
 | B-M2-13 | **Accessibility and polish:** form ARIA wiring, no nested interactive elements, no theme flash, mobile navigation. | Audit §4.2 |
 | B-M2-14 | **End-to-end tests** (Playwright) including phone viewports and deep links. | Audit §4.6 (v5 mobile lesson) |
-| B-M2-15 | **i18n-ready strings** from the start (English source); full translations in M5. | Archived 0023 |
+| B-M2-15 | **i18n-ready strings** from the start (English source); full translations in M7. | Archived 0023 |
 | B-M2-16 | **First deployment** to `muonhub.web.app` (staging approach: see Open questions). | Roadmap |
 
 **M2 validation:** real use on a phone and on a computer with the real detector.
@@ -168,14 +168,12 @@ network cuts, plus the virtual detector.
 
 ---
 
-## Before 6.0.0 — Seismic channel and muography (placement **Proposed**)
+## M5 — Seismic channel
 
-The maintainer decided on 2026-11-05 to integrate both into v6 before the official `6.0.0` release;
-they were planned for 6.x (former B-P-01 and B-P-02). The proposed placement is two milestones after
-M4 and before Migration + launch ([`ROADMAP.md`](ROADMAP.md)). These IDs stay stable whatever numbers
-the milestones receive.
-
-### Seismic channel (proposed M5)
+The maintainer decided on 2026-11-05 to integrate the seismic channel and muography into v6 before
+the official `6.0.0` release (they were planned for 6.x as B-P-01 and B-P-02), and approved their
+placement as M5 and M6 on 2026-11-06 ([`ROADMAP.md`](ROADMAP.md)). The B-SE and B-MU IDs keep the
+names they were first written with.
 
 | ID | Item | Source |
 |---|---|---|
@@ -187,7 +185,7 @@ the milestones receive.
 | B-SE-06 | **Public seismic data (optional):** FDSN web services (miniSEED, StationXML) as an external source beside the station's own sensor, licences honoured. | Research notes §D |
 | B-SE-07 | **Views:** per-minute seismic features beside the particle rate in the dashboard and in the comparison toolkit (B-M3-02). | Session record A.7.1 |
 
-**Validation (Proposed):** the real sensor beside the CosmicWatch for 72 hours, as an acquisition
+**M5 validation:** the real sensor beside the CosmicWatch for 72 hours, as an acquisition
 and systematics test. The cloud features are recomputed independently from the immutable local
 samples with a versioned recipe (units, sensor response, passband, RMS/peak/trigger definitions,
 numerical tolerances). Time alignment and complete-minute coverage are verified across interruptions
@@ -197,7 +195,9 @@ is inspected, and its statistics are validated on synthetic null and injected-si
 positive physical correlation is **not** a pass condition; the scientific observing span is set
 separately from this 72-hour integration test.
 
-### Muography (proposed M6)
+---
+
+## M6 — Muography
 
 | ID | Item | Source |
 |---|---|---|
@@ -209,15 +209,16 @@ separately from this 72-hour integration test.
 | B-MU-06 | **Offline analysis service** (Python: heavy inversion and simulation) on the maintainer's machines or included CI — never on paid compute (ADR-005). | Session record A.7.8 |
 | B-MU-07 | **Simulator tier 2:** a virtual muograph (multichannel hits from a realistic angular distribution) so that the agent and the maps are tested without the hardware. | Spec 0086 (out of scope there); research notes §B |
 
-**Validation (Proposed):** before acquisition, the feasibility study fixes the geometry, the target's
+**M6 validation:** before acquisition, the feasibility study fixes the geometry, the target's
 path length and density (with uncertainties), the angular bins, the required exposure, and
-quantitative acceptance criteria. With the real muograph: the open-sky counts are tested against the
+quantitative acceptance criteria, including the maximum acceptable error. With the real muograph: the open-sky counts are tested against the
 acceptance-folded prediction, and the target transmission is measured with enough exposure to meet
 the declared precision, then compared — transmission and inferred opacity, with statistical and
 systematic uncertainties — with the independently characterized target. Known-answer simulations
-also recover planted tracks and opacity. If the hardware is not ready, the maintainer may accept a
-clearly labelled software-only milestone on simulated open-sky and target data; the real-instrument
-and physical-target validation then remain explicitly outstanding.
+also recover planted tracks and opacity. If the hardware is not ready, M6 closes as a clearly
+labelled software-only milestone (approved by the maintainer on 2026-11-06): simulated open-sky and
+target data whose planted values are recovered within the declared error; the real-instrument and
+physical-target validation then remain explicitly outstanding.
 
 ### Designed for in the earlier milestones (Proposed)
 
@@ -233,16 +234,16 @@ So that neither instrument forces a rewrite later:
 
 ---
 
-## M5 — Migration + launch
+## M7 — Migration + launch
 
 | ID | Item | Source |
 |---|---|---|
-| B-M5-01 | **v5 → v6 migration tool:** read-only from the live v5 project (`munhub-1`) and the `munra-1` cold dump; streaming, idempotent, resumable, quarantine report; v5 profiles → stations + streams; fragment profiles quarantined; personal data only into protected paths; spectrum recovered only where event amplitudes exist. | Session record §5; archived 0007 |
-| B-M5-02 | **Cutover:** the agent machine switches from the v5 reader to the agent; v5 stays on its own site and project. | Session (2026-10-02) |
-| B-M5-03 | **Translations** (Spanish, Brazilian Portuguese) and locale-aware units. | Archived 0023, 0073 |
-| B-M5-04 | **User manual and FAQ** (English first, then Spanish and Portuguese); technical documentation complete. | Archived 0047, 0048, 0055 |
-| B-M5-05 | **Academic artifacts:** `CITATION.cff`, Zenodo DOI for the release, a published MuonHub dataset with a DOI (CC-BY 4.0). | Archived 0050, 0069; session record §6 |
-| B-M5-06 | **Release `6.0.0`:** compiled changelog and launch checklist. | ADR-008 |
+| B-M7-01 | **v5 → v6 migration tool:** read-only from the live v5 project (`munhub-1`) and the `munra-1` cold dump; streaming, idempotent, resumable, quarantine report; v5 profiles → stations + streams; fragment profiles quarantined; personal data only into protected paths; spectrum recovered only where event amplitudes exist. | Session record §5; archived 0007 |
+| B-M7-02 | **Cutover:** the agent machine switches from the v5 reader to the agent; v5 stays on its own site and project. | Session (2026-10-02) |
+| B-M7-03 | **Translations** (Spanish, Brazilian Portuguese) and locale-aware units. | Archived 0023, 0073 |
+| B-M7-04 | **User manual and FAQ** (English first, then Spanish and Portuguese); technical documentation complete. | Archived 0047, 0048, 0055 |
+| B-M7-05 | **Academic artifacts:** `CITATION.cff`, Zenodo DOI for the release, a published MuonHub dataset with a DOI (CC-BY 4.0). | Archived 0050, 0069; session record §6 |
+| B-M7-06 | **Release `6.0.0`:** compiled changelog and launch checklist. | ADR-008 |
 
 ---
 
@@ -250,8 +251,8 @@ So that neither instrument forces a rewrite later:
 
 | ID | Item | Source |
 |---|---|---|
-| B-P-01 | *Moved before 6.0.0 (maintainer, 2026-11-05):* seismic channel → B-SE-01 … B-SE-07. | — |
-| B-P-02 | *Moved before 6.0.0 (maintainer, 2026-11-05):* muography → B-MU-01 … B-MU-07. | — |
+| B-P-01 | *Moved before 6.0.0 (maintainer, 2026-11-05):* seismic channel → M5, B-SE-01 … B-SE-07. | — |
+| B-P-02 | *Moved before 6.0.0 (maintainer, 2026-11-05):* muography → M6, B-MU-01 … B-MU-07. | — |
 | B-P-03 | **LLM assistance** (device-type mapping, analysis help) after proofs of concept. | Session record §3.5 |
 | B-P-04 | **Machine learning** on top of the deterministic base, with per-station consent (Proposed). | Archived 0044–0046, 0066 |
 | B-P-05 | **Station networks** and simultaneous-event detection (Proposed). | Archived 0056, 0058 |
@@ -300,7 +301,7 @@ canonical numbers (its own mapping table) differ from the first-attempt spec fol
 | 0004 | DataProvider interface | M1 · B-M1-14, B-M1-15 |
 | 0005 | Physics package | M1 · B-M1-08…12 |
 | 0006 | FirebaseProvider | M1 · B-M1-14 |
-| 0007 | v5 → v6 migration | M5 · B-M5-01 |
+| 0007 | v5 → v6 migration | M7 · B-M7-01 |
 | 0008 | `munhub-1` config (rules, keys, indexes) | Superseded by the `muonhub` project → B-M1-17, B-M1-33 |
 | 0009 | Auth | M2 · B-M2-03 |
 | 0010 | Roles, tenancy, permissions | M1 rules (B-M1-17) + M2 sharing (B-M2-05) |
@@ -316,7 +317,7 @@ canonical numbers (its own mapping table) differ from the first-attempt spec fol
 | 0020 | Comparison and contrast | M3 · B-M3-02 |
 | 0021 | Honest particle labelling | M2 · B-M2-08 |
 | 0022 | Multi-format export | M3 · B-M3-08 |
-| 0023 | i18n, theming, accessibility | M2 (B-M2-13, B-M2-15) + M5 (B-M5-03) |
+| 0023 | i18n, theming, accessibility | M2 (B-M2-13, B-M2-15) + M7 (B-M7-03) |
 | 0024 | Detector map (city aggregation) | M2 · B-M2-11 (owner-chosen precision) |
 | 0025 | Live demo of a public detector | M2 · B-M2-10 |
 | 0026 | Educational sections | M2 · B-M2-09 |
@@ -340,15 +341,15 @@ canonical numbers (its own mapping table) differ from the first-attempt spec fol
 | 0044 | AI design document | Archived (planning document) |
 | 0045 | ML pipeline | After 6.0 · B-P-04 (Proposed) |
 | 0046 | `ai_insights` contract + UI | After 6.0 · B-P-04 (Proposed) |
-| 0047 | User manual + FAQ | M5 · B-M5-04 |
-| 0048 | Technical documentation | Every PR (docs are part of done) + M5 · B-M5-04 |
+| 0047 | User manual + FAQ | M7 · B-M7-04 |
+| 0048 | Technical documentation | Every PR (docs are part of done) + M5 · B-M7-04 |
 | 0049 | Scientific article base | After 6.0 (Proposed) |
-| 0050 | Academic and community artifacts | M5 · B-M5-05 |
+| 0050 | Academic and community artifacts | M7 · B-M7-05 |
 | 0051 | Red Clara resource tiers | Dropped — no Red Clara |
 | 0052 | Notification centre | M4 · B-M4-04 |
 | 0053 | Transactional email | M4 (Proposed; Firebase Auth already sends account emails) |
 | 0054 | Ticket system | After 6.0 (Proposed); device-type feedback threads cover part (B-M4-02) |
-| 0055 | Public FAQ | M5 · B-M5-04 |
+| 0055 | Public FAQ | M7 · B-M7-04 |
 | 0056 | Network CRUD + station linking | After 6.0 · B-P-05 (Proposed) |
 | 0057 | Multi-station comparative view | M3 · B-M3-02 |
 | 0058 | Simultaneous network event detection | After 6.0 · B-P-05 (Proposed) |
@@ -362,8 +363,8 @@ canonical numbers (its own mapping table) differ from the first-attempt spec fol
 | 0066 | ML consent | After 6.0 · B-P-04 |
 | 0067 | Entitlements + metering | After 6.0 (Proposed); related to Bring Your Own DataBase |
 | 0068 | Public read-only API | After 6.0 · B-P-07 (Proposed) |
-| 0069 | Dataset citation + status page | M5 · B-M5-05 (DOI); status page after 6.0 (Proposed) |
+| 0069 | Dataset citation + status page | M7 · B-M7-05 (DOI); status page after 6.0 (Proposed) |
 | 0070 | Historical data import + ZIP backup | M4 · B-M4-13 (Proposed) |
 | 0071 | Fully local agent mode | M1 · B-M1-28 |
 | 0072 | Data quality, robustness, concurrency | M1 · B-M1-02, B-M1-16, B-M1-22 + M2 · B-M2-06 (health) |
-| 0073 | Localization, versioned Terms, public chart embed | M5 · B-M5-03 (locale, Terms) + after 6.0 · B-P-07 (embed) |
+| 0073 | Localization, versioned Terms, public chart embed | M7 · B-M7-03 (locale, Terms) + after 6.0 · B-P-07 (embed) |

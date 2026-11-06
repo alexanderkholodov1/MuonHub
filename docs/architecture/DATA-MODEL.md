@@ -128,7 +128,7 @@ are omitted. The round trip is lossless (property test over 10 000 generated rec
 | Sessions and status | a few Firestore writes per stream-day; status heartbeats in RTDB |
 | Dashboard reads | one day-summary read per day of range; minutes only for short ranges |
 
-## 7. v5 → v6 field mapping (for the M5 migration)
+## 7. v5 → v6 field mapping (for the M7 migration)
 
 | v5 (`profiles/{id}/sessions/{sid}/minutes/{ts}`) | v6 minute record | Notes |
 |---|---|---|

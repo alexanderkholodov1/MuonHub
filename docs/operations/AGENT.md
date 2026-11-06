@@ -128,7 +128,7 @@ raw bytes as a test fixture. It refuses to run while the daemon holds the same p
 
 ## v5 compatibility bridge
 
-For the period until the M5 cutover the agent can serve the v5 website: set
+For the period until the M7 cutover the agent can serve the v5 website: set
 `"bridge": {"enabled": true, "port": 8765}`. It speaks exactly the v5 protocol
 (`bridge_info`, one `serial_data` per raw line, `ping`/`pong`, `status`), listens on `127.0.0.1` only,
 checks `Host` and `Origin` (allowlist `bridge.allowedOrigins`; a missing `Origin` is refused and `"null"` is not allowed unless you add it explicitly), accepts only `ping` and `status`, caps

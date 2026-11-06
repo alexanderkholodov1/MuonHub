@@ -283,4 +283,4 @@ agent adapts them to es/en/pt-BR for the educational texts.
   *Int. J. Astron. Astrophys.* 13, 236–258. https://doi.org/10.4236/ijaa.2023.133013
 - NMDB (Neutron Monitor Database); NOAA SWPC; NASA DONKI.
 
-> Verify and complete citations (DOI/links) when preparing the scientific article (launch milestone M5).
+> Verify and complete citations (DOI/links) when preparing the scientific article (launch milestone M7).

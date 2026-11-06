@@ -11,9 +11,9 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.1.7` · branch `feat/m1-core-a
 | M2 Web platform | Accounts, stations and devices, live dashboard, public site and live page | ⏳ |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
-| *Proposed M5* | Seismic channel — before `6.0.0` (maintainer decision 2026-11-05; placement Proposed) | ⏳ |
-| *Proposed M6* | Muography — before `6.0.0` (maintainer decision 2026-11-05; placement Proposed) | ⏳ |
-| M5 Migration + launch (*Proposed M7*) | v5 → v6 migration, i18n, manual, DOI → `6.0.0` | ⏳ |
+| M5 Seismic channel | Sampled device type, per-minute features, systematics channel, pre-registered exploratory correlation | ⏳ |
+| M6 Muography | Feasibility simulation, tracks, open-sky and transmission maps, first-order opacity | ⏳ |
+| M7 Migration + launch | v5 → v6 migration, i18n, manual, DOI → `6.0.0` | ⏳ |
 
 ## M1 progress
 
@@ -25,8 +25,8 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.1.7` · branch `feat/m1-core-a
 | 4 Physics · 5 Simulator | ✅ physicist review applied | `6.0.0-alpha.1.4`, `.1.5` |
 | 6 Data layer v2 and rules v2 | ✅ security and silent-failure reviews applied; nothing deployed | `6.0.0-alpha.1.6` |
 | 7 Agent daemon | ✅ security and silent-failure reviews applied | `6.0.0-alpha.1.7` |
-| 8 Firebase setup and first deploy | ⏳ **maintainer:** set up `muonhub` per [`operations/FIREBASE-SETUP.md`](operations/FIREBASE-SETUP.md) and create `muonhub-dev` (decision A); then the v2 rules are deployed with his go-ahead | — |
-| 9 Site access and format capture | ⏳ **maintainer on site:** Tailscale on the university PC ([`operations/REMOTE-ACCESS.md`](operations/REMOTE-ACCESS.md)); then a ~10-minute capture | — |
+| 8 Firebase setup and first deploy | ⏳ done by the agent (maintainer, 2026-11-06: "Configura Firebase tu mismo") once the Firebase CLI on the laptop is signed in again (its session expired); `muonhub-dev` created the same way | — |
+| 9 Site access and format capture | ⏳ **maintainer on site:** Tailscale on the university PC (approach proposed 2026-11-06 in the session record; [`operations/REMOTE-ACCESS.md`](operations/REMOTE-ACCESS.md)); then a ~10-minute capture | — |
 | 10 Measurements | ⏳ needs `muonhub-dev` (step 8) | — |
 | 11 Install and 72-hour validation | ⏳ needs steps 8–9 and sudo on the university PC (decision H) | — |
 | 12 Review and close, PR #2 | ⏳ | — |
@@ -43,13 +43,15 @@ Details of each step: the execution log at the end of the M1 plan.
 ## Open questions for the maintainer
 
 **New (2026-11-06):**
-1. **Placement of the seismic channel and muography** before `6.0.0`: two milestones after M4
-   (proposed M5 Seismic, M6 Muography; Migration + launch becomes M7) — see
-   [`product/ROADMAP.md`](product/ROADMAP.md). The renumbering is done once this is approved.
-2. **The two new instruments:** does the seismic sensor exist today (model, where)? Does the
-   muograph exist, is it being built, or is it planned (channels, geometry)?
-3. **Muography validation:** if the muograph hardware is not ready, may M6 be validated with the
-   virtual muograph?
+1. **Remote access to the lab PC:** a separate lab tailnet whose PC is shared to the maintainer's
+   account (one-way by Tailscale's default quarantine), instead of joining his own tailnet — proposed
+   in [`audit/2026-11-06-SESSION-RECORD.md`](audit/2026-11-06-SESSION-RECORD.md) §6.
+2. **The two new instruments exist** (maintainer, 2026-11-06); their models, channels and geometry
+   are read once the lab PC is reachable.
+
+**Decided 2026-11-06:** placement M5 Seismic channel, M6 Muography, M7 Migration + launch; M6 may
+close software-only on simulated data recovered within a declared error if the muograph is not
+ready.
 
 **Open, decided later:**
 1. Public live demo mechanism (ADR-005 §6, Proposed) — decided by the M1 step-10 measurement.

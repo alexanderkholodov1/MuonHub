@@ -42,7 +42,7 @@ Extensions require the Blaze plan and are **not** part of the architecture.
   **[verified]**. Session/minute volume has not been measured yet.
 - Known v5 issues found during the audit are recorded in a private, git-ignored note under
   `private/`. They are addressed by v6, not by patching v5.
-- v5 → v6 data migration belongs to milestone M5.
+- v5 → v6 data migration belongs to milestone M7.
 
 ### `munra-1` — legacy v5 project
 
@@ -50,7 +50,7 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 - Its cold Realtime Database dump (data and rules, 2026-06-07) and a service-account key are on the
   maintainer's laptop, in the git-ignored `private/` folder of the first-attempt checkout
   (`C:\My Files\MunHub\private\`) **[verified 2026-11-06, file names only]**. They are not copied to
-  the agent node Beacon; both are needed only for the M5 migration.
+  the agent node Beacon; both are needed only for the M7 migration.
 
 ## Local emulator (tests)
 

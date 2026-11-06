@@ -13,7 +13,8 @@
   `6.3.0-beta`) and then releasing `6.0.0` makes versions go *backwards*. SemVer orders
   `6.3.0-beta` above `6.0.0`, and tools that compare versions — package managers, and the agent's
   updater — would treat the final release as older.
-- **The maintainer's PR policy:** few, large PRs — about 5–6 for the whole of v6. Each opens only
+- **The maintainer's PR policy:** few, large PRs — about 5–6 for the whole of v6 (8 since the
+  2026-11-06 amendment below). Each opens only
   when its milestone is fully planned, tested (unit and integration), **validated in real practice
   with real hardware**, and corrected along the way. Each contains many commits with minor
   versions.
@@ -50,13 +51,14 @@
 | M2 Web platform | 3 | Accounts, stations/devices/streams, live dashboard (also mobile), public map with privacy levels, public live demo, deployment to `muonhub.web.app` |
 | M3 Science | 4 | Comparison, stacked coincidences, geometry and assemblies, versioned calibration, views |
 | M4 Open platform | 5 | Bring Your Own Detector, operations (backups, alerts, usage monitor), external and open data, offline collection |
-| M5 Migration + launch | 6 | v5 → v6 migration, i18n, manual, DOI → `6.0.0` |
+| M5 Seismic channel | 6 | Sampled device type, local raw samples with per-minute features in the cloud, systematics channel, pre-registered exploratory correlation |
+| M6 Muography | 7 | Feasibility simulation, multichannel device type, tracks, open-sky and transmission maps, first-order opacity |
+| M7 Migration + launch | 8 | v5 → v6 migration, i18n, manual, DOI → `6.0.0` |
 
-~~After `6.0.0`, in 6.x releases: the seismic channel, and muography (study → simulation →
-demonstrator).~~ **Amended by the maintainer on 2026-11-05:** both are integrated into v6 before
-`6.0.0`. The proposed placement is two new milestones after M4 (M5 Seismic channel, M6 Muography),
-which moves Migration + launch to M7. The placement and the renumbering of this table are
-**Proposed** until the maintainer approves them ([`ROADMAP.md`](../../product/ROADMAP.md)).
+**Amendment (2026-11-05 and 2026-11-06).** The seismic channel and muography were first planned
+for 6.x releases after `6.0.0`. The maintainer moved both into v6 before `6.0.0` on 2026-11-05 and
+approved their placement as M5 and M6 on 2026-11-06, which moved Migration + launch from M5 to M7
+and the number of v6 pull requests from about 6 to 8 ([`ROADMAP.md`](../../product/ROADMAP.md)).
 
 ### Rules
 1. **One branch and one PR per milestone.** The branch is pushed regularly as a backup. The PR is

@@ -216,7 +216,7 @@ bundle packager (M4), or a cloud raw uploader (admin-gated, M4).
   (`version`, `serial_port`, `baud_rate`, `os`, `message`), one `serial_data` message per raw line
   (`line`, `ts` in ms), `ping` → `pong` (`ts`), `status` → `status` (`serial_connected` — the **real**
   port state, `clients`, `serial_port`). Bound to `127.0.0.1` only. Enabled by configuration until
-  the M5 cutover. **Safety and isolation:**
+  the M7 cutover. **Safety and isolation:**
   - binding to localhost does not stop browser pages (WebSockets ignore CORS), so the `Origin` header
     is checked against an allowlist (the v5 site origins `https://munhub-lab.web.app`,
     `https://munhub-1.web.app`, `https://munhub-1.firebaseapp.com` *(Proposed list)*); a **missing**
@@ -356,7 +356,7 @@ parallel, 72 h of the virtual detector on `muonhub-dev` with ground truth compar
 Web dashboards and the public live page (M2); public showcase writes until ADR-005 §6 is decided
 (step 10); Raspberry Pi/arm64 packaging, GPS/RTC timing, sealed offline bundles (M4); cloud raw
 upload (admin-gated, M4); Windows/macOS services (M4); multichannel and sampled devices beyond
-contracts (6.x); auto-update (Proposed for M4).
+contracts (M5–M6); auto-update (Proposed for M4).
 
 ## Tasks
 

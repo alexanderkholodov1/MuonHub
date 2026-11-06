@@ -73,7 +73,7 @@ documentation. The Spanish column gives the term used in the chat and in the Spa
 - **Data model:** the M1 data model is designed around `deviceTypes`, `devices`, `stations`,
   `assemblies`, `streams`, `sessions`, `calibrations`, `recipes`, and `views` (detailed in the M1
   specs).
-- **Migration:** v5 data maps profile → station + stream (M5).
+- **Migration:** v5 data maps profile → station + stream (M7).
 - **Writing:** agents and contributors must not use "detector" as a domain term in new work.
 
 ## Alternatives considered

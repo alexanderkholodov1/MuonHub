@@ -22,7 +22,7 @@ storage layout in Firebase (Firestore + Realtime Database). It does **not** impl
 (partial first/last minutes discarded, as in v5 — ADR-006 rule 7); intensive quantities are time
 averages, never sums; realtime is a short ephemeral window (v5 keeps 8 minutes); the per-minute
 record keeps v5's quantities (event count, coincidences, amplitude mean/min/max, temperature,
-pressure, dead time) so v5 data can be migrated in M5.
+pressure, dead time) so v5 data can be migrated in M7.
 
 **Changes from established behavior (labelled):** (1) dead time is stored as the increment of the
 device's cumulative counter (live time), not as an average of the raw column (ADR-006 rule 8, change
@@ -156,7 +156,7 @@ minute (e.g. after a parser fix) is written under a new session/version, never s
     provider, and agent core directly. Nothing deployable is lost (v6 has never been deployed), and no
     effort is spent keeping soon-replaced code compiling.
 - Documentation: new `docs/architecture/DATA-MODEL.md` (entities, paths, compact key table, budget
-  estimates, v5 → v6 field mapping for M5).
+  estimates, v5 → v6 field mapping for M7).
 
 ## Acceptance criteria (verifiable)
 
@@ -187,7 +187,7 @@ schema rejections outside deliberately malformed test input).
 
 Data-layer implementation and rules (step 6, spec 0084); recipes and views beyond the calibration
 record (M3); Bring Your Own Detector editor and catalogue workflow (M4); cloud storage of raw lines,
-multichannel events, or sampled data (M4/6.x); migration tooling (M5).
+multichannel events, or sampled data (M4–M6); migration tooling (M7).
 
 ## Tasks
 

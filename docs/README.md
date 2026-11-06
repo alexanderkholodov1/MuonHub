@@ -3,7 +3,7 @@
 | Section | What you find there |
 |---|---|
 | [`STATUS.md`](STATUS.md) | Where the project is right now: active milestone, progress, open questions |
-| [`product/`](product/) | Vision, roadmap (milestones M0–M5), backlog, public site plan |
+| [`product/`](product/) | Vision, roadmap (milestones M0–M7), backlog, public site plan |
 | [`decisions/`](decisions/) | Architecture decision records (ADRs) and the status of the historical decision log D1–D46 |
 | [`architecture/`](architecture/) | System architecture of the v6 rebuild |
 | [`science/`](science/) | Theoretical foundation, serial data formats, research notes |

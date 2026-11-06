@@ -8,7 +8,7 @@
   and survives USB unplugs, network cuts, and reboots without losing or duplicating data. Underneath
   it: corrected physics, contracts v2, a data layer v2 with security rules tested against real
   identities, and a synthetic "virtual detector".
-- **Pull request:** #2 of ~6 · **Branch:** `feat/m1-core-agent` · **Versions:** `6.0.0-alpha.1.x`
+- **Pull request:** #2 of 8 · **Branch:** `feat/m1-core-agent` · **Versions:** `6.0.0-alpha.1.x`
 - **Depends on:** M0 merged (PR #57, tag `v6.0.0-alpha.0.4.3`); Firebase setup by the maintainer
   (step 8); site access with Tailscale (step 9).
 - **Backlog items:** B-M1-01 … B-M1-36 ([`../BACKLOG.md`](../BACKLOG.md)).
@@ -75,9 +75,9 @@
 
 Web interface, dashboards, public site and live page (M2); comparison, coincidences, calibration UI,
 assembly editor (M3); Bring Your Own Detector terminal and catalogue, backups vault, alerts, external
-data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seismic and muography
-(before 6.0.0 since the maintainer's decision of 2026-11-05; placement Proposed in the roadmap). App
-Check enforcement (M2).
+data, Raspberry Pi and offline bundles (M4); the seismic channel (M5) and muography (M6), both before
+6.0.0 since the maintainer's decision of 2026-11-05; v5 migration and cutover (M7). App Check
+enforcement (M2).
 
 ## Needs the maintainer's approval
 
@@ -89,7 +89,7 @@ Check enforcement (M2).
   `ws://localhost:8765` with the same messages as v5's Python bridge (`serial_data` lines,
   `bridge_info`, `ping`/`status`), so the open v5 page keeps recording to `munhub-1` while the agent
   owns the serial port. No v5 code changes; the Python bridge is stopped and the v5 page uses its
-  bridge mode. Recommended; it also makes the M5 cutover painless. Alternative: a planned v5 pause.
+  bridge mode. Recommended; it also makes the M7 cutover painless. Alternative: a planned v5 pause.
 - **C. Node 24 LTS for the whole repository** (not only the agent). Recommended.
 - **D. Upgrade split:** zod, vitest, ESLint, TypeScript in M1; Next, React, maplibre with the web
   in M2. Recommended.

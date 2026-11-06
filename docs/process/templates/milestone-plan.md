@@ -7,7 +7,7 @@
 -->
 
 - **Goal:** <one paragraph: what "done" means for this milestone>
-- **Pull request:** #<n> of ~6 · **Branch:** `<type>/m<n>-<slug>` · **Versions:**
+- **Pull request:** #<n> of 8 · **Branch:** `<type>/m<n>-<slug>` · **Versions:**
   `6.0.0-alpha.<n>.x`
 - **Depends on:** <merged milestones, decisions, things the maintainer must do first>
 

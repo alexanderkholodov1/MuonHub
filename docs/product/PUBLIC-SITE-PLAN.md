@@ -90,16 +90,16 @@
 ### 7. Data and citation (`/data`)
 - **Purpose:** open science.
 - **Content:** the data licence (CC-BY 4.0 for public data; MIT for code); how to cite MuonHub and
-  its datasets (DOI from M5); how to download public data.
-- **Data:** static content; dataset links from M5.
+  its datasets (DOI from M7); how to download public data.
+- **Data:** static content; dataset links from M7.
 
 ### 8. Documentation (`/docs`)
 - **Purpose:** the user manual and FAQ.
-- **Content:** the user manual (English first, then Spanish and Portuguese, M5); the FAQ.
+- **Content:** the user manual (English first, then Spanish and Portuguese, M7); the FAQ.
 
 ### 9. Privacy and Terms (`/privacy`, `/terms`)
 - **Purpose:** what is collected, what is public, and the rules of use (versioned Terms are
-  **Proposed** for M5).
+  **Proposed** for M7).
 
 ### 10. Contact (`/contact`)
 - **Purpose:** reach the team.

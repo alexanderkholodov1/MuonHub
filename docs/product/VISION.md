@@ -42,11 +42,11 @@ central Quito's ≈ 2,850 m. The high geomagnetic cutoff rigidity of the region
 ## What v6 is
 
 v6 is a **rebuild** of the platform as a typed TypeScript monorepo, reusing the knowledge and the
-sound parts of the first v6 attempt (2026-06) and of v5. It is delivered in **six milestones, one
-pull request each** (M0 Foundation → M5 Migration + launch), each opened only when its milestone is
+sound parts of the first v6 attempt (2026-06) and of v5. It is delivered in **eight milestones, one
+pull request each** (M0 Foundation → M7 Migration + launch), each opened only when its milestone is
 planned, tested, validated with real hardware, and corrected. See [`ROADMAP.md`](ROADMAP.md).
 
-The release that completes M5 is **`6.0.0`**. v5 keeps running unchanged on its own Firebase
+The release that completes M7 is **`6.0.0`**. v5 keeps running unchanged on its own Firebase
 project until then.
 
 ## Vocabulary (ADR-004)
