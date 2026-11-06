@@ -9,6 +9,7 @@ import { useDataProvider } from "@/lib/data/DataProviderContext";
 import { useResource, type Resource } from "@/lib/data/useResource";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { VerificationBanner } from "@/features/auth/VerificationBanner";
+import { OwnershipNotice } from "@/features/stations/OwnershipNotice";
 import { t, type MessageKey } from "@/i18n/t";
 
 interface StationRow {
@@ -25,17 +26,26 @@ function StationList({
   titleKey,
   empty,
   resource,
+  showNewLink,
 }: {
   titleKey: MessageKey;
   empty: MessageKey;
   resource: Resource<StationRows>;
+  showNewLink?: boolean;
 }): ReactNode {
   return (
     <section
       aria-label={t(titleKey)}
       className="space-y-4 rounded-md border border-border bg-surface p-6"
     >
-      <h2 className="text-2xl font-semibold">{t(titleKey)}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-2xl font-semibold">{t(titleKey)}</h2>
+        {showNewLink && (
+          <Link className="underline" href="/app/station/new">
+            {t("station.newLink")}
+          </Link>
+        )}
+      </div>
       {resource.status === "loading" && <p role="status">{t("state.loading")}</p>}
       {resource.status === "error" && (
         <>
@@ -57,7 +67,12 @@ function StationList({
             <ul className="space-y-4">
               {resource.data.items.map((station) => (
                 <li key={station.id} className="flex flex-wrap justify-between gap-4">
-                  <span>{station.name}</span>
+                  <Link
+                    className="underline"
+                    href={`/app/station?id=${encodeURIComponent(station.id)}`}
+                  >
+                    {station.name}
+                  </Link>
                   <span className="text-secondary">{t(`stations.role.${station.role}`)}</span>
                 </li>
               ))}
@@ -122,8 +137,14 @@ export function SignedInHome(): ReactNode {
         </Link>
       )}
       <VerificationBanner />
+      <OwnershipNotice />
       <div className="grid gap-8 md:grid-cols-2">
-        <StationList titleKey="nav.myStations" empty="stations.ownedEmpty" resource={owned} />
+        <StationList
+          titleKey="nav.myStations"
+          empty="stations.ownedEmpty"
+          resource={owned}
+          showNewLink
+        />
         <StationList titleKey="stations.shared" empty="stations.sharedEmpty" resource={shared} />
       </div>
     </div>

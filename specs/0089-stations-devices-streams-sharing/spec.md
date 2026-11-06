@@ -1,7 +1,6 @@
 # 0089 — Stations, devices, streams, and sharing (web)
 
-- **Status:** draft (implementation started 2026-11-06 at the maintainer's instruction, before the
-  M2 plan's formal approval)
+- **Status:** implemented (spec 0089 — web stations, devices, streams, sharing; CA1–CA6 covered in `@muonhub/web` tests and build)
 - **Milestone:** M2 — Web platform (`6.0.0-alpha.2.x`), step 3
 - **Owner:** written by the MuonHub brigadista; implemented by a Codex worker; reviewed by code and
   security reviewers
@@ -59,15 +58,15 @@ Not applicable: metadata only; no measurement data is written.
 
 ## Acceptance criteria (verifiable)
 
-- [ ] CA1: create station → device → stream with the in-memory provider (component tests); the
+- [x] CA1: create station → device → stream with the in-memory provider (component tests); the
   station form cannot be submitted without a visibility choice.
-- [ ] CA2: a viewer sees no edit, add or remove controls; an editor sees device and stream controls
+- [x] CA2: a viewer sees no edit, add or remove controls; an editor sees device and stream controls
   only; tested with three identities.
-- [ ] CA3: add member by username shows the display name and adds the role; an unknown username
+- [x] CA3: add member by username shows the display name and adds the role; an unknown username
   shows a field error; remove and change role work.
-- [ ] CA4: transfer moves ownership and the recipient sees the notice.
-- [ ] CA5: exact coordinates are absent from the rendered station page for a non-member.
-- [ ] CA6: typecheck · lint · build · test green; static routes listed by `next build`.
+- [x] CA4: transfer moves ownership and the recipient sees the notice.
+- [x] CA5: exact coordinates are absent from the rendered station page for a non-member.
+- [x] CA6: typecheck · lint · build · test green; static routes listed by `next build`.
 
 ## Validation in practice
 
