@@ -163,7 +163,12 @@ service cloud.firestore {
         && unchanged(['schemaVersion', 'uid', 'createdAt'])
         && (request.resource.data.username == resource.data.username
           || (getAfter(usernamePath(request.resource.data.username)).data.uid == me()
-            && !existsAfter(usernamePath(resource.data.username))));
+            && !existsAfter(usernamePath(resource.data.username))))
+        // A published public profile changes in the same batch (or is removed), so it never shows
+        // a stale name or a username released to someone else.
+        && (!existsAfter(publicProfilePath(userId))
+          || (getAfter(publicProfilePath(userId)).data.displayName == request.resource.data.displayName
+            && getAfter(publicProfilePath(userId)).data.username == request.resource.data.username));
       // Account removal releases the username claim and the public profile in the same batch
       // (no orphaned claim, no name left readable).
       allow delete: if signedIn() && userId == me()

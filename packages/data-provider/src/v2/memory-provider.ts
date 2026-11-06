@@ -471,6 +471,8 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       return getDocOrNull(`users/${uid}`, v2.UserSchema);
     },
     async updateDisplayName(uid, displayName) {
+      // As the rules: only the user changes their own profile.
+      if (requireUid() !== uid) throw new DataProviderError("permission-denied");
       validate(v2.UserSchema.shape.displayName, displayName, "display name");
       const current = getDocOrNull(`users/${uid}`, v2.UserSchema);
       if (current === null) throw new DataProviderError("not-found");

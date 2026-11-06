@@ -300,6 +300,44 @@ describeEmu("publicProfiles/{uid}", () => {
       }),
     );
   });
+  it("denies anonymous listing and deletion of projections", async () => {
+    await publish("owner", UID.owner);
+    await assertFails(getDocs(collection(fsAs(env, "anon"), "publicProfiles")));
+    await assertFails(deleteDoc(doc(fsAs(env, "anon"), `publicProfiles/${UID.owner}`)));
+  });
+  it("denies tampering with an existing projection through a partial update", async () => {
+    const fs = await publish("owner", UID.owner);
+    const path = `publicProfiles/${UID.owner}`;
+    await assertFails(updateDoc(doc(fs, path), { displayName: "Spoofed" }));
+    await assertFails(updateDoc(doc(fs, path), { username: usernameOf(UID.stranger) }));
+    await assertFails(updateDoc(doc(fs, path), { email: "ownera@example.org" }));
+    await assertFails(updateDoc(doc(fsAs(env, "stranger"), path), { updatedAt: now() }));
+  });
+  it("denies changing the profile while the published projection keeps the old name", async () => {
+    const fs = await publish("owner", UID.owner);
+    await assertFails(updateDoc(doc(fs, `users/${UID.owner}`), { displayName: "Dr. Owner" }));
+  });
+  it("denies a rename that leaves the projection advertising the released username", async () => {
+    const fs = await publish("owner", UID.owner);
+    const b = writeBatch(fs);
+    b.update(doc(fs, `users/${UID.owner}`), { username: "renamed-owner" });
+    b.set(doc(fs, "usernames/renamed-owner"), { uid: UID.owner, createdAt: now() });
+    b.delete(doc(fs, `usernames/${usernameOf(UID.owner)}`));
+    await assertFails(b.commit());
+    const ok = writeBatch(fs);
+    ok.update(doc(fs, `users/${UID.owner}`), { username: "renamed-owner" });
+    ok.set(doc(fs, "usernames/renamed-owner"), { uid: UID.owner, createdAt: now() });
+    ok.delete(doc(fs, `usernames/${usernameOf(UID.owner)}`));
+    ok.set(
+      doc(fs, `publicProfiles/${UID.owner}`),
+      projection(UID.owner, { username: "renamed-owner" }),
+    );
+    await assertSucceeds(ok.commit());
+  });
+  it("a user without a projection still changes their display name alone", async () => {
+    const fs = fsAs(env, "owner");
+    await assertSucceeds(updateDoc(doc(fs, `users/${UID.owner}`), { displayName: "Dr. Owner" }));
+  });
   it("a user deletes their projection; a stranger cannot", async () => {
     await publish("owner", UID.owner);
     await assertFails(deleteDoc(doc(fsAs(env, "stranger"), `publicProfiles/${UID.owner}`)));

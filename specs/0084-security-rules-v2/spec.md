@@ -45,8 +45,12 @@ query with real client identities. It does **not** deploy anything by itself: th
   the maintainer's decision): the name other members see — exactly `schemaVersion`, `uid`,
   `displayName`, `username`, `updatedAt`; never the email. `get` by any signed-in user, `list`
   never (no enumeration); create and update only by that user and only when `displayName` and
-  `username` equal `getAfter(users/{auth.uid})` (no impersonation); delete by that user. Deleting
-  `users/{uid}` also requires the projection to be gone after the batch. Written with the profile at
+  `username` equal `getAfter(users/{auth.uid})` (no impersonation); delete by that user. An update
+  of `users/{uid}` must leave a published projection matching it after the batch (no stale name, no
+  username released to someone else still advertised); deleting `users/{uid}` requires the
+  projection to be gone after the batch. Independent security review (agy, 2026-11-06, WARNING, no
+  critical or high): four findings verified; three applied (stale projection, memory-provider
+  ownership check, missing negative tests), one not needed (the logged error is already mapped). Written with the profile at
   sign-up, with it on a display-name change, and by the signed-in home for older accounts.
 - **FR7 — `stations/{stationId}`:** create by a signed-in user with `ownerUid == auth.uid` and an
   explicit `visibility` (no default). **Station ids are random** (20–64 letters and digits; generated with 20 characters of a 62-character alphabet from a cryptographic RNG), carrying no uid (ADR-009: public data holds no user ids; station ids appear in the public projection). The id is unguessable, so squatting a specific future id is infeasible; creating over an existing id is impossible (Firestore `create` needs `!exists`; the RTDB `stationAccess` create needs `!data.exists()` and `ownerUid == auth.uid`, written first by the established mirror-first flow); read by owner, members, admins, and (for `visibility ==
