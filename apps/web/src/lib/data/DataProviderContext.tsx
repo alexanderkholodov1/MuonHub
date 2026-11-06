@@ -4,6 +4,7 @@
  * One `DataProviderV2` per browser tab (spec 0088 FR3). It is created lazily in the browser — never
  * during the static export — and tests inject the in-memory provider through the same context.
  */
+import React from "react";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { v2 as dp } from "@muonhub/data-provider";
 import type { PublicConfig } from "@/lib/config";

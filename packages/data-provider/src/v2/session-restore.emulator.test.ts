@@ -75,7 +75,7 @@ describeEmu("session restore from a refresh token (Auth emulator)", () => {
     const restarted = connect(true); // a new process: no password, only the stored token
     expect(restarted.currentUser()).toBeNull();
     const user = await restarted.signInWithRefreshToken(refreshToken);
-    expect(user).toEqual({ uid, email });
+    expect(user).toEqual({ uid, email, emailVerified: false });
     expect(restarted.currentUser()?.uid).toBe(uid);
     expect(restarted.getRefreshToken()).toBeTruthy();
     expect(await restarted.checkSession()).toBe(true);

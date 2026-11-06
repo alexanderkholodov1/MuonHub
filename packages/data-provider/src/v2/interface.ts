@@ -32,6 +32,7 @@ export interface SubscriptionHandlers<T> {
 export interface AuthUser {
   uid: string;
   email: string | null;
+  emailVerified: boolean;
 }
 
 export interface AuthApi {
@@ -42,6 +43,14 @@ export interface AuthApi {
   }): Unsubscribe;
   signInWithEmail(email: string, password: string): Promise<AuthUser>;
   createAccount(email: string, password: string): Promise<AuthUser>;
+  /** Resolves identically for known and unknown email addresses (no account enumeration). */
+  sendPasswordReset(email: string): Promise<void>;
+  /** Sends a verification message to the signed-in user without changing verification state. */
+  sendEmailVerification(): Promise<void>;
+  /** Browser popup sign-in using the enabled Google provider. */
+  signInWithGoogle(): Promise<AuthUser>;
+  /** Refreshes account state and notifies auth subscribers; null when signed out. */
+  reloadUser(): Promise<AuthUser | null>;
   signOut(): Promise<void>;
 }
 
