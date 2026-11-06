@@ -41,7 +41,7 @@ Details of each step: the execution log at the end of the M1 plan.
 | 2 Accounts (spec 0088) | ✅ | sign-up with unique username, sign-in, reset, verification, `?next=` |
 | 3 Stations, devices, streams, sharing (spec 0089) | ✅ first version | member names fall back to a neutral label because profiles are private (open question below) |
 | 4 Stream dashboard (spec 0090) | ✅ first version | rate, pressure and temperature charts; Poisson uncertainty; freshness apart from connection |
-| Demo on Beacon | ✅ | emulators + read-only v5 mirror of the running detector; [`operations/DEMO.md`](operations/DEMO.md) |
+| Demo on Beacon | ✅ | build 2.5 (`6.0.0-alpha.2.4`); emulators + read-only v5 mirror of the running detector; offline recording for the presentation; [`operations/DEMO.md`](operations/DEMO.md) |
 | 5 Network map (spec 0091) | ✅ first version | `/network` from public projections; OpenFreeMap tiles (production provider: open question); "active" means an active device until projections carry the latest data time |
 | 7 Hardening — end-to-end suite | ✅ | Playwright, desktop and phone, against the emulators with the v2 rules; runs in CI (`web · end-to-end`); found and fixed a hydration bug in the reset form |
 | 7 Hardening — accessibility pass | ✅ | axe (WCAG 2.2 A/AA + best practices) on every page, both themes and viewports, in the end-to-end suite; keyboard, reduced motion, no theme flash; contrast tokens fixed. Found that the new-device form was denied to every non-admin (device-type list) — fixed with emulator and end-to-end regression tests |
@@ -52,7 +52,7 @@ Details of each step: the execution log at the end of the M1 plan.
 | Gate | State |
 |---|---|
 | CI on GitHub — M1 branch (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `404fc95` (`6.0.0-alpha.1.8`) **[verified]** |
-| CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `9f34d97` (`6.0.0-alpha.2.3`, run 42175147430) **[verified]** |
+| CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `b50a6ad` (`6.0.0-alpha.2.4`, run 42190789928) **[verified]** |
 | Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 77 unit + 27 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
 
 ## Open questions for the maintainer
@@ -65,8 +65,12 @@ Details of each step: the execution log at the end of the M1 plan.
    are read once the lab PC is reachable.
 
 3. **Member names:** profiles are private by the rules (`users/{uid}` readable only by its user), so
-   members see each other as "Member ab12cd". Proposed: a public profile projection (display name and
-   username only, no email) readable by signed-in users — a rules change that needs a security review.
+   members see each other as "Member ab12cd". **Ready for a yes:** branch `feat/m2-public-profile`
+   (not merged into the M2 branch, not served) adds `publicProfiles/{uid}` — display name and
+   username only, never the email; read one at a time by signed-in users, never listed; written only
+   as an exact copy of the user's own profile; removed with the account — with 14 rules tests
+   (negatives included) and an independent security review whose verified findings are applied. A
+   yes is a merge of that branch.
 4. **Map tiles for production:** OpenFreeMap (free, no key) serves the demo; confirm it, or choose
    another provider, before the public site ships.
 5. **`muonhub-dev`:** create it as the test project (recommended; see the session record §8).

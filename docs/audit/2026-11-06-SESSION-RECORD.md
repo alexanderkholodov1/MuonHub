@@ -180,3 +180,39 @@ maintainer asked on 2026-11-06 what it is for; the answer given:
   `muonhub-dev`; the public-profile and map-tile decisions; a design session for the public site
   (step 6); App Check (console); deployment (step 8, his go-ahead); validation with the real
   detector through the v6 agent (needs the lab PC, M1 step 9).
+
+## 11. Morning (08:30–09:20Z): the captain's three items
+
+The captain of Beacon reopened the night at 08:30Z with the maintainer's words for it ("asegúrate
+de que haga todo lo que pueda") and three items that need no decision from him.
+
+- **Presentation fallback.** `apps/web/scripts/record-demo.mjs` walks the five-minute script of
+  [`DEMO.md`](../operations/DEMO.md) against the served demo (it only opens pages and clicks):
+  screenshots of each stop at 1366 and 390 px, a walk-through video and an `index.html` that opens
+  offline. Recorded from build 2.4 at 08:28Z, and again from build 2.5 at 09:07Z
+  (`~/.cache/muonhub-demo/presentation/`, with a tarball to copy; no console errors; the real
+  detector's last minute shown).
+- **Accessibility pass (M2 step 7), `6.0.0-alpha.2.4`.** axe (WCAG 2.2 A/AA plus best practices)
+  now runs in the end-to-end suite on every page, in both themes and both viewports, with keyboard,
+  reduced-motion and theme-before-hydration tests (27 end-to-end tests). Fixed: contrast of the
+  light accent and of muted text in both themes, utility transitions under reduced motion, a skip
+  link, an h1 in loading and error states, text alternatives for the charts, a dark flash for
+  light-theme visitors, and coverage that rounded 1439 of 1440 minutes up to 100.0 %.
+- **A real bug found by the pass:** the new-device page answered "You do not have access to this"
+  to the station owner, on the demo too. The device-type list was an unconstrained query, which the
+  rules deny to every non-admin (rules are not filters). Fixed in the data provider; an emulator
+  test fails without the fix (`permission-denied`) and passes with it, and an end-to-end test opens
+  the form.
+- **CI and demo.** CI green on all four jobs at `b50a6ad` (run 42190789928). The new build was
+  checked in a browser at 1366 and 390 px against the demo emulators on a side port (no console
+  errors; the device form lists the three built-in types), then promoted as **build 2.5**; 2.1–2.4
+  are kept.
+- **A ready answer for the member-name question.** Branch `feat/m2-public-profile` (from the M2
+  branch; not merged into it, not served, rules not deployed) adds `publicProfiles/{uid}` — display
+  name and username, never the email — with rules tests including negatives. An independent security
+  review (agy, WARNING, no critical or high finding) reported four findings; each was checked
+  against the code: three applied (a rename could leave a stale projection advertising a released
+  username; the memory provider lacked the ownership check; missing negatives), one not needed. If
+  the maintainer says yes, the branch is merged; otherwise it is deleted.
+- **Not done, on purpose:** no `muonhub-dev`, no Firebase or console change, no deployment, no
+  Codex. App Check stays for the console.

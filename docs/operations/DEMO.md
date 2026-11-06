@@ -29,19 +29,19 @@ the demo's accounts and data, and the v5 project (`munhub-1`) is only **read**.
 
 ## If the network fails: the offline recording
 
-A recording of this presentation, taken from the demo as served (build 2.4, the real detector data,
-nothing staged), opens without any network:
+A recording of this presentation, taken from the demo as served (the real detector data, nothing
+staged; the script only opens pages and clicks), opens without any network:
 
-- **Folder on Beacon:** `~/.cache/muonhub-demo/presentation/2026-11-06T0828/` — `index.html` (open it
-  in Chrome, Edge or Firefox), a 34-second walk-through video `video/walkthrough.webm` (1366 px), and
-  screenshots of each stop at 1366 px (`desktop-*.png`) and 390 px (`phone-*.png`). Recorded
-  2026-11-06 08:28 UTC; the last minute shown is 08:26 UTC; no console errors.
-- **One file to copy:** `~/.cache/muonhub-demo/presentation/2026-11-06T0828.tar.gz` (6 MB). From the
-  laptop, while Tailscale is up: `scp akbase:.cache/muonhub-demo/presentation/2026-11-06T0828.tar.gz .`
-  then `tar xzf 2026-11-06T0828.tar.gz` and open `2026-11-06T0828/index.html`.
-- **Record it again** (only opens pages and clicks; it builds, seeds and changes nothing):
-  `cd ~/MuonHub/apps/web && node scripts/record-demo.mjs` — a new dated folder appears next to this
-  one.
+- **Folder on Beacon:** `~/.cache/muonhub-demo/presentation/2026-11-06T0907/` — recorded
+  2026-11-06 09:07 UTC from build 2.5 (last minute shown 09:06 UTC, no console errors):
+  `index.html` (open it in Chrome, Edge or Firefox), a walk-through video `video/walkthrough.webm`
+  (1366 px), and screenshots of each stop at 1366 px (`desktop-*.png`) and 390 px (`phone-*.png`).
+  The earlier recording of build 2.4 (08:28 UTC) is kept next to it.
+- **One file to copy:** `~/.cache/muonhub-demo/presentation/2026-11-06T0907.tar.gz` (6 MB). From the
+  laptop, while Tailscale is up: `scp akbase:.cache/muonhub-demo/presentation/2026-11-06T0907.tar.gz .`
+  then `tar xzf 2026-11-06T0907.tar.gz` and open `2026-11-06T0907/index.html`.
+- **Record it again** (it builds, seeds and changes nothing):
+  `cd ~/MuonHub/apps/web && node scripts/record-demo.mjs` — a new dated folder appears next to these.
 
 ## What runs
 
@@ -67,8 +67,8 @@ systemctl --user restart muonhub-demo-emulators muonhub-demo-mirror muonhub-demo
 
 # rebuild the web app after a change (not served yet), check it, then promote it
 bash ~/MuonHub/infra/demo/build-web.sh
-bash ~/MuonHub/infra/demo/promote-web.sh 2.2      # serve this build as "2.2"
-bash ~/MuonHub/infra/demo/promote-web.sh --back 2.1   # put the presented build back
+bash ~/MuonHub/infra/demo/promote-web.sh 2.6      # serve this build as "2.6"
+bash ~/MuonHub/infra/demo/promote-web.sh --back 2.4   # put an earlier kept build back
 
 # first install on a machine
 bash ~/MuonHub/infra/demo/install.sh
