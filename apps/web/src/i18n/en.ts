@@ -100,6 +100,7 @@ export const en = {
   "station.addMemberSubmit": "Add member",
   "station.lookupMember": "Look up username",
   "station.memberUnknown": "No account uses this username.",
+  "station.memberUnnamed": "Member {id}",
   "station.memberConfirm": "Add {name} with the selected role?",
   "station.memberRole": "Role",
   "station.memberRoleLine": "Role: {role}",

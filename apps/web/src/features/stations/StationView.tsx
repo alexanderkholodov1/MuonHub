@@ -232,7 +232,7 @@ export function StationView({ stationId }: { stationId: string | null }): ReactN
                   className="underline"
                   href={`/app/stream?id=${encodeURIComponent(stream.id)}`}
                 >
-                  {stream.id}
+                  {devices.find((d) => d.id === stream.deviceId)?.label ?? stream.id}
                 </Link>{" "}
                 <span className="text-secondary">
                   {t("streams.statusLine", { status: t(`streams.status.${stream.status}`) })}

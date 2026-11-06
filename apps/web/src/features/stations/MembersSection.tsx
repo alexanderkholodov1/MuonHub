@@ -13,19 +13,34 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { Field, SelectField } from "./form-fields";
 import { canManageMembers, type StationAccessRole } from "./resolve-role";
 
+/**
+ * Profiles are private to their owner (rules: `users/{uid}` is readable by its user and admins), so
+ * another member's display name is usually unreadable. That is expected, not an error: the member is
+ * then shown with a neutral label. Any other failure still surfaces.
+ */
+async function readableName(provider: dp.DataProviderV2, uid: string): Promise<string | null> {
+  try {
+    return (await provider.getUser(uid))?.displayName ?? null;
+  } catch (error) {
+    if (error instanceof dp.DataProviderError && error.code === "permission-denied") return null;
+    throw error;
+  }
+}
+
+function memberLabel(uid: string): string {
+  return t("station.memberUnnamed", { id: uid.slice(0, 6) });
+}
+
 async function loadMemberProfiles(
   provider: dp.DataProviderV2,
   members: v2.StationMember[],
 ): Promise<{ uid: string; role: v2.MemberRole; displayName: string }[]> {
   const rows = await Promise.all(
-    members.map(async (member) => {
-      const profile = await provider.getUser(member.uid);
-      return {
-        uid: member.uid,
-        role: member.role,
-        displayName: profile?.displayName ?? member.uid,
-      };
-    }),
+    members.map(async (member) => ({
+      uid: member.uid,
+      role: member.role,
+      displayName: (await readableName(provider, member.uid)) ?? memberLabel(member.uid),
+    })),
   );
   return rows;
 }
@@ -76,9 +91,8 @@ export function MembersSection({
         setUsernameError(t("station.memberUnknown"));
         return;
       }
-      const profile = await provider.getUser(uid);
       setPendingUid(uid);
-      setPendingName(profile?.displayName ?? trimmed);
+      setPendingName((await readableName(provider, uid)) ?? trimmed);
     } catch (cause) {
       setUsernameError(errorMessage(cause));
     } finally {
