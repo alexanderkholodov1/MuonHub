@@ -4,7 +4,7 @@ After=network-online.target tailscaled.service
 
 [Service]
 WorkingDirectory=%h/MuonHub
-Environment=DEMO_HOST=100.120.140.56 WEB_PORT=8085 WEB_ROOT=%h/MuonHub/apps/web/out
+Environment=DEMO_HOST=100.120.140.56 WEB_PORT=8085 WEB_ROOT=%h/.cache/muonhub-demo/web/current
 ExecStart=%h/.nvm/versions/node/v24.22.2/bin/node %h/MuonHub/infra/demo/static-server.mjs
 Restart=always
 RestartSec=5

@@ -33,7 +33,7 @@ the demo's accounts and data, and the v5 project (`munhub-1`) is only **read**.
 |---|---|
 | `muonhub-demo-emulators` | Auth, Firestore and Realtime Database emulators with the v2 security rules, on Beacon's Tailscale address; data restored from the last snapshot on start |
 | `muonhub-demo-mirror` | Seeds the demo account, station, device and stream (once), then every minute copies the new minutes of the public v5 profile `leopard_test` into the stream (`apps/v5-mirror`; read-only on v5, write-once on v6) |
-| `muonhub-demo-web` | Serves the web app's static export (`apps/web/out`) with clean URLs on port 8085 |
+| `muonhub-demo-web` | Serves the promoted build (`~/.cache/muonhub-demo/web/current`, a link to a kept build such as `2.1`) with clean URLs on port 8085 |
 | `muonhub-demo-export.timer` | Every 10 minutes, snapshots the emulators' data to `~/.cache/muonhub-demo/data` (atomic swap) |
 
 All restart on failure and keep running after logout (lingering is on for the user).
@@ -49,8 +49,10 @@ journalctl --user -u muonhub-demo-mirror -n 20 -o cat
 systemctl --user start muonhub-demo-export && \
 systemctl --user restart muonhub-demo-emulators muonhub-demo-mirror muonhub-demo-web
 
-# rebuild the web app after a change, then reload the page
+# rebuild the web app after a change (not served yet), check it, then promote it
 bash ~/MuonHub/infra/demo/build-web.sh
+bash ~/MuonHub/infra/demo/promote-web.sh 2.2      # serve this build as "2.2"
+bash ~/MuonHub/infra/demo/promote-web.sh --back 2.1   # put the presented build back
 
 # first install on a machine
 bash ~/MuonHub/infra/demo/install.sh
