@@ -7,7 +7,7 @@
  * Consumers import schemas to validate and types to annotate; the two can never drift because the
  * type is `z.infer` of the schema.
  */
-export const MUONHUB_VERSION = "6.0.0-alpha.2.2" as const;
+export const MUONHUB_VERSION = "6.0.0-alpha.2.2.1" as const;
 
 /** Contracts (spec 0083), exported as the `v2` namespace. */
 export * as v2 from "./v2/index.js";
