@@ -82,3 +82,4 @@ migration from v5 (M7).
 | — | 3 — stations | built by a Cursor worker; verified; a real-browser check against the emulator rules found that private profiles broke the members and transfer sections — fixed with a regression test |
 | — | 4 — dashboard | uPlot charts on the real minutes of the running v5 detector (read-only mirror); checked in headless Chromium at 1366 px and 390 px |
 | 6.0.0-alpha.2.1 | first increment | CI green (build, tests, lint, typecheck; emulator tests; gitleaks); demo live on Beacon |
+| 6.0.0-alpha.2.2 | 5 — network map | `/network` (MapLibre GL 6, OpenFreeMap); the browser check found MapLibre's module worker missing from the bundle and served with the wrong type — the build now copies it and the demo server serves `.mjs` as JavaScript; promoted to the demo as build 2.2 after CI and the 1366/390 check |
