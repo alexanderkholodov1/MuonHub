@@ -162,3 +162,21 @@ maintainer asked on 2026-11-06 what it is for; the answer given:
     failure;
   - the simulated 72-hour rehearsal was the wrong priority for the night; it remains as opt-in
     tooling with its known gaps listed.
+
+## 10. Close of the night (06:40Z)
+
+- **Delivered on `feat/m2-web-platform`:** `6.0.0-alpha.2.3` — M2 steps 1–5 (foundation, accounts,
+  stations and sharing, stream dashboard, network map) and the end-to-end part of step 7, with the
+  physicist review of the dashboard applied. CI green on all four jobs (`9f34d97`, run
+  42175147430), including the new `web · end-to-end` job (12 Playwright tests, desktop and phone).
+- **Demo:** <http://100.120.140.56:8085/> serves build 2.4 (kept: 2.1, 2.2, 2.3); every build was
+  promoted only after CI and a 1366/390 browser check. Guide and presentation script:
+  [`DEMO.md`](../operations/DEMO.md).
+- **Found by using the product, not by unit tests:** private profiles under the real rules (members),
+  the MapLibre worker missing from the bundle and served with the wrong type, a time formatter that
+  threw in browsers, and a hydration mismatch in the reset form (found by the new end-to-end suite).
+  All fixed before reaching the demo.
+- **Remaining M2 work waits on the maintainer:** plan approval; Authentication in the console;
+  `muonhub-dev`; the public-profile and map-tile decisions; a design session for the public site
+  (step 6); App Check (console); deployment (step 8, his go-ahead); validation with the real
+  detector through the v6 agent (needs the lab PC, M1 step 9).
