@@ -398,7 +398,7 @@ describe("signed-in home (FR9)", () => {
   it("shows independent loading/error states and allows a failed list to be retried", async () => {
     const { provider, store } = fixture();
     await provider.createAccount("user@example.test", "password123");
-    store.injectFault({ op: "listMyStations", kind: "unavailable" });
+    store.injectFault({ op: "listMyStations", kind: "unavailable", times: 2 });
     mount(
       provider,
       <RequireAuth>
