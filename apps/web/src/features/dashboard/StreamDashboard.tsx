@@ -11,6 +11,7 @@ import { Stat } from "@muonhub/ui";
 import { useDataProvider } from "@/lib/data/DataProviderContext";
 import { useResource } from "@/lib/data/useResource";
 import { t, type MessageKey } from "@/i18n/t";
+import { formatTime } from "./format";
 import { freshness, rangeStats, toChartData } from "./series";
 import { TimeChart } from "./TimeChart";
 import { useStreamMinutes } from "./useStreamMinutes";
@@ -21,12 +22,7 @@ const RANGES: ReadonlyArray<{ hours: number; label: MessageKey }> = [
   { hours: 72, label: "dashboard.range.72h" },
 ];
 
-const time = (ms: number): string =>
-  new Date(ms).toLocaleString(undefined, {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZoneName: "short",
-  });
+const time = (ms: number): string => formatTime(ms);
 
 export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
   const provider = useDataProvider();
