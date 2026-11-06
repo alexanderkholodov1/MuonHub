@@ -63,8 +63,9 @@ freshness), `useStreamMinutes.ts` (initial range plus 60 s refresh, cancellation
 - [x] CA3: in a real browser against the emulators (desktop 1366 px and phone 390 px), the page shows
   the mirrored LEOPARD-TEST stream with three charts and no console errors from the page itself
   (2026-11-06, `~/.cache/muonhub-demo/screens/`).
-- [ ] CA4: component test of `StreamDashboard` with a fake provider (states: loading, error, empty,
-  ready, stale).
+- [x] CA4: component test of `StreamDashboard` with a fake provider (states: ready with statistics,
+  charts and labels; stale; empty; access denied; not found; the v5-mirror banner) —
+  `StreamDashboard.test.tsx`.
 - [x] CA5 (physics part): independent physicist review (agy, 2026-11-06, WARNING, no critical): seven
   findings, each checked against the foundation and applied — the uncorrected notice is always shown
   (the page never corrects counts); the range is aligned to minute starts so coverage counts against
