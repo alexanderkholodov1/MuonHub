@@ -1,6 +1,6 @@
 # MuonHub — Status
 
-_Last updated: 2026-11-06 · version `6.0.0-alpha.2.3` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
+_Last updated: 2026-11-06 · version `6.0.0-alpha.2.4` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
 
 ## Milestones (plan: [`product/ROADMAP.md`](product/ROADMAP.md))
 
@@ -8,7 +8,7 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.2.3` · branches `feat/m1-core
 |---|---|---|
 | **M0 Foundation** | Cleanup, rename to MuonHub, documentation structure, decisions (ADR-004…009), roadmap and backlog | ✅ merged (PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57), tag `v6.0.0-alpha.0.4.3`) |
 | **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 🔄 steps 1–7 of 12 done; steps 8, 9 and 11 need the maintainer — plan approved 2026-10-04 ([`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md)) |
-| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5 and the end-to-end part of 7 built (`6.0.0-alpha.2.3`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
+| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5 and the end-to-end and accessibility parts of 7 built (`6.0.0-alpha.2.4`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
 | M5 Seismic channel | Sampled device type, per-minute features, systematics channel, pre-registered exploratory correlation | ⏳ |
@@ -44,7 +44,8 @@ Details of each step: the execution log at the end of the M1 plan.
 | Demo on Beacon | ✅ | emulators + read-only v5 mirror of the running detector; [`operations/DEMO.md`](operations/DEMO.md) |
 | 5 Network map (spec 0091) | ✅ first version | `/network` from public projections; OpenFreeMap tiles (production provider: open question); "active" means an active device until projections carry the latest data time |
 | 7 Hardening — end-to-end suite | ✅ | Playwright, desktop and phone, against the emulators with the v2 rules; runs in CI (`web · end-to-end`); found and fixed a hydration bug in the reset form |
-| 6, 7 (App Check, accessibility pass), 8, 9 | ⏳ | public site (design session), App Check (console), deployment (go-ahead), validation with the real detector |
+| 7 Hardening — accessibility pass | ✅ | axe (WCAG 2.2 A/AA + best practices) on every page, both themes and viewports, in the end-to-end suite; keyboard, reduced motion, no theme flash; contrast tokens fixed. Found that the new-device form was denied to every non-admin (device-type list) — fixed with emulator and end-to-end regression tests |
+| 6, 7 (App Check), 8, 9 | ⏳ | public site (design session), App Check (console), deployment (go-ahead), validation with the real detector |
 
 ## Quality gates
 
@@ -52,7 +53,7 @@ Details of each step: the execution log at the end of the M1 plan.
 |---|---|
 | CI on GitHub — M1 branch (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `404fc95` (`6.0.0-alpha.1.8`) **[verified]** |
 | CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `9f34d97` (`6.0.0-alpha.2.3`, run 42175147430) **[verified]** |
-| Tests on the M2 branch | data-provider 125 unit + 375 emulator; agent 112; web 75 unit + 12 end-to-end (6 desktop, 6 phone) **[verified by running]** |
+| Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 77 unit + 27 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
 
 ## Open questions for the maintainer
 
