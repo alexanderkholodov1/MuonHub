@@ -136,6 +136,20 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(uid);
     }
 
+    function publicProfilePath(uid) {
+      return /databases/$(database)/documents/publicProfiles/$(uid);
+    }
+
+    function validPublicProfile(d, uid) {
+      return d.keys().hasAll(['schemaVersion', 'uid', 'displayName', 'username', 'updatedAt'])
+        && d.keys().hasOnly(['schemaVersion', 'uid', 'displayName', 'username', 'updatedAt'])
+        && d.schemaVersion == 2
+        && d.uid == uid
+        && str(d.displayName, 1, 120)
+        && isUsername(d.username)
+        && pastMs(d.updatedAt);
+    }
+
     match /users/{userId} {
       allow get: if signedIn() && (userId == me() || isAdmin());
       allow list: if isAdmin();
@@ -150,9 +164,24 @@ service cloud.firestore {
         && (request.resource.data.username == resource.data.username
           || (getAfter(usernamePath(request.resource.data.username)).data.uid == me()
             && !existsAfter(usernamePath(resource.data.username))));
-      // Account removal releases the username claim in the same batch (no orphaned claim).
+      // Account removal releases the username claim and the public profile in the same batch
+      // (no orphaned claim, no name left readable).
       allow delete: if signedIn() && userId == me()
-        && !existsAfter(usernamePath(resource.data.username));
+        && !existsAfter(usernamePath(resource.data.username))
+        && !existsAfter(publicProfilePath(userId));
+    }
+
+    // Public profile projection: the display name and username other members see; never the
+    // email. Read one at a time by signed-in users (no enumeration); written only by its user and
+    // only as a copy of their own profile after the write, so it cannot impersonate anyone.
+    match /publicProfiles/{userId} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn() && userId == me()
+        && validPublicProfile(request.resource.data, userId)
+        && getAfter(userPath(me())).data.displayName == request.resource.data.displayName
+        && getAfter(userPath(me())).data.username == request.resource.data.username;
+      allow delete: if signedIn() && userId == me();
     }
 
     match /usernames/{username} {

@@ -465,13 +465,32 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
         uid: profile.uid,
         createdAt: profile.createdAt,
       });
+      createDoc(`publicProfiles/${profile.uid}`, v2.toPublicProfile(profile, profile.createdAt));
     },
     async getUser(uid) {
       return getDocOrNull(`users/${uid}`, v2.UserSchema);
     },
     async updateDisplayName(uid, displayName) {
       validate(v2.UserSchema.shape.displayName, displayName, "display name");
+      const current = getDocOrNull(`users/${uid}`, v2.UserSchema);
+      if (current === null) throw new DataProviderError("not-found");
       updateDocFields(`users/${uid}`, { displayName });
+      store.docs.set(
+        `publicProfiles/${uid}`,
+        v2.toPublicProfile({ ...current, displayName }, now()),
+      );
+    },
+    async getPublicProfile(uid) {
+      requireUid();
+      return getDocOrNull(`publicProfiles/${uid}`, v2.PublicProfileSchema);
+    },
+    async publishPublicProfile() {
+      const uid = requireUid();
+      const own = getDocOrNull(`users/${uid}`, v2.UserSchema);
+      if (own === null) throw new DataProviderError("not-found");
+      const projection = v2.toPublicProfile(own, now());
+      store.docs.set(`publicProfiles/${uid}`, projection);
+      return projection;
     },
     async findUidByUsername(username) {
       return getDocOrNull(`usernames/${username}`, v2.UsernameClaimSchema)?.uid ?? null;

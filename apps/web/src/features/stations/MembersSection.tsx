@@ -14,13 +14,14 @@ import { Field, SelectField } from "./form-fields";
 import { canManageMembers, type StationAccessRole } from "./resolve-role";
 
 /**
- * Profiles are private to their owner (rules: `users/{uid}` is readable by its user and admins), so
- * another member's display name is usually unreadable. That is expected, not an error: the member is
- * then shown with a neutral label. Any other failure still surfaces.
+ * Profiles are private to their owner; another member's name comes from their public profile
+ * (display name and username, never the email). A member without one — an account that has not
+ * signed in since public profiles existed — is shown with a neutral label, and so is a denied read
+ * (rules not yet deployed). Any other failure still surfaces.
  */
 async function readableName(provider: dp.DataProviderV2, uid: string): Promise<string | null> {
   try {
-    return (await provider.getUser(uid))?.displayName ?? null;
+    return (await provider.getPublicProfile(uid))?.displayName ?? null;
   } catch (error) {
     if (error instanceof dp.DataProviderError && error.code === "permission-denied") return null;
     throw error;

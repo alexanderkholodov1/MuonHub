@@ -590,13 +590,37 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
           }
           tx.set(userRef, stripUndefined(profile));
           tx.set(nameRef, { uid: profile.uid, createdAt: profile.createdAt });
+          tx.set(
+            docRef("publicProfiles", profile.uid),
+            v2.toPublicProfile(profile, profile.createdAt),
+          );
         });
       }),
     getUser: (uid) => guard(() => getParsed(docRef("users", uid), v2.UserSchema)),
     updateDisplayName: (uid, displayName) =>
       guard(async () => {
         const name = parseOrInvalid(v2.UserSchema.shape.displayName, displayName, "display name");
-        await updateDoc(docRef("users", uid), { displayName: name });
+        const current = await getParsed(docRef("users", uid), v2.UserSchema);
+        if (current === null) throw new DataProviderError("not-found");
+        // The profile and its public projection change together (the rules check they match).
+        const batch = writeBatch(fs);
+        batch.update(docRef("users", uid), { displayName: name });
+        batch.set(
+          docRef("publicProfiles", uid),
+          v2.toPublicProfile({ ...current, displayName: name }, Date.now()),
+        );
+        await batch.commit();
+      }),
+    getPublicProfile: (uid) =>
+      guard(() => getParsed(docRef("publicProfiles", uid), v2.PublicProfileSchema)),
+    publishPublicProfile: () =>
+      guard(async () => {
+        const uid = requireUid();
+        const own = await getParsed(docRef("users", uid), v2.UserSchema);
+        if (own === null) throw new DataProviderError("not-found");
+        const projection = v2.toPublicProfile(own, Date.now());
+        await setDoc(docRef("publicProfiles", uid), projection);
+        return projection;
       }),
     findUidByUsername: (username) =>
       guard(async () => {

@@ -72,12 +72,25 @@ export interface SessionRestoreApi {
 }
 
 export interface IdentityApi {
-  /** Creates `users/{uid}` and claims `usernames/{username}` in one atomic write. */
+  /**
+   * Creates `users/{uid}`, claims `usernames/{username}` and writes the public profile in one
+   * atomic write.
+   */
   createUserProfile(user: v2.User): Promise<void>;
   getUser(uid: string): Promise<v2.User | null>;
   updateDisplayName(uid: string, displayName: string): Promise<void>;
   /** Resolves a username to its owner (for sharing by username). */
   findUidByUsername(username: string): Promise<string | null>;
+  /**
+   * Another user's public profile (display name and username, never the email), or null when the
+   * user has not published one. Signed-in users only.
+   */
+  getPublicProfile(uid: string): Promise<v2.PublicProfile | null>;
+  /**
+   * Writes the signed-in user's public profile as a copy of their own profile (accounts created
+   * before public profiles existed, or after an out-of-band change). Returns what was written.
+   */
+  publishPublicProfile(): Promise<v2.PublicProfile>;
 }
 
 // ── Stations, members, transfers ───────────────────────────────────────────────────────────────

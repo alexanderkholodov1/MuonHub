@@ -302,7 +302,7 @@ describe("members (CA3)", () => {
     });
   });
 
-  it("works when other members' profiles are private, as the security rules make them", async () => {
+  it("shows a neutral label for a member without a public profile; private profiles stay private", async () => {
     const { provider: open } = fixture();
     const owner = await createAccountWithProfile(open, "o2@example.test", "owner_y", "Owner");
     await open.signOut();
@@ -312,6 +312,7 @@ describe("members (CA3)", () => {
     // As in Firestore: `users/{uid}` is readable only by that user.
     const provider = new Proxy(open, {
       get(target, prop, receiver) {
+        if (prop === "getPublicProfile") return async () => null;
         if (prop === "getUser") {
           return async (uid: string) => {
             if (uid !== target.currentUser()?.uid) {
@@ -349,6 +350,56 @@ describe("members (CA3)", () => {
     expect(
       await screen.findByText(t("station.memberUnnamed", { id: memberUid.slice(0, 6) })),
     ).toBeTruthy();
+    expect(screen.queryByText(t("error.permissionDenied"))).toBeNull();
+  });
+
+  it("names a member from their public profile, never reading their private profile", async () => {
+    const { provider: open } = fixture();
+    const owner = await createAccountWithProfile(open, "o2@example.test", "owner_y", "Owner");
+    await open.signOut();
+    await createAccountWithProfile(open, "c2@example.test", "colleague2", "Colleague");
+    await open.signOut();
+    await open.signInWithEmail("o2@example.test", "password123");
+    // As in Firestore: `users/{uid}` is readable only by that user.
+    const provider = new Proxy(open, {
+      get(target, prop, receiver) {
+        if (prop === "getUser") {
+          return async (uid: string) => {
+            if (uid !== target.currentUser()?.uid) {
+              throw new dp.DataProviderError("permission-denied");
+            }
+            return target.getUser(uid);
+          };
+        }
+        const value: unknown = Reflect.get(target, prop, receiver);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+    const id = dp.newStationId();
+    await provider.createStation(stationSeed(owner.uid, id));
+    navigation.query = `id=${id}`;
+    const user = userEvent.setup();
+    mount(
+      provider,
+      <RequireAuth>
+        <StationView stationId={id} />
+      </RequireAuth>,
+    );
+    await screen.findByRole("heading", { name: "Test lab" });
+    await user.type(screen.getByLabelText(t("auth.username")), "colleague2");
+    await user.click(screen.getByRole("button", { name: t("station.lookupMember") }));
+    expect(await screen.findByText(t("station.memberConfirm", { name: "Colleague" }))).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: t("station.addMemberSubmit") }));
+    const memberUid = await waitFor(async () => {
+      const items = (await provider.listMembers(id)).items;
+      expect(items).toHaveLength(1);
+      return items[0]!.uid;
+    });
+    expect(memberUid).not.toBe(owner.uid);
+    expect(await screen.findByText("Colleague", { exact: false })).toBeTruthy();
+    expect(
+      screen.queryByText(t("station.memberUnnamed", { id: memberUid.slice(0, 6) })),
+    ).toBeNull();
     expect(screen.queryByText(t("error.permissionDenied"))).toBeNull();
   });
 });

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@muonhub/ui";
+import type { v2 } from "@muonhub/shared";
 import { v2 as dp } from "@muonhub/data-provider";
 import { useDataProvider } from "@/lib/data/DataProviderContext";
 import { useResource, type Resource } from "@/lib/data/useResource";
@@ -84,13 +85,30 @@ function StationList({
   );
 }
 
+/**
+ * Accounts created before public profiles existed have none, so fellow members would see a neutral
+ * label. The home page publishes it, or refreshes it if it no longer matches the profile. Best
+ * effort: the page and the profile are unaffected when this fails.
+ */
+async function syncPublicProfile(provider: dp.DataProviderV2, own: v2.User): Promise<void> {
+  try {
+    const current = await provider.getPublicProfile(own.uid);
+    if (current?.displayName === own.displayName && current.username === own.username) return;
+    await provider.publishPublicProfile();
+  } catch (cause) {
+    console.warn("public profile not published", cause);
+  }
+}
+
 export function SignedInHome(): ReactNode {
   const provider = useDataProvider();
   const { user } = useAuth();
   const key = provider !== null && user !== null ? user.uid : null;
-  const profile = useResource(key, () => {
+  const profile = useResource(key, async () => {
     if (provider === null || user === null) throw new dp.DataProviderError("unauthenticated");
-    return provider.getUser(user.uid);
+    const own = await provider.getUser(user.uid);
+    if (own !== null) void syncPublicProfile(provider, own);
+    return own;
   });
   const owned = useResource<StationRows>(key, async () => {
     if (provider === null) throw new dp.DataProviderError("unauthenticated");

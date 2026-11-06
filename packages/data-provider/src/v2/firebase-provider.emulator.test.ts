@@ -414,6 +414,19 @@ describeEmu("data layer v2 against the emulators", () => {
     expect(anyone).not.toContain(`emu-own-${suffix}`);
   });
 
+  it("publishes the public profile with the account: others read the name, never the email", async () => {
+    const seen = await stranger.provider.getPublicProfile(owner.uid);
+    expect(seen?.uid).toBe(owner.uid);
+    expect(seen?.displayName).toMatch(/^Actor /);
+    expect(Object.keys(seen ?? {})).not.toContain("email");
+    await expect(anonymous.getPublicProfile(owner.uid)).rejects.toMatchObject({
+      code: "permission-denied",
+    });
+    await viewer.provider.updateDisplayName(viewer.uid, "Dr. Viewer");
+    expect((await owner.provider.getPublicProfile(viewer.uid))?.displayName).toBe("Dr. Viewer");
+    expect((await viewer.provider.publishPublicProfile()).displayName).toBe("Dr. Viewer");
+  });
+
   it("transfers ownership; the new owner claims the mirror and the former owner loses access", async () => {
     const transferId = await owner.provider.transferOwnership(station.id, stranger.uid);
     expect((await stranger.provider.getTransfer(transferId))?.to).toBe(stranger.uid);

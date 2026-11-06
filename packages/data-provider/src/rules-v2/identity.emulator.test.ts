@@ -16,6 +16,7 @@ import {
   setDoc,
   updateDoc,
   writeBatch,
+  type Firestore,
 } from "firebase/firestore";
 import {
   OLD_TRANSFER,
@@ -190,6 +191,131 @@ describeEmu("usernames/{username}", () => {
   });
   it("denies deleting someone else's claim", async () => {
     await assertFails(deleteDoc(doc(fsAs(env, "stranger"), `usernames/${usernameOf(UID.owner)}`)));
+  });
+});
+
+describeEmu("publicProfiles/{uid}", () => {
+  // The seeded profiles: users/{uid} with displayName `User ${uid}` and username uid.toLowerCase().
+  const projection = (uid: string, extra: Record<string, unknown> = {}) => ({
+    schemaVersion: 2,
+    uid,
+    displayName: `User ${uid}`,
+    username: usernameOf(uid),
+    updatedAt: now(),
+    ...extra,
+  });
+  const publish = async (who: Who, uid: string) => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore() as unknown as Firestore, `publicProfiles/${uid}`),
+        projection(uid),
+      );
+    });
+    return fsAs(env, who);
+  };
+
+  it("a user publishes their own projection, a copy of their profile", async () => {
+    const fs = fsAs(env, "owner");
+    await assertSucceeds(setDoc(doc(fs, `publicProfiles/${UID.owner}`), projection(UID.owner)));
+  });
+  it("a new user writes profile, username claim and projection in one batch", async () => {
+    const me = fsUid(env, "newUser2");
+    const b = writeBatch(me);
+    b.set(doc(me, "users/newUser2"), user("newUser2", "newbie2"));
+    b.set(doc(me, "usernames/newbie2"), { uid: "newUser2", createdAt: now() });
+    b.set(doc(me, "publicProfiles/newUser2"), {
+      ...projection("newUser2"),
+      displayName: "User newUser2",
+      username: "newbie2",
+    });
+    await assertSucceeds(b.commit());
+  });
+  it("a display-name change updates profile and projection together", async () => {
+    const fs = await publish("owner", UID.owner);
+    const b = writeBatch(fs);
+    b.update(doc(fs, `users/${UID.owner}`), { displayName: "Dr. Owner" });
+    b.set(
+      doc(fs, `publicProfiles/${UID.owner}`),
+      projection(UID.owner, { displayName: "Dr. Owner" }),
+    );
+    await assertSucceeds(b.commit());
+  });
+  it("any signed-in user reads one projection", async () => {
+    const fs = await publish("stranger", UID.owner);
+    await assertSucceeds(getDoc(doc(fs, `publicProfiles/${UID.owner}`)));
+  });
+  it("denies an anonymous read", async () => {
+    await publish("owner", UID.owner);
+    await assertFails(getDoc(doc(fsAs(env, "anon"), `publicProfiles/${UID.owner}`)));
+  });
+  it("denies listing projections (no enumeration), even to their users", async () => {
+    await publish("owner", UID.owner);
+    await assertFails(getDocs(collection(fsAs(env, "owner"), "publicProfiles")));
+  });
+  it("denies writing another user's projection", async () => {
+    const fs = fsAs(env, "stranger");
+    await assertFails(setDoc(doc(fs, `publicProfiles/${UID.owner}`), projection(UID.owner)));
+  });
+  it("denies a display name that is not the user's own (impersonation)", async () => {
+    const fs = fsAs(env, "stranger");
+    await assertFails(
+      setDoc(
+        doc(fs, `publicProfiles/${UID.stranger}`),
+        projection(UID.stranger, { displayName: `User ${UID.owner}` }),
+      ),
+    );
+  });
+  it("denies a username that is not the user's own", async () => {
+    const fs = fsAs(env, "stranger");
+    await assertFails(
+      setDoc(
+        doc(fs, `publicProfiles/${UID.stranger}`),
+        projection(UID.stranger, { username: usernameOf(UID.owner) }),
+      ),
+    );
+  });
+  it("denies the email or any other extra field in a projection", async () => {
+    const fs = fsAs(env, "owner");
+    const path = `publicProfiles/${UID.owner}`;
+    await assertFails(
+      setDoc(doc(fs, path), projection(UID.owner, { email: "ownera@example.org" })),
+    );
+    await assertFails(setDoc(doc(fs, path), projection(UID.owner, { role: "admin" })));
+  });
+  it("denies a projection with a missing field, schemaVersion 1 or a future time", async () => {
+    const fs = fsAs(env, "owner");
+    const path = `publicProfiles/${UID.owner}`;
+    await assertFails(setDoc(doc(fs, path), omit(projection(UID.owner), "username")));
+    await assertFails(setDoc(doc(fs, path), projection(UID.owner, { schemaVersion: 1 })));
+    await assertFails(
+      setDoc(doc(fs, path), projection(UID.owner, { updatedAt: now() + 3_600_000 })),
+    );
+  });
+  it("denies a projection for a user without a profile", async () => {
+    const fs = fsUid(env, "noProfile9");
+    await assertFails(
+      setDoc(doc(fs, "publicProfiles/noProfile9"), {
+        ...projection("noProfile9"),
+        username: "noprofile9",
+      }),
+    );
+  });
+  it("a user deletes their projection; a stranger cannot", async () => {
+    await publish("owner", UID.owner);
+    await assertFails(deleteDoc(doc(fsAs(env, "stranger"), `publicProfiles/${UID.owner}`)));
+    await assertSucceeds(deleteDoc(doc(fsAs(env, "owner"), `publicProfiles/${UID.owner}`)));
+  });
+  it("denies deleting the account while its projection remains readable", async () => {
+    const fs = await publish("stranger", UID.stranger);
+    const b = writeBatch(fs);
+    b.delete(doc(fs, `users/${UID.stranger}`));
+    b.delete(doc(fs, `usernames/${usernameOf(UID.stranger)}`));
+    await assertFails(b.commit());
+    const all = writeBatch(fs);
+    all.delete(doc(fs, `users/${UID.stranger}`));
+    all.delete(doc(fs, `usernames/${usernameOf(UID.stranger)}`));
+    all.delete(doc(fs, `publicProfiles/${UID.stranger}`));
+    await assertSucceeds(all.commit());
   });
 });
 

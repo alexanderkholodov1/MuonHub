@@ -24,6 +24,29 @@ export const UserSchema = z.strictObject({
   createdAt: EpochMsSchema,
 });
 
+/**
+ * `publicProfiles/{uid}`: what other signed-in users may read about a user — the display name and
+ * the username, never the email. The rules require it to match the user's own profile.
+ */
+export const PublicProfileSchema = z.strictObject({
+  schemaVersion: SchemaVersionSchema,
+  uid: UidSchema,
+  displayName: UserSchema.shape.displayName,
+  username: UsernameSchema,
+  updatedAt: EpochMsSchema,
+});
+
+/** The public projection of a user's own profile. */
+export function toPublicProfile(user: User, updatedAt: number): PublicProfile {
+  return {
+    schemaVersion: 2,
+    uid: user.uid,
+    displayName: user.displayName,
+    username: user.username,
+    updatedAt,
+  };
+}
+
 /** `usernames/{username}` → the claiming uid (one username per user). */
 export const UsernameClaimSchema = z.strictObject({
   uid: UidSchema,
@@ -43,4 +66,5 @@ export const InstitutionSchema = z.strictObject({
 
 export type User = z.infer<typeof UserSchema>;
 export type UsernameClaim = z.infer<typeof UsernameClaimSchema>;
+export type PublicProfile = z.infer<typeof PublicProfileSchema>;
 export type Institution = z.infer<typeof InstitutionSchema>;
