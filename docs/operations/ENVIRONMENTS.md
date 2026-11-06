@@ -19,18 +19,29 @@ the Blaze plan, stop and tell the Adjutant.
 
 ### `muonhub` — v6
 
-| Resource | State (2026-10-02) |
+| Resource | State (2026-11-06, M1 step 8) |
 |---|---|
-| Realtime Database | Default instance `muonhub-default-rtdb`, region `us-central1`, URL `https://muonhub-default-rtdb.firebaseio.com/`, **empty** **[verified]** |
-| Hosting | Default site `muonhub` → `https://muonhub.web.app` **[verified]**; nothing deployed by v6 yet |
-| Cloud Firestore | **Not created** (API not enabled) **[verified]**. Location decided: **`nam5`** (United States, multi-region) — permanent once created |
-| Authentication | **Not initialised** **[verified]** |
-| Web app registration | **None registered** **[verified]** |
-| App Check, Cloud Messaging, Remote Config, Analytics | Not configured |
+| Realtime Database | Default instance `muonhub-default-rtdb`, region `us-central1`, URL `https://muonhub-default-rtdb.firebaseio.com/`, empty; **v2 rules deployed** from `25d7a84`; anonymous read of the root denied **[verified by running]** |
+| Hosting | Default site `muonhub` → `https://muonhub.web.app` **[verified 2026-10-02]**; nothing deployed by v6 yet |
+| Cloud Firestore | `(default)`, **Standard** edition, Native mode, location **`nam5`**, created 2026-11-06 01:36Z; **delete protection enabled**; point-in-time recovery off; **v2 rules and indexes deployed** from `25d7a84`; anonymous list denied **[verified by running]** |
+| Authentication | **Not initialised** — the Firebase CLI has no command for it **[verified]**; done in the console (below) |
+| Web app registration | `MuonHub web`, App ID `1:1062287112089:web:2a3b6cdc5f3ca300c84508` (public configuration) **[verified by running]** |
+| App Check, Cloud Messaging, Remote Config, Analytics | Not configured — first needed in M2 |
 
-Setting these up is done by the maintainer in the Firebase console at the start of M1 — see
-[`FIREBASE-SETUP.md`](FIREBASE-SETUP.md). Cloud Storage, Cloud Functions, App Hosting, and
-Extensions require the Blaze plan and are **not** part of the architecture.
+Set up on 2026-11-06 by the agent through the maintainer's Firebase CLI on his laptop (maintainer:
+"Configura Firebase tu mismo"). Deploys use a fresh clone of the exact commit, always with
+`--project muonhub`; the clone is removed afterwards.
+
+**Lesson:** `firebase deploy --only firestore` **creates the `(default)` database by itself** if it
+does not exist, with the CLI's default location (`nam5` here, which is the decided one). Because the
+location is permanent, a new project's database is created explicitly first
+(`firebase firestore:databases:create "(default)" --location nam5`), never through a deploy.
+
+**Still needed from the console:** **Authentication** → Get started →
+enable **Email/Password** (needed by the agent's account in M1) and **Google** (needed by the web in
+M2) — [`FIREBASE-SETUP.md`](FIREBASE-SETUP.md) §1. App Check and the Web Push key wait for M2. Cloud
+Storage, Cloud Functions, App Hosting, and Extensions require the Blaze plan and are **not** part of
+the architecture.
 
 ### `munhub-1` — v5 production (frozen)
 

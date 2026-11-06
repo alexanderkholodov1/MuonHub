@@ -25,7 +25,7 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.1.7` · branch `feat/m1-core-a
 | 4 Physics · 5 Simulator | ✅ physicist review applied | `6.0.0-alpha.1.4`, `.1.5` |
 | 6 Data layer v2 and rules v2 | ✅ security and silent-failure reviews applied; nothing deployed | `6.0.0-alpha.1.6` |
 | 7 Agent daemon | ✅ security and silent-failure reviews applied | `6.0.0-alpha.1.7` |
-| 8 Firebase setup and first deploy | ⏳ done by the agent (maintainer, 2026-11-06: "Configura Firebase tu mismo") once the Firebase CLI on the laptop is signed in again (its session expired); `muonhub-dev` created the same way | — |
+| 8 Firebase setup and first deploy | 🔄 by the agent (maintainer, 2026-11-06: "Configura Firebase tu mismo"): Firestore `nam5`, web app, v2 rules and indexes deployed to `muonhub` ✅; **Authentication** (Email/Password, Google) still needs the console; `muonhub-dev` awaits the maintainer's confirmation ([`operations/ENVIRONMENTS.md`](operations/ENVIRONMENTS.md)) | — |
 | 9 Site access and format capture | ⏳ **maintainer on site:** Tailscale on the university PC (approach proposed 2026-11-06 in the session record; [`operations/REMOTE-ACCESS.md`](operations/REMOTE-ACCESS.md)); then a ~10-minute capture | — |
 | 10 Measurements | ⏳ needs `muonhub-dev` (step 8) | — |
 | 11 Install and 72-hour validation | ⏳ needs steps 8–9 and sudo on the university PC (decision H) | — |

@@ -61,9 +61,10 @@ sources it cites and all seven were applied:
 
 ## 5. Next
 
-- **Maintainer:** sign the Firebase CLI in again on his laptop (§7); Tailscale on the lab PC (§6);
-  the private security follow-up.
-- **Agent, without the maintainer:** M1 step 8 once the CLI is signed in; the step-11 validation
+- **Maintainer:** Authentication in the console (§7); a yes or no on `muonhub-dev` (§8); Tailscale on
+  the lab PC (§6); the private security follow-up.
+- **Agent, without the maintainer:** `muonhub-dev` once confirmed (database created explicitly
+  first); the step-11 validation
   tooling of spec 0087 ("Validation in practice": disruption scripts and the cloud-versus-local
   reconciliation check), which needs a machine with enough free disk for the install and the
   emulator (the laptop's WSL has it; Beacon does not).
@@ -103,11 +104,35 @@ personal account.
 
 ## 7. Firebase set-up by the agent
 
-- The Firebase CLI on the maintainer's laptop (WSL Ubuntu, `firebase-tools` 15.4.0) is signed in as
-  his account, but its session has expired: listing projects returns HTTP 401 **[verified by
-  running]**. One sign-in by the maintainer (`firebase login --reauth`) restores it; the agent then
-  works through it over SSH, and the login never leaves the laptop.
-- With the CLI, the agent can create `muonhub-dev`, the Firestore databases (`nam5`, decided in
-  ENVIRONMENTS.md), the web app registration, and deploy the v2 rules. Console-only items (Google
-  sign-in provider, App Check, Web Push key) are listed for the maintainer or deferred to M2, where
-  they are first needed.
+- The Firebase CLI in the laptop's WSL Ubuntu (`firebase-tools` 15.4.0) still returns HTTP 401
+  after the maintainer signed in again; the Windows CLI (`firebase-tools` 15.11.0, his account) works
+  and sees `muonhub` **[verified by running]**. All work went through the Windows CLI over SSH; the
+  login never left the laptop.
+- **Done on `muonhub`** (state and evidence in [`ENVIRONMENTS.md`](../operations/ENVIRONMENTS.md)):
+  web app `MuonHub web` registered; the v2 Firestore rules deployed, which enabled the Firestore API
+  and **created the `(default)` database by itself** — it came out Standard, Native, `nam5`, the
+  decided location, verified right after; delete protection then enabled; indexes and the RTDB rules
+  deployed. All from a fresh clone of `25d7a84`, removed afterwards. Anonymous reads of both
+  databases are denied **[verified by running]**.
+- **Lesson:** a deploy must never be what creates a database — its location is permanent. For any
+  new project the database is created explicitly first (recorded in `ENVIRONMENTS.md`).
+- **Remaining:** Authentication (Email/Password for the agent's account in M1; Google for the web
+  in M2) has no Firebase CLI command and is enabled in the console. `muonhub-dev` was not created:
+  the maintainer asked what it is for (§8).
+
+## 8. Why a test project (`muonhub-dev`)
+
+M1 decision A (approved 2026-10-04) created it "so `muonhub` only ever receives real data". The
+maintainer asked on 2026-11-06 what it is for; the answer given:
+- **Real data only in `muonhub`:** step 10 and the 72-hour virtual detector of step 11 write
+  synthetic data; in `muonhub` it would mix with the real detector's streams (ADR-006).
+- **Free quotas are per project:** the step-10 test deliberately opens many simultaneous
+  connections against the 100-connection limit, and the virtual detector writes for 72 hours; in
+  `muonhub` that consumes the real project's monthly download and storage quota and distorts the
+  measurement of the real detector's own usage.
+- **What the emulator cannot do:** it does not enforce the 100-connection limit or report real
+  bytes, so those measurements need a real project.
+- **Later milestones:** rules and web deploys are tried there before `muonhub` (staging).
+- **Cost:** none (another free Spark project; a different purpose, not load splitting).
+- **Alternative:** use `muonhub` for the tests now and delete the synthetic data before launch —
+  simpler today, but every later milestone would test against the production project.
