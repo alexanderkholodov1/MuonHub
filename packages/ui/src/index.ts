@@ -16,6 +16,7 @@
 
 export { ThemeProvider, useTheme } from "./components/ThemeProvider";
 export type { Theme } from "./components/ThemeProvider";
+export { THEME_INIT_SCRIPT, THEME_STORAGE_KEY } from "./lib/theme-init";
 
 export { Button } from "./components/Button";
 export type { ButtonProps } from "./components/Button";

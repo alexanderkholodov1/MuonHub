@@ -69,13 +69,28 @@ export function NewStreamForm(): ReactNode {
     }
   }
 
+  // The page keeps its heading in every state, so assistive technology always finds it.
+  const heading = <h1 className="text-4xl font-semibold">{t("streams.newTitle")}</h1>;
   if (stationId === null || stationId === "") {
-    return <p role="alert">{t("streams.missingStation")}</p>;
+    return (
+      <div className="space-y-8">
+        {heading}
+        <p role="alert">{t("streams.missingStation")}</p>
+      </div>
+    );
   }
-  if (access.status === "loading") return <p role="status">{t("state.loading")}</p>;
+  if (access.status === "loading") {
+    return (
+      <div className="space-y-8">
+        {heading}
+        <p role="status">{t("state.loading")}</p>
+      </div>
+    );
+  }
   if (access.status === "error") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-8">
+        {heading}
         <p role="alert">{access.error}</p>
         <Link className="underline" href={`/app/station?id=${encodeURIComponent(stationId)}`}>
           {t("station.backToStation")}
@@ -88,7 +103,7 @@ export function NewStreamForm(): ReactNode {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-semibold">{t("streams.newTitle")}</h1>
+      {heading}
       <p className="text-secondary">{station.name}</p>
       {error && <p role="alert">{error}</p>}
       {devices.length === 0 ? (

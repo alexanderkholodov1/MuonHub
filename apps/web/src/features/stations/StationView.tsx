@@ -90,11 +90,21 @@ export function StationView({ stationId }: { stationId: string | null }): ReactN
     return <p role="alert">{t("station.missingId")}</p>;
   }
 
-  if (resource.status === "loading") return <p role="status">{t("state.loading")}</p>;
+  // Until the station's name is known, a generic heading keeps the page navigable by heading.
+  const pending = <h1 className="sr-only">{t("station.title")}</h1>;
+  if (resource.status === "loading") {
+    return (
+      <>
+        {pending}
+        <p role="status">{t("state.loading")}</p>
+      </>
+    );
+  }
   if (resource.status === "error") {
     const missing = resource.error === t("error.notFound");
     return (
       <div className="space-y-4">
+        {pending}
         <p role="alert">{resource.error}</p>
         {!missing && (
           <Button size="lg" variant="secondary" onClick={resource.reload}>

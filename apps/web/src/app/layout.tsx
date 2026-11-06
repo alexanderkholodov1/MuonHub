@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { THEME_INIT_SCRIPT } from "@muonhub/ui";
 import { t } from "@/i18n/t";
 import { Providers } from "./Providers";
 import "./globals.css";
@@ -19,6 +20,10 @@ export default function RootLayout({ children }: { children: ReactNode }): React
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Sets the theme before the first paint (no flash of the dark theme); static content. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-screen bg-bg text-text antialiased">
         <Providers>{children}</Providers>
       </body>

@@ -10,6 +10,7 @@
  * - Sets `data-theme` attribute on <html> so CSS custom properties apply.
  */
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { THEME_STORAGE_KEY } from "../lib/theme-init";
 
 export type Theme = "dark" | "light";
 
@@ -21,7 +22,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "muonhub-theme";
+const STORAGE_KEY = THEME_STORAGE_KEY;
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "dark";

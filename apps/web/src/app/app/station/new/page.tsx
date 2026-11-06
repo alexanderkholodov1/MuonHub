@@ -9,7 +9,7 @@ export default function Page(): ReactNode {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main id="main" className="mx-auto max-w-6xl px-6 py-12">
         <Suspense fallback={<p role="status">{t("state.loading")}</p>}>
           <RequireAuth>
             <NewStationPage />

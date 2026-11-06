@@ -45,7 +45,7 @@ export function NetworkMap({ stations }: { stations: StationCollection }): React
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => {
         const active = token("--color-success", "#3fb950");
-        const idle = token("--color-text-muted", "#6b7480");
+        const idle = token("--color-text-muted", "#808996");
         map.addSource("stations", { type: "geojson", data: stations });
         map.addLayer({
           id: "stations",

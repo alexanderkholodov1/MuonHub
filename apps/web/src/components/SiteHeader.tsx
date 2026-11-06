@@ -29,6 +29,12 @@ export function SiteHeader(): ReactNode {
   }
   return (
     <header className="border-b border-border">
+      <a
+        href="#main"
+        className="sr-only rounded-md bg-surface px-4 py-2 focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-20"
+      >
+        {t("nav.skipToContent")}
+      </a>
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-6 py-4">
         <Link href="/" className="font-semibold tracking-tight">
           {t("app.name")}

@@ -10,6 +10,7 @@ export const en = {
   "nav.signOut": "Sign out",
   "nav.myStations": "My stations",
   "nav.account": "Account",
+  "nav.skipToContent": "Skip to content",
   "home.title": "MuonHub",
   "home.body":
     "An open-science platform for cosmic-ray detectors, starting at the USFQ physics laboratory in Quito. The public site is being rebuilt; signed-in users can manage their stations and streams.",
@@ -68,6 +69,7 @@ export const en = {
   "station.edit": "Edit station",
   "station.cancel": "Cancel",
   "station.details": "Station details",
+  "station.title": "Station",
   "station.locationTitle": "Location",
   "station.backHome": "Back to your stations",
   "station.backToStation": "Back to station",
@@ -200,6 +202,9 @@ export const en = {
   "dashboard.chart.rate.unit": "counts / min",
   "dashboard.chart.pressure": "Barometric pressure",
   "dashboard.chart.temperature": "Temperature",
+  "dashboard.chart.summary":
+    "{label} chart, {unit}: {count} minutes recorded, from {min} to {max}.",
+  "dashboard.chart.summaryEmpty": "{label} chart: no minutes recorded in this range.",
   "dashboard.uncorrected":
     "Counts per minute are shown as recorded: not corrected for dead time, barometric pressure or temperature.",
   "dashboard.physicsNote":

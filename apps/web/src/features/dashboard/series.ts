@@ -89,3 +89,29 @@ export function freshness(lastTs: number | null, now: number): Freshness {
   if (lastTs === null) return "none";
   return now - (lastTs + MINUTE_MS) <= 3 * MINUTE_MS ? "fresh" : "stale";
 }
+
+/**
+ * Coverage as a percentage with one decimal, rounded down: 100.0 % only when every minute of the
+ * range is stored (1439 of 1440 minutes is 99.9 %, never 100.0 %). Integer arithmetic, so exact.
+ */
+export function coveragePercent(minutes: number, span: number): string {
+  if (span <= 0) return "0.0";
+  return (Math.floor((Math.min(minutes, span) * 1000) / span) / 10).toFixed(1);
+}
+
+/** The text alternative of a chart: what a screen-reader user needs instead of the canvas. */
+export interface ChartSummary {
+  readonly count: number;
+  readonly min: number | null;
+  readonly max: number | null;
+}
+
+export function chartSummary(y: readonly (number | null)[]): ChartSummary {
+  const values = y.filter((v): v is number => v !== null && Number.isFinite(v));
+  if (values.length === 0) return { count: 0, min: null, max: null };
+  return {
+    count: values.length,
+    min: values.reduce((a, v) => Math.min(a, v)),
+    max: values.reduce((a, v) => Math.max(a, v)),
+  };
+}

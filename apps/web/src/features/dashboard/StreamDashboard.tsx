@@ -12,7 +12,7 @@ import { useDataProvider } from "@/lib/data/DataProviderContext";
 import { useResource } from "@/lib/data/useResource";
 import { t, type MessageKey } from "@/i18n/t";
 import { formatTime } from "./format";
-import { freshness, rangeStats, toChartData } from "./series";
+import { MINUTE_MS, coveragePercent, freshness, rangeStats, toChartData } from "./series";
 import { TimeChart } from "./TimeChart";
 import { useStreamMinutes } from "./useStreamMinutes";
 
@@ -40,10 +40,20 @@ export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
   });
   const data = useStreamMinutes(provider, streamId, hours);
 
-  if (meta.status === "loading") return <p role="status">{t("state.loading")}</p>;
+  // Until the stream's name is known, a generic heading keeps the page navigable by heading.
+  const pending = <h1 className="sr-only">{t("dashboard.title")}</h1>;
+  if (meta.status === "loading") {
+    return (
+      <>
+        {pending}
+        <p role="status">{t("state.loading")}</p>
+      </>
+    );
+  }
   if (meta.status === "error") {
     return (
       <div role="alert">
+        {pending}
         <p>{meta.error}</p>
         <button className="mt-2 underline" onClick={meta.reload}>
           {t("state.retry")}
@@ -51,12 +61,20 @@ export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
       </div>
     );
   }
-  if (meta.data === null) return <p role="alert">{t("error.notFound")}</p>;
+  if (meta.data === null) {
+    return (
+      <>
+        {pending}
+        <p role="alert">{t("error.notFound")}</p>
+      </>
+    );
+  }
 
   const { station, device, sessions } = meta.data;
   const stats = rangeStats(data.minutes, data.fromTs, data.toTs);
   const chart = toChartData(data.minutes);
   const fresh = freshness(stats.lastTs, Date.now());
+  const span = Math.round((data.toTs - data.fromTs) / MINUTE_MS);
   const mirrored = sessions.some((s) => s.agentVersion.startsWith("v5-mirror"));
   const freshTone =
     fresh === "fresh" ? "text-[var(--color-success)]" : "text-[var(--color-warning)]";
@@ -133,12 +151,9 @@ export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
         <Stat
           label={t("dashboard.stat.coverage")}
           loading={data.status === "loading"}
-          value={(stats.coverage * 100).toFixed(1)}
+          value={coveragePercent(stats.minutes, span)}
           unit={t("unit.percent")}
-          note={t("dashboard.stat.coverage.note", {
-            minutes: stats.minutes,
-            span: Math.round((data.toTs - data.fromTs) / 60_000),
-          })}
+          note={t("dashboard.stat.coverage.note", { minutes: stats.minutes, span })}
         />
         <Stat
           label={t("dashboard.stat.pressure")}

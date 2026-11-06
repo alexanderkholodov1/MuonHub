@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { v2 } from "@muonhub/shared";
-import { MINUTE_MS, freshness, rangeStats, toChartData } from "./series";
+import {
+  MINUTE_MS,
+  chartSummary,
+  coveragePercent,
+  freshness,
+  rangeStats,
+  toChartData,
+} from "./series";
 
 const T0 = Date.UTC(2026, 10, 6, 0, 0);
 const minute = (i: number, n: number, extra: Partial<v2.MinuteRecord> = {}): v2.MinuteRecord => ({
@@ -68,5 +75,23 @@ describe("freshness", () => {
     expect(freshness(null, T0)).toBe("none");
     expect(freshness(T0, T0 + 4 * MINUTE_MS)).toBe("fresh");
     expect(freshness(T0, T0 + 4 * MINUTE_MS + 1)).toBe("stale");
+  });
+});
+
+describe("coveragePercent", () => {
+  it("rounds down, so 100.0 % means no minute is missing", () => {
+    expect(coveragePercent(1440, 1440)).toBe("100.0");
+    expect(coveragePercent(1439, 1440)).toBe("99.9");
+    expect(coveragePercent(4319, 4320)).toBe("99.9");
+    expect(coveragePercent(180, 1440)).toBe("12.5");
+    expect(coveragePercent(0, 1440)).toBe("0.0");
+    expect(coveragePercent(3, 0)).toBe("0.0");
+  });
+});
+
+describe("chartSummary", () => {
+  it("counts recorded values and ignores gaps", () => {
+    expect(chartSummary([3, null, 7, 5])).toEqual({ count: 3, min: 3, max: 7 });
+    expect(chartSummary([null, null])).toEqual({ count: 0, min: null, max: null });
   });
 });

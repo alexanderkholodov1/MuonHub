@@ -6,6 +6,11 @@
  */
 import { useEffect, useRef, type ReactNode } from "react";
 import "uplot/dist/uPlot.min.css";
+import { t } from "@/i18n/t";
+import { chartSummary } from "./series";
+
+const formatValue = (value: number | null): string =>
+  value === null ? "" : Number.isInteger(value) ? String(value) : value.toFixed(1);
 
 type UPlotInstance = {
   setData(data: unknown): void;
@@ -73,5 +78,17 @@ export function TimeChart(props: {
     plot.current?.setData(data);
   });
 
-  return <div ref={host} className="w-full" />;
+  // The canvas is invisible to assistive technology; this text stands in for it.
+  const summary = chartSummary(props.y);
+  const description =
+    summary.count === 0
+      ? t("dashboard.chart.summaryEmpty", { label: props.label })
+      : t("dashboard.chart.summary", {
+          label: props.label,
+          unit: props.unit,
+          count: summary.count,
+          min: formatValue(summary.min),
+          max: formatValue(summary.max),
+        });
+  return <div ref={host} className="w-full" role="img" aria-label={description} />;
 }

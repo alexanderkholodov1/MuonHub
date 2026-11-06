@@ -6,7 +6,7 @@ export default function Page(): ReactNode {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main id="main" className="mx-auto max-w-6xl px-6 py-10">
         <NetworkPage />
       </main>
     </>

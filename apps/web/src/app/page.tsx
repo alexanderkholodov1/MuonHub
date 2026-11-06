@@ -8,7 +8,7 @@ export default function HomePage(): ReactNode {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-6 py-16">
+      <main id="main" className="mx-auto max-w-3xl px-6 py-16">
         <h1 className="text-4xl font-semibold tracking-tight">{t("home.title")}</h1>
         <p className="mt-6 text-lg text-secondary">{t("home.body")}</p>
         <div className="mt-8 flex gap-4">

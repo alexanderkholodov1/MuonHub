@@ -24,7 +24,7 @@
   /* Text */
   --color-text: #e6eaf2;
   --color-text-secondary: #9aa4b2;
-  --color-text-muted: #6b7480;
+  --color-text-muted: #808996; /* ≥ 4.5:1 on bg, surface and surface-2 (WCAG AA) */
 
   /* Accents (max 2 on any screen) */
   --color-accent: #4cc9f0;
@@ -95,9 +95,9 @@
 
   --color-text: #0a0c10;
   --color-text-secondary: #4b5563;
-  --color-text-muted: #8a93a2;
+  --color-text-muted: #687180; /* ≥ 4.5:1 on bg, surface and surface-2 (WCAG AA) */
 
-  --color-accent: #0e9fcf;
+  --color-accent: #0877a0; /* ≥ 4.5:1 as text on light surfaces and under bg-coloured text */
   --color-accent-warm: #c77a12;
 
   --color-success: #1a7f37;
@@ -113,6 +113,17 @@
     --duration-fast: 0ms;
     --duration-normal: 0ms;
     --duration-slow: 0ms;
+  }
+
+  /* Utility transitions and animations (e.g. transition-colors, animate-spin) do not read the
+     duration tokens; stop them too. Loading states are also announced in text. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
