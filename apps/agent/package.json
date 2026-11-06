@@ -1,8 +1,8 @@
 {
   "name": "@muonhub/agent",
-  "version": "6.0.0-alpha.1.7",
+  "version": "6.0.0-alpha.1.8",
   "private": true,
-  "description": "MuonHub agent \u2014 headless Node.js 24 daemon that reads devices over serial, keeps every raw line locally, and syncs complete-minute records (spec 0087, ADR-007)",
+  "description": "MuonHub agent — headless Node.js 24 daemon that reads devices over serial, keeps every raw line locally, and syncs complete-minute records (spec 0087, ADR-007)",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,7 +17,8 @@
     "typecheck": "tsc --noEmit",
     "dev": "tsc --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "test:emulator": "firebase emulators:exec --only auth,firestore,database --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\""
+    "test:emulator": "firebase emulators:exec --only auth,firestore,database --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts\"",
+    "rehearsal": "MUONHUB_REHEARSAL=1 firebase emulators:exec --only auth,firestore,database --project demo-muonhub --config ../../infra/firebase/firebase.json \"vitest run --config vitest.emulator.config.ts src/rehearsal.emulator.test.ts\""
   },
   "engines": {
     "node": ">=24"

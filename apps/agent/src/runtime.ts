@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { uptime } from "node:os";
 import { join } from "node:path";
 import { v2 as dp } from "@muonhub/data-provider";
-import { v2 } from "@muonhub/shared";
+import { MUONHUB_VERSION, v2 } from "@muonhub/shared";
 import { Agent } from "./agent.js";
 import { createSystemClockProbe } from "./clock/clock.js";
 import { BindingSchema, loadConfig, type AgentConfig, type Binding } from "./config.js";
@@ -22,7 +22,8 @@ import { openLocalStore } from "./store/sqlite.js";
 import type { RefreshTokenSupport } from "./sync/auth.js";
 import { createFileCredentialStore } from "./sync/credentials.js";
 
-export const AGENT_VERSION = "6.0.0-alpha.1.6";
+/** The agent reports the release it belongs to (ADR-008 lockstep), never a hand-kept copy. */
+export const AGENT_VERSION: string = MUONHUB_VERSION;
 
 export function stateFile(config: AgentConfig, name: string): string {
   return join(config.stateDir, name);

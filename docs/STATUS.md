@@ -1,6 +1,6 @@
 # MuonHub — Status
 
-_Last updated: 2026-11-06 · version `6.0.0-alpha.1.7` · branch `feat/m1-core-agent`_
+_Last updated: 2026-11-06 · version `6.0.0-alpha.1.8` · branch `feat/m1-core-agent`_
 
 ## Milestones (plan: [`product/ROADMAP.md`](product/ROADMAP.md))
 
