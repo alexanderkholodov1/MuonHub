@@ -13,6 +13,11 @@ export const PublicConfigSchema = z.object({
   FIREBASE_DATABASE_URL: z.url(),
   FIREBASE_APP_ID: nonEmpty,
   USE_EMULATORS: z.enum(["0", "1"]).default("0"),
+  /** Host of the local emulators when USE_EMULATORS is "1" (a demo machine's address). */
+  EMULATOR_HOST: z
+    .string()
+    .regex(/^[A-Za-z0-9.-]+$/)
+    .default("127.0.0.1"),
   AUTH_GOOGLE: z.enum(["0", "1"]).default("0"),
 });
 
@@ -29,6 +34,7 @@ export function readRawConfig(): Record<keyof PublicConfig, string | undefined> 
     FIREBASE_DATABASE_URL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
     FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     USE_EMULATORS: process.env.NEXT_PUBLIC_USE_EMULATORS,
+    EMULATOR_HOST: process.env.NEXT_PUBLIC_EMULATOR_HOST,
     AUTH_GOOGLE: process.env.NEXT_PUBLIC_AUTH_GOOGLE,
   };
 }

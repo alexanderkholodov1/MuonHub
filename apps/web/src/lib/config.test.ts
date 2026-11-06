@@ -16,6 +16,7 @@ describe("parseConfig", () => {
     if (r.ok) {
       expect(r.config.USE_EMULATORS).toBe("0");
       expect(r.config.AUTH_GOOGLE).toBe("0");
+      expect(r.config.EMULATOR_HOST).toBe("127.0.0.1");
     }
   });
 
@@ -29,6 +30,11 @@ describe("parseConfig", () => {
       ok: false,
       missing: ["NEXT_PUBLIC_FIREBASE_API_KEY", "NEXT_PUBLIC_FIREBASE_DATABASE_URL"],
     });
+  });
+
+  it("refuses an emulator host that is not a plain host name", () => {
+    const r = parseConfig({ ...valid, EMULATOR_HOST: "evil.example/path" });
+    expect(r).toEqual({ ok: false, missing: ["NEXT_PUBLIC_EMULATOR_HOST"] });
   });
 
   it("treats empty strings as missing", () => {

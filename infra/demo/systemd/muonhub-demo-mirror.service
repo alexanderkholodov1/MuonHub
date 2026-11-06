@@ -1,0 +1,12 @@
+[Unit]
+Description=MuonHub demo: read-only mirror of the running v5 detector into the emulators
+After=muonhub-demo-emulators.service
+Wants=muonhub-demo-emulators.service
+
+[Service]
+ExecStart=%h/MuonHub/infra/demo/run-mirror.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

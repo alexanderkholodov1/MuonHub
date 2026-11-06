@@ -20,9 +20,9 @@ export function createBrowserProvider(config: PublicConfig): dp.DataProviderV2 {
     ...(config.USE_EMULATORS === "1"
       ? {
           emulators: {
-            auth: "http://127.0.0.1:9099",
-            firestore: { host: "127.0.0.1", port: 8080 },
-            database: { host: "127.0.0.1", port: 9000 },
+            auth: `http://${config.EMULATOR_HOST}:9099`,
+            firestore: { host: config.EMULATOR_HOST, port: 8080 },
+            database: { host: config.EMULATOR_HOST, port: 9000 },
           },
         }
       : {}),

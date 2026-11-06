@@ -1,0 +1,12 @@
+[Unit]
+Description=MuonHub demo: Firebase emulators with the v2 rules
+After=network-online.target tailscaled.service
+
+[Service]
+ExecStart=%h/MuonHub/infra/demo/run-emulators.sh
+Restart=always
+RestartSec=10
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target

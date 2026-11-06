@@ -1,0 +1,6 @@
+[Unit]
+Description=MuonHub demo: snapshot of the emulators' data
+
+[Service]
+Type=oneshot
+ExecStart=%h/MuonHub/infra/demo/export.sh

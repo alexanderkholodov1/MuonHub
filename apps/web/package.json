@@ -2,7 +2,7 @@
   "name": "@muonhub/web",
   "version": "6.0.0-alpha.1.8",
   "private": true,
-  "description": "MuonHub web app \u2014 Next.js static export: accounts, stations, dashboards, public site (spec 0088)",
+  "description": "MuonHub web app — Next.js static export: accounts, stations, dashboards, public site (spec 0088)",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "next": "^16.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "uplot": "^1.6.32",
     "zod": "catalog:"
   },
   "devDependencies": {
