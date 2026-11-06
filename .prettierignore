@@ -14,3 +14,6 @@ specs/
 
 # Secrets and local data
 private/
+
+# Generated at build time (apps/web/scripts/copy-maplibre-worker.mjs)
+apps/web/public/maplibre/
