@@ -15,6 +15,19 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { Field, SelectField } from "@/features/stations/form-fields";
 import { canManageDevicesAndStreams, resolveStationRole } from "@/features/stations/resolve-role";
 
+/**
+ * The built-in device types ship with MuonHub (`v2.BUILTIN_DEVICE_TYPES`) and are always offered;
+ * types published to the catalogue are added, and a published copy of a built-in id and version
+ * replaces it.
+ */
+export function withBuiltInTypes(published: readonly v2.DeviceType[]): v2.DeviceType[] {
+  const byKey = new Map<string, v2.DeviceType>();
+  for (const type of [...v2.BUILTIN_DEVICE_TYPES, ...published]) {
+    byKey.set(`${type.id}:${String(type.version)}`, type);
+  }
+  return [...byKey.values()];
+}
+
 export function NewDeviceForm(): ReactNode {
   const provider = useDataProvider();
   const { user } = useAuth();
@@ -35,8 +48,8 @@ export function NewDeviceForm(): ReactNode {
     if (station === null) throw new dp.DataProviderError("not-found");
     const role = await resolveStationRole(provider, station, user.uid);
     if (!canManageDevicesAndStreams(role)) throw new dp.DataProviderError("permission-denied");
-    const types = await provider.listDeviceTypes();
-    return { station, types: types.items };
+    const published = await provider.listDeviceTypes();
+    return { station, types: withBuiltInTypes(published.items) };
   });
 
   async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
