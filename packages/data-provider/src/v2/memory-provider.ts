@@ -87,7 +87,13 @@ function faultError(kind: FaultKind): DataProviderError {
 
 /** Shared state; create one per test and hand it to every provider that should see the same data. */
 export class MemoryStore {
-  readonly accounts = new Map<string, { uid: string; email: string; password: string }>();
+  readonly accounts = new Map<
+    string,
+    { uid: string; email: string; password: string | null; emailVerified: boolean }
+  >();
+  /** Test outbox: only existing accounts receive reset messages. */
+  readonly passwordResetEmails: string[] = [];
+  readonly verificationEmails: string[] = [];
   readonly docs = new Map<string, unknown>(); // Firestore-like: "collection/id/..." → document
   readonly rtdb = new Map<string, unknown>(); // flat RTDB-like: "minutes/{stream}/{key}" → value
   private readonly listeners = new Set<Listener>();
@@ -240,6 +246,8 @@ export class MemoryStore {
 
 export interface MemoryProviderOptions {
   store?: MemoryStore;
+  /** Test identity selected by the simulated Google popup. */
+  googleEmail?: string;
   /** Clock for timestamps made by the provider (default `Date.now`). */
   now?: () => number;
 }
@@ -363,7 +371,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       if (account === undefined || account.password !== password) {
         throw new DataProviderError("invalid-credentials");
       }
-      const next = { uid: account.uid, email };
+      const next = { uid: account.uid, email, emailVerified: account.emailVerified };
       refreshToken = store.issueRefreshToken(account.uid);
       setUser(next);
       return next;
@@ -376,7 +384,7 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       if (uid === undefined || account === undefined || store.disabledUids.has(uid)) {
         throw new DataProviderError("unauthenticated");
       }
-      const next = { uid, email: account.email };
+      const next = { uid, email: account.email, emailVerified: account.emailVerified };
       refreshToken = token;
       setUser(next);
       return next;
@@ -390,10 +398,52 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
     async createAccount(email, password) {
       if (store.accounts.has(email)) throw new DataProviderError("already-exists");
       if (password.length < 6) fail("Password too short.");
-      const account = { uid: store.nextUid(), email, password };
+      const account = { uid: store.nextUid(), email, password, emailVerified: false };
       store.accounts.set(email, account);
-      const next = { uid: account.uid, email };
+      const next = { uid: account.uid, email, emailVerified: account.emailVerified };
       refreshToken = store.issueRefreshToken(account.uid);
+      setUser(next);
+      return next;
+    },
+    async sendPasswordReset(email) {
+      validate(v2.UserSchema.shape.email, email, "email");
+      if (store.accounts.has(email)) store.passwordResetEmails.push(email);
+    },
+    async sendEmailVerification() {
+      const uid = requireUid();
+      const account = [...store.accounts.values()].find((a) => a.uid === uid);
+      if (account === undefined || store.disabledUids.has(uid)) {
+        throw new DataProviderError("unauthenticated");
+      }
+      store.verificationEmails.push(account.email);
+    },
+    async signInWithGoogle() {
+      const email = validate(
+        v2.UserSchema.shape.email,
+        options.googleEmail ?? "google@example.test",
+        "email",
+      );
+      let account = store.accounts.get(email);
+      if (account === undefined) {
+        account = { uid: store.nextUid(), email, password: null, emailVerified: true };
+        store.accounts.set(email, account);
+      }
+      if (store.disabledUids.has(account.uid)) throw new DataProviderError("permission-denied");
+      account.emailVerified = true;
+      const next = { uid: account.uid, email, emailVerified: true };
+      refreshToken = store.issueRefreshToken(account.uid);
+      setUser(next);
+      return next;
+    },
+    async reloadUser() {
+      if (user === null) return null;
+      const uid = user.uid;
+      const account = [...store.accounts.values()].find((a) => a.uid === uid);
+      if (account === undefined || store.disabledUids.has(user.uid)) {
+        setUser(null);
+        throw new DataProviderError("unauthenticated");
+      }
+      const next = { uid: account.uid, email: account.email, emailVerified: account.emailVerified };
       setUser(next);
       return next;
     },

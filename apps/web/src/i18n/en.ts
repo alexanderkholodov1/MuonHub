@@ -21,6 +21,46 @@ export const en = {
   "config.title": "MuonHub is not configured",
   "config.body":
     "This build is missing its public Firebase configuration, so it cannot connect. The following values are missing or invalid:",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.displayName": "Display name",
+  "auth.username": "Username",
+  "auth.usernameHint":
+    "Use 3–30 lowercase letters, digits, or underscores. Start and end with a letter or digit.",
+  "auth.usernameInvalid": "Use 3–30 lowercase letters, digits, or underscores.",
+  "auth.usernameBoundary": "Start and end your username with a letter or digit.",
+  "auth.usernameTaken": "This username is already taken. Choose another.",
+  "auth.google": "Sign in with Google",
+  "auth.forgotPassword": "Forgot password?",
+  "auth.resetTitle": "Reset your password",
+  "auth.sendReset": "Send reset email",
+  "auth.resetConfirmation":
+    "If an account exists for this email, you will receive a password reset link.",
+  "auth.verificationTitle": "Email verification",
+  "auth.verificationBanner":
+    "Verify your email using the link in your inbox. You can still use your own data.",
+  "auth.resend": "Resend verification email",
+  "auth.checkVerification": "I have verified my email",
+  "auth.verificationSent": "Verification email sent. Check your inbox.",
+  "auth.verificationPending":
+    "Your email is not verified yet. Follow the link in your inbox, then check again.",
+  "auth.profilePending": "Your account was created. Complete your profile to finish signing up.",
+  "auth.finishProfile": "Complete profile",
+  "auth.retryVerification": "Retry verification email",
+  "auth.profileMissing":
+    "Your account has no profile yet. Complete your profile in the sign-up flow.",
+  "auth.welcome": "Welcome, {name}.",
+  "stations.title": "Your stations",
+  "stations.shared": "Shared with me",
+  "stations.ownedEmpty":
+    "You do not own any stations yet. Station creation will be available in the station management release.",
+  "stations.sharedEmpty":
+    "No stations have been shared with you. Ask a station owner to invite you using your username.",
+  "stations.role.owner": "Owner",
+  "stations.role.editor": "Editor",
+  "stations.role.viewer": "Viewer",
+  "stations.invalid":
+    "{count} station records could not be displayed because their data is invalid.",
   "state.loading": "Loading…",
   "state.retry": "Try again",
   "error.generic": "Something went wrong. Please try again.",

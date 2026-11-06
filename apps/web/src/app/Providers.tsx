@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { ThemeProvider } from "@muonhub/ui";
 import { parseConfig, readRawConfig } from "@/lib/config";
 import { DataProviderRoot } from "@/lib/data/DataProviderContext";
+import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ConfigErrorPage } from "@/components/ConfigErrorPage";
 
 const configResult = parseConfig(readRawConfig());
@@ -16,7 +17,9 @@ export function Providers({ children }: { children: ReactNode }): ReactNode {
   return (
     <ThemeProvider>
       {configResult.ok ? (
-        <DataProviderRoot config={configResult.config}>{children}</DataProviderRoot>
+        <DataProviderRoot config={configResult.config}>
+          <AuthProvider>{children}</AuthProvider>
+        </DataProviderRoot>
       ) : (
         <ConfigErrorPage missing={configResult.missing} />
       )}

@@ -11,10 +11,14 @@ import {
   connectAuthEmulator,
   createUserWithEmailAndPassword,
   getAuth,
+  GoogleAuthProvider,
   initializeAuth,
   reload,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  sendEmailVerification as fbSendEmailVerification,
   signOut as fbSignOut,
   type Auth,
   type Persistence,
@@ -172,7 +176,7 @@ function parseOrInvalid<T>(schema: { parse(value: unknown): T }, value: unknown,
 }
 
 function toAuthUser(user: FbUser): AuthUser {
-  return { uid: user.uid, email: user.email };
+  return { uid: user.uid, email: user.email, emailVerified: user.emailVerified };
 }
 
 export function createFirebaseProviderV2(config: FirebaseV2Config): DataProviderV2 {
@@ -454,17 +458,27 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
 
   // ── The provider ───────────────────────────────────────────────────────────────────────────
 
+  const authListeners = new Set<(user: AuthUser | null) => void>();
+  const authUnsubscribers = new Set<Unsubscribe>();
   const provider: DataProviderV2 = {
     // Auth ----------------------------------------------------------------------------------
     currentUser() {
       return auth.currentUser === null ? null : toAuthUser(auth.currentUser);
     },
     onAuthChange(handlers) {
-      return onAuthStateChanged(
+      authListeners.add(handlers.onChange);
+      const stop = onAuthStateChanged(
         auth,
         (user) => handlers.onChange(user === null ? null : toAuthUser(user)),
         (error) => handlers.onError(mapError(error)),
       );
+      const unsubscribe = (): void => {
+        authListeners.delete(handlers.onChange);
+        authUnsubscribers.delete(unsubscribe);
+        stop();
+      };
+      authUnsubscribers.add(unsubscribe);
+      return unsubscribe;
     },
     signInWithEmail: (email, password) =>
       guard(async () => toAuthUser((await signInWithEmailAndPassword(auth, email, password)).user)),
@@ -472,6 +486,37 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       guard(async () =>
         toAuthUser((await createUserWithEmailAndPassword(auth, email, password)).user),
       ),
+    sendPasswordReset: (email) =>
+      guard(async () => {
+        parseOrInvalid(v2.UserSchema.shape.email, email, "email");
+        try {
+          await sendPasswordResetEmail(auth, email);
+        } catch (error) {
+          // Older projects/emulators may expose an absent account; keep the public result uniform.
+          if ((error as { code?: unknown } | null)?.code !== "auth/user-not-found") throw error;
+        }
+      }),
+    sendEmailVerification: () =>
+      guard(async () => {
+        const user = auth.currentUser;
+        if (user === null) throw new DataProviderError("unauthenticated");
+        await fbSendEmailVerification(user);
+      }),
+    // Popup account selection is interactive: the regular I/O deadline would report a failure
+    // while a user is still completing sign-in and the popup can later succeed.
+    signInWithGoogle: () =>
+      baseGuard(async () =>
+        toAuthUser((await signInWithPopup(auth, new GoogleAuthProvider())).user),
+      ),
+    reloadUser: () =>
+      guard(async () => {
+        const user = auth.currentUser;
+        if (user !== null) await reload(user);
+        // A sign-out or account switch during the request must not resurrect the old identity.
+        const current = auth.currentUser === null ? null : toAuthUser(auth.currentUser);
+        for (const listener of [...authListeners]) listener(current);
+        return current;
+      }),
     signOut: () => guard(() => fbSignOut(auth)),
     getRefreshToken() {
       const token = auth.currentUser?.refreshToken;
@@ -531,11 +576,18 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
       guard(async () => {
         const profile = parseOrInvalid(v2.UserSchema, user, "user profile");
         const nameRef = docRef("usernames", profile.username);
-        if (await probeExists(nameRef)) throw new DataProviderError("already-exists");
-        await createStrict([
-          [docRef("users", profile.uid), profile],
-          [nameRef, { uid: profile.uid, createdAt: profile.createdAt }],
-        ]);
+        const userRef = docRef("users", profile.uid);
+        // Read both claims inside the transaction so a concurrent claimant is retried and
+        // reported as already-exists instead of a misleading permission-denied write failure.
+        await fsRunTransaction(fs, async (tx) => {
+          const existingUser = await tx.get(userRef);
+          const existingName = await tx.get(nameRef);
+          if (existingUser.exists() || existingName.exists()) {
+            throw new DataProviderError("already-exists");
+          }
+          tx.set(userRef, stripUndefined(profile));
+          tx.set(nameRef, { uid: profile.uid, createdAt: profile.createdAt });
+        });
       }),
     getUser: (uid) => guard(() => getParsed(docRef("users", uid), v2.UserSchema)),
     updateDisplayName: (uid, displayName) =>
@@ -1244,6 +1296,7 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
 
     close: () =>
       guard(() => {
+        for (const unsubscribe of [...authUnsubscribers]) unsubscribe();
         stopConnectionWatch?.();
         stopConnectionWatch = null;
         return deleteApp(app);
