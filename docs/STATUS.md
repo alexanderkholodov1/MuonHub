@@ -50,8 +50,9 @@ Details of each step: the execution log at the end of the M1 plan.
 
 | Gate | State |
 |---|---|
-| CI on GitHub (typecheck · lint · build · test, emulator tests, web end-to-end, gitleaks) | ✅ green on `68d93bc` (step 7, 2026-10-12) **[verified]** |
-| Unit and emulator tests | 389 unit + 372 emulator tests at step 7 **[reported]** (M1 execution log) |
+| CI on GitHub — M1 branch (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `404fc95` (`6.0.0-alpha.1.8`) **[verified]** |
+| CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `9f34d97` (`6.0.0-alpha.2.3`, run 42175147430) **[verified]** |
+| Tests on the M2 branch | data-provider 125 unit + 375 emulator; agent 112; web 75 unit + 12 end-to-end (6 desktop, 6 phone) **[verified by running]** |
 
 ## Open questions for the maintainer
 
