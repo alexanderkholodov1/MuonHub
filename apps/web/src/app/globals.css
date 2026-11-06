@@ -1,3 +1,9 @@
 /* Observatory Dark tokens and Tailwind (docs/design/DESIGN-LANGUAGE.md). */
 @import "@muonhub/ui/styles";
 @source "../../../../packages/ui/src";
+
+/* The design language's one UI family and one mono, as loaded by next/font (layout.tsx). */
+:root {
+  --font-ui: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
