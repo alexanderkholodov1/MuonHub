@@ -40,8 +40,9 @@ and the public. Write them as a professional record of **what the change deliver
 - Frame the change as a reaction to review ("as requested", "addresses the feedback", "now
   without X", "fixed the issue where it was too …"). Describe the *result*, not the back-and-forth.
 - Apologize, editorialize, or explain what something "used to be". The history shows the diff.
-- Add tool-attribution lines such as "Generated with Claude Code" (or any robot emoji line) to a
-  pull request. **Never** — this is a standing rule of the maintainer.
+- Add AI or tool attribution to a commit or a pull request: no `Co-Authored-By:` trailer naming a
+  model, no "Generated with Claude Code" or robot emoji line. **Never** — this is a standing rule of
+  the maintainer.
 
 **Examples**
 

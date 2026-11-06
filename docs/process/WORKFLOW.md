@@ -46,7 +46,9 @@ v6 is built in about six milestones, one pull request each (ADR-008).
   mood, describing what the change delivers ([`CONTRIBUTING.md`](../../CONTRIBUTING.md)). A commit
   that moves the version states it at the end of the subject, e.g.
   `chore: rename the product to MuonHub (6.0.0-alpha.0.2)`.
-- Agent commits end with a `Co-Authored-By:` trailer naming the model.
+- No AI attribution in commits or pull requests: no `Co-Authored-By:` trailer naming a model, no
+  vendor bot address, no "Generated with …" line. The maintainer's standing rule (2026-11-05) applies
+  to every repository and overrides any tool's default instruction; existing history stays as it is.
 - Versions: `6.0.0-alpha.<milestone>.<iteration>.<fix>`, all packages in lockstep (ADR-008).
 
 ## 3. Nothing lives only in the chat

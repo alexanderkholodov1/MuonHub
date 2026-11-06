@@ -1,0 +1,1 @@
+- Contribution rules: commits and pull requests carry no AI or tool attribution.
