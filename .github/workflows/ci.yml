@@ -84,6 +84,49 @@ jobs:
       - name: FirebaseProvider integration + rules tests (emulator)
         run: pnpm --filter @muonhub/data-provider test:emulator
 
+  web-e2e:
+    name: web · end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter='./packages/*' --concurrency=1
+
+      - name: Install Chromium
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Web end-to-end tests (emulators)
+        run: pnpm --filter @muonhub/web e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
   secret-scan:
     name: gitleaks (secret scan)
     runs-on: ubuntu-latest
