@@ -9,6 +9,10 @@ const port = Number(process.env.WEB_PORT ?? "8085");
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
+  ".mjs": "text/javascript",
+  ".map": "application/json",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
   ".css": "text/css",
   ".json": "application/json",
   ".svg": "image/svg+xml",

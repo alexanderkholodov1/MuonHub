@@ -62,10 +62,30 @@ async function account(
   return { provider, uid: user.uid };
 }
 
+/**
+ * The public projection (device count, map point) is refreshed by the owner only. It is cosmetic for
+ * the demo, so a failure is logged and never stops the mirror from starting.
+ */
+async function refreshProjection(state: DemoState): Promise<void> {
+  const p = emulatorProvider("seed-projection");
+  try {
+    await p.signInWithEmail(state.ownerEmail, state.ownerPassword);
+    await p.refreshPublicProjection(state.stationId);
+    process.stdout.write("public projection refreshed\n");
+  } catch (error) {
+    process.stderr.write(
+      `public projection not refreshed: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+  } finally {
+    await p.signOut().catch(() => undefined);
+  }
+}
+
 async function main(): Promise<void> {
   const found = await existing();
   if (found === "valid") {
     process.stdout.write(`demo already seeded (${STATE_FILE})\n`);
+    await refreshProjection(loadState());
     return;
   }
   if (found === "unknown") throw new Error("could not check the emulators; not re-seeding");
@@ -146,6 +166,7 @@ async function main(): Promise<void> {
   mkdirSync(dirname(STATE_FILE), { recursive: true });
   writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), { mode: 0o600 });
   process.stdout.write(`demo seeded: ${STATE_FILE}\n`);
+  await refreshProjection(state);
   await owner.provider.signOut();
   await mirror.provider.signOut();
 }

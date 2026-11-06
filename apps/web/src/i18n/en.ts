@@ -213,6 +213,19 @@ export const en = {
   "unit.hPa": "hPa",
   "unit.celsius": "°C",
   "unit.percent": "%",
+  "nav.network": "Network",
+  "network.title": "Network",
+  "network.intro":
+    "Public MuonHub stations. Each owner chooses how precisely the station's location is shown; stations without a public point are listed but not placed on the map.",
+  "network.mapLabel": "Map of public stations",
+  "network.listTitle": "Public stations",
+  "network.empty": "There are no public stations yet.",
+  "network.active": "Has an active device",
+  "network.idle": "No active device",
+  "network.devices": "Devices: {count}",
+  "network.approximate": "Approximate location (about 11 km)",
+  "network.hidden": "Location hidden",
+  "network.notOnMap": "Not on the map at the owner's request",
 } as const;
 
 export type MessageKey = keyof typeof en;

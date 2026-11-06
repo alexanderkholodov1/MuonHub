@@ -88,6 +88,14 @@ export function NewDeviceForm(): ReactNode {
     setError(null);
     try {
       await provider.createDevice(device.data);
+      const { station } = access.data;
+      if (station.visibility === "public" && station.ownerUid === user.uid) {
+        // The public projection counts devices; only the owner may refresh it (rules). The device
+        // exists either way, so a failed refresh is reported to developers, not shown as a failure.
+        await provider.refreshPublicProjection(stationId).catch((cause: unknown) => {
+          console.warn("public projection not refreshed", cause);
+        });
+      }
       router.replace(`/app/station?id=${encodeURIComponent(stationId)}`);
     } catch (cause) {
       setError(errorMessage(cause));

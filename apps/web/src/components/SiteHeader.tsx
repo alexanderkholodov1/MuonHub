@@ -34,6 +34,7 @@ export function SiteHeader(): ReactNode {
           {t("app.name")}
         </Link>
         <nav aria-label={t("nav.account")} className="flex items-center gap-4 text-base">
+          <Link href="/network">{t("nav.network")}</Link>
           {loading ? (
             <span role="status">{t("state.loading")}</span>
           ) : user === null ? (
