@@ -12,10 +12,9 @@ describe("version lockstep (ADR-008)", () => {
     const expected = versionOf("package.json");
     expect(MUONHUB_VERSION).toBe(expected);
     expect(AGENT_VERSION).toBe(expected);
-    const workspaces = [
-      "apps/agent/package.json",
-      ...readdirSync(new URL("packages/", root)).map((p) => `packages/${p}/package.json`),
-    ];
+    const workspaces = ["apps/", "packages/"].flatMap((dir) =>
+      readdirSync(new URL(dir, root)).map((p) => `${dir}${p}/package.json`),
+    );
     for (const w of workspaces) expect({ w, v: versionOf(w) }).toEqual({ w, v: expected });
   });
 });

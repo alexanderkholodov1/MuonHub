@@ -1,0 +1,3 @@
+/* Observatory Dark tokens and Tailwind (docs/design/DESIGN-LANGUAGE.md). */
+@import "@muonhub/ui/styles";
+@source "../../../../packages/ui/src";

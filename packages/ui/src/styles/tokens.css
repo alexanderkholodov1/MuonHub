@@ -126,6 +126,9 @@
   --color-text: var(--color-text);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-muted: var(--color-text-muted);
+  /* Short aliases the components use: text-secondary, text-muted. */
+  --color-secondary: var(--color-text-secondary);
+  --color-muted: var(--color-text-muted);
   --color-accent: var(--color-accent);
   --color-accent-warm: var(--color-accent-warm);
   --color-success: var(--color-success);
