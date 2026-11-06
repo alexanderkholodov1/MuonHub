@@ -27,6 +27,22 @@ the demo's accounts and data, and the v5 project (`munhub-1`) is only **read**.
 5. Point out the honest labels: counts are uncorrected, and a single-SiPM detector measures a
    charged-particle (MIP-type) rate; muon language applies only in aggregate.
 
+## If the network fails: the offline recording
+
+A recording of this presentation, taken from the demo as served (build 2.4, the real detector data,
+nothing staged), opens without any network:
+
+- **Folder on Beacon:** `~/.cache/muonhub-demo/presentation/2026-11-06T0828/` — `index.html` (open it
+  in Chrome, Edge or Firefox), a 34-second walk-through video `video/walkthrough.webm` (1366 px), and
+  screenshots of each stop at 1366 px (`desktop-*.png`) and 390 px (`phone-*.png`). Recorded
+  2026-11-06 08:28 UTC; the last minute shown is 08:26 UTC; no console errors.
+- **One file to copy:** `~/.cache/muonhub-demo/presentation/2026-11-06T0828.tar.gz` (6 MB). From the
+  laptop, while Tailscale is up: `scp akbase:.cache/muonhub-demo/presentation/2026-11-06T0828.tar.gz .`
+  then `tar xzf 2026-11-06T0828.tar.gz` and open `2026-11-06T0828/index.html`.
+- **Record it again** (only opens pages and clicks; it builds, seeds and changes nothing):
+  `cd ~/MuonHub/apps/web && node scripts/record-demo.mjs` — a new dated folder appears next to this
+  one.
+
 ## What runs
 
 | Service (systemd user unit) | What it does |
