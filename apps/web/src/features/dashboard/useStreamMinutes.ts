@@ -62,9 +62,11 @@ export function useStreamMinutes(
     if (provider === null) return;
     let current = true;
     let byTs = new Map<number, v2.MinuteRecord>();
+    // Aligned to minute starts: the current minute is never complete, so a range of H hours holds at
+    // most H × 60 minute records and coverage is measured against exactly that.
     const window = (): { fromTs: number; toTs: number } => {
-      const toTs = Date.now();
-      return { fromTs: Math.floor((toTs - hours * 3_600_000) / MINUTE_MS) * MINUTE_MS, toTs };
+      const toTs = Math.floor(Date.now() / MINUTE_MS) * MINUTE_MS;
+      return { fromTs: toTs - hours * 3_600_000, toTs };
     };
     const publish = (error: string | null): void => {
       const { fromTs, toTs } = window();

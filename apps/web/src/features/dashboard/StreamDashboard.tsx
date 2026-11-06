@@ -22,7 +22,11 @@ const RANGES: ReadonlyArray<{ hours: number; label: MessageKey }> = [
 ];
 
 const time = (ms: number): string =>
-  new Date(ms).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+  new Date(ms).toLocaleString(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZoneName: "short",
+  });
 
 export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
   const provider = useDataProvider();
@@ -193,7 +197,7 @@ export function StreamDashboard({ streamId }: { streamId: string }): ReactNode {
       )}
 
       <div className="space-y-2 text-secondary">
-        {stats.uncorrected && <p>{t("dashboard.uncorrected")}</p>}
+        <p>{t("dashboard.uncorrected")}</p>
         <p>{t("dashboard.physicsNote")}</p>
       </div>
 

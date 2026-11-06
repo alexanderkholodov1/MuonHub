@@ -49,8 +49,6 @@ export interface RangeStats {
   /** Time-averages of the minutes that carry the quantity; null when none does. */
   readonly meanPressureHpa: number | null;
   readonly meanTemperatureC: number | null;
-  /** True when any minute has no live-time correction (`liveSource: "nominal"`). */
-  readonly uncorrected: boolean;
 }
 
 const mean = (values: number[]): number | null =>
@@ -78,7 +76,6 @@ export function rangeStats(
     meanTemperatureC: mean(
       inRange.flatMap((m) => (m.temperatureC === undefined ? [] : [m.temperatureC])),
     ),
-    uncorrected: inRange.some((m) => m.liveSource === "nominal"),
   };
 }
 

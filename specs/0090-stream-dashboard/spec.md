@@ -27,8 +27,8 @@ ranges from day summaries, the live event window, and calibrated views come late
 - **FR4 — Statistics** over the range: mean count per minute ± its Poisson uncertainty
   (√ΣN / minutes, from raw counts); coverage (stored minutes over the minutes of the range);
   time-averaged pressure and temperature over the minutes that carry them.
-- **FR5 — Honest labels:** "not corrected for dead time or pressure" whenever a minute has
-  `liveSource: "nominal"`; a standing note that a single-SiPM scintillator measures a MIP-type
+- **FR5 — Honest labels:** "not corrected for dead time, barometric pressure or temperature",
+  always (the page never applies corrections); a standing note that a single-SiPM scintillator measures a MIP-type
   charged-particle rate and that muon language applies only in aggregate.
 - **FR6 — Status apart from data:** data freshness (up to date when the last minute ended at most
   three minutes ago; otherwise "no new minute recently"; "no data yet") shown separately from the
@@ -65,7 +65,12 @@ freshness), `useStreamMinutes.ts` (initial range plus 60 s refresh, cancellation
   (2026-11-06, `~/.cache/muonhub-demo/screens/`).
 - [ ] CA4: component test of `StreamDashboard` with a fake provider (states: loading, error, empty,
   ready, stale).
-- [ ] CA5: physicist review of FR4–FR5 wording; design-language review.
+- [x] CA5 (physics part): independent physicist review (agy, 2026-11-06, WARNING, no critical): seven
+  findings, each checked against the foundation and applied — the uncorrected notice is always shown
+  (the page never corrects counts); the range is aligned to minute starts so coverage counts against
+  exactly H × 60 minutes; temperature added to the uncorrected notice; the physics note names Compton
+  electrons from ambient gammas and the smaller muon share at altitude; "mean count rate"; no repeated
+  ±; timestamps carry their time zone. Design-language review still pending.
 - [x] CA6: typecheck · lint · test green.
 
 ## Validation in practice

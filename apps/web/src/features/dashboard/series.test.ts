@@ -41,7 +41,6 @@ describe("rangeStats", () => {
     expect(s.sigmaPerMin).toBeCloseTo(Math.sqrt(221) / 2, 10);
     expect(s.coverage).toBe(0.5);
     expect(s.lastTs).toBe(T0 + MINUTE_MS);
-    expect(s.uncorrected).toBe(true);
   });
 
   it("averages environmental quantities over the minutes that carry them, never as sums", () => {
