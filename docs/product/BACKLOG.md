@@ -168,6 +168,71 @@ network cuts, plus the virtual detector.
 
 ---
 
+## Before 6.0.0 — Seismic channel and muography (placement **Proposed**)
+
+The maintainer decided on 2026-11-05 to integrate both into v6 before the official `6.0.0` release;
+they were planned for 6.x (former B-P-01 and B-P-02). The proposed placement is two milestones after
+M4 and before Migration + launch ([`ROADMAP.md`](ROADMAP.md)). These IDs stay stable whatever numbers
+the milestones receive.
+
+### Seismic channel (proposed M5)
+
+| ID | Item | Source |
+|---|---|---|
+| B-SE-01 | **Identify the seismic sensor** from its output (capture tool, B-M1-26) and define its device type as a **sampled stream** (`SampleBlock`, spec 0083 FR13): channels, sample rate (≈ 100 samples/s is typical), units, time source. | Session record §3.11; open question 8 |
+| B-SE-02 | **Agent ingest of sampled streams:** raw samples stay on the agent machine (3 channels at 100 samples/s ≈ 26 million samples per day, far above the free tier); only derived per-minute features (RMS, peak, trigger counts) and an event catalogue reach the cloud, within the ADR-005 budget. | Session record A.7.7; research notes §D |
+| B-SE-03 | **Time alignment:** time provenance per session (B-M1-06) so the seismic and particle-rate series align minute by minute. | B-M1-06 |
+| B-SE-04 | **Seismometer as a systematics channel:** vibration and tilt at the detector, set beside the particle rate to flag instrumental artefacts. | Research notes §D |
+| B-SE-05 | **Exploratory correlation with an honesty protocol:** pre-register the observables, observing span, aggregation, lag range, nuisance model, missing-data policy, test statistic and full trial family before any correlation result is inspected. Use live-time-corrected particle rates; model pressure, thermal and NMDB-reference variability as covariates with uncertainty and residual checks (an NMDB reference has a different particle and energy response — it is not an exact subtraction), and keep unavailable or inadequate corrections as explicit limitations. Specify an autocorrelation-preserving null that breaks the tested cross-association (justified block length or phase-surrogate assumptions) and verify its false-positive rate and injected-signal recovery; correct for every searched lag, feature and window. Particle-anomaly claims follow THEORETICAL-FOUNDATION §10. A local association is exploratory and may be instrumental — neither a replication of the reported global result nor earthquake prediction. | Session record A.7.7; research notes §D; physicist review 2026-11-06 |
+| B-SE-06 | **Public seismic data (optional):** FDSN web services (miniSEED, StationXML) as an external source beside the station's own sensor, licences honoured. | Research notes §D |
+| B-SE-07 | **Views:** per-minute seismic features beside the particle rate in the dashboard and in the comparison toolkit (B-M3-02). | Session record A.7.1 |
+
+**Validation (Proposed):** the real sensor beside the CosmicWatch for 72 hours, as an acquisition
+and systematics test. The cloud features are recomputed independently from the immutable local
+samples with a versioned recipe (units, sensor response, passband, RMS/peak/trigger definitions,
+numerical tolerances). Time alignment and complete-minute coverage are verified across interruptions
+and recovery: every missing interval is explained, incomplete minutes are discarded (B-M1-36), and
+missing data never becomes zero. The correlation protocol is committed before any correlation result
+is inspected, and its statistics are validated on synthetic null and injected-signal data. A
+positive physical correlation is **not** a pass condition; the scientific observing span is set
+separately from this 72-hour integration test.
+
+### Muography (proposed M6)
+
+| ID | Item | Source |
+|---|---|---|
+| B-MU-01 | **Feasibility study first:** simulate the planned geometry (~20 channels ≈ 2 X/Y planes of 5 + 5 strips) with EcoMug (open sky) and PUMAS (transmission through a target); estimate the angular resolution, the rates, and the exposure time a target needs; choose the first target from its predicted opacity, angular acceptance and achievable statistical precision (a building or a thin hill is a candidate; imaging a thick volcanic edifice commonly calls for square-metre detectors and months of exposure, but the requirement depends on target and geometry and must be calculated). Licences checked first (EcoMug is unverified). Offline, so it can run early, in parallel with M2–M4. | Session record A.7.8; research notes §B–C |
+| B-MU-02 | **Identify the muograph** from its output (capture tool) and define its device type as a **multichannel event stream** (`ChannelEvent`, spec 0083 FR13). | Session record §3.12; open question 8 |
+| B-MU-03 | **Event building in the agent:** accepted hit patterns defined for the measured geometry (for two X/Y tracking stations: one reconstructed X/Y position per station, not every channel firing), with explicit handling of clusters and ambiguous or multiple tracks. The common event-time basis, resolution and jitter are verified from device timestamps or measured acquisition timing before the coincidence window is chosen (GPS PPS clock synchronization alone is not enough). Singles rates and the pairwise accidental estimate 2·τ_c·R₁·R₂ (τ_c = coincidence half-window) are kept; the accepted-track accidental background is validated with time offsets, and correlated or non-muon backgrounds are quantified or bounded for the chosen target. Raw hits stay local; derived angular-bin counts with live time, quality and reconstruction provenance reach the cloud. | Research notes §C, §E; physicist review 2026-11-06 |
+| B-MU-04 | **Angular rate map (open sky):** counts and measured live time per angular bin, compared with a site-appropriate flux model folded through the measured geometry, projected area, solid angle, channel efficiencies and reconstruction response; counting intervals and acceptance/model uncertainties shown separately. The approximate cos²θ incident intensity is a reference, not the expected raw-count histogram. The comparison statistic and tolerance are fixed before validation data are inspected. | Research notes §C; foundation §2; physicist review 2026-11-06 |
+| B-MU-05 | **Transmission ratio map:** target and open-sky flux estimates compared in matched zenith/azimuth bins, normalized by measured live time and acceptance/efficiency, T = (N_target/t_target)/(N_sky/t_sky), with pointing, atmospheric and background treatment documented. Counting uncertainty comes from both exposures (σ_T/T ≈ √(1/N_target + 1/N_sky) for large counts; proper intervals or limits for sparse and zero counts), systematics reported separately. Exposure is estimated for a declared precision or detectable contrast. First-order line-of-sight opacity X = ∫ρ ds (g cm⁻²) is inferred with a versioned flux/transport table appropriate to site, angle, threshold and material, with its uncertainty; a mean density only where the path length is independently known. | Research notes §C; physicist review 2026-11-06 |
+| B-MU-06 | **Offline analysis service** (Python: heavy inversion and simulation) on the maintainer's machines or included CI — never on paid compute (ADR-005). | Session record A.7.8 |
+| B-MU-07 | **Simulator tier 2:** a virtual muograph (multichannel hits from a realistic angular distribution) so that the agent and the maps are tested without the hardware. | Spec 0086 (out of scope there); research notes §B |
+
+**Validation (Proposed):** before acquisition, the feasibility study fixes the geometry, the target's
+path length and density (with uncertainties), the angular bins, the required exposure, and
+quantitative acceptance criteria. With the real muograph: the open-sky counts are tested against the
+acceptance-folded prediction, and the target transmission is measured with enough exposure to meet
+the declared precision, then compared — transmission and inferred opacity, with statistical and
+systematic uncertainties — with the independently characterized target. Known-answer simulations
+also recover planted tracks and opacity. If the hardware is not ready, the maintainer may accept a
+clearly labelled software-only milestone on simulated open-sky and target data; the real-instrument
+and physical-target validation then remain explicitly outstanding.
+
+### Designed for in the earlier milestones (Proposed)
+
+So that neither instrument forces a rewrite later:
+- **M2:** dashboard charts chosen by stream kind (event rate, sampled, multichannel), not wired to a
+  single particle rate.
+- **M3:** the coincidence engine supports configurable hit patterns across channels or devices within
+  a time window, including the muograph's X/Y tracking stations; the comparison toolkit offers
+  validated surrogate tests that preserve autocorrelation.
+- **M4:** the configuration terminal and the device-type catalogue accept sampled and multichannel
+  device types; offline collection records event-time accuracy and supports hardware event
+  timestamping with GPS PPS where the required coincidence precision demands it.
+
+---
+
 ## M5 — Migration + launch
 
 | ID | Item | Source |
@@ -185,8 +250,8 @@ network cuts, plus the virtual detector.
 
 | ID | Item | Source |
 |---|---|---|
-| B-P-01 | **Seismic channel (exploratory):** raw data stays local; per-minute features and an event catalogue are uploaded; pre-registered analysis with controls; the seismometer also serves as a systematics channel. | Session record §3.11, A.7.7 |
-| B-P-02 | **Muography:** study → simulation (EcoMug/PUMAS) → demonstrator; track reconstruction, angular rate maps, transmission maps. | Session record §3.12, A.7.8 |
+| B-P-01 | *Moved before 6.0.0 (maintainer, 2026-11-05):* seismic channel → B-SE-01 … B-SE-07. | — |
+| B-P-02 | *Moved before 6.0.0 (maintainer, 2026-11-05):* muography → B-MU-01 … B-MU-07. | — |
 | B-P-03 | **LLM assistance** (device-type mapping, analysis help) after proofs of concept. | Session record §3.5 |
 | B-P-04 | **Machine learning** on top of the deterministic base, with per-station consent (Proposed). | Archived 0044–0046, 0066 |
 | B-P-05 | **Station networks** and simultaneous-event detection (Proposed). | Archived 0056, 0058 |
@@ -208,12 +273,14 @@ network cuts, plus the virtual detector.
    decide in the M1 plan.
 5. **Public live mechanism:** depends on whether short REST requests count toward the Realtime
    Database connection limit — measured in M1.
-6. **v5 cold dump:** the `munra-1` dump is not on the development machine; its location is needed for
-   M5.
+6. ~~**v5 cold dump:** the `munra-1` dump is not on the development machine; its location is needed
+   for M5.~~ **Found (2026-11-06):** on the maintainer's laptop, in the first-attempt checkout's
+   `private/` folder ([`ENVIRONMENTS.md`](../operations/ENVIRONMENTS.md)).
 7. **Agent machine:** which v5 reader holds the serial port (Chrome Web Serial or the Python
    bridge).
-8. **New detectors:** their models are unknown and must be determined from their output (capture
-   tool, B-M1-26); whether any device accepts configuration commands over serial.
+8. **New detectors (the seismic sensor and the muograph):** their models are unknown and must be
+   determined from their output (capture tool, B-M1-26); whether any device accepts configuration
+   commands over serial; whether each one exists today, is being built, or is still planned.
 9. **CosmicWatch coincidence window:** ~30 µs (v2 paper) vs 0.1 s (2026 preprint) — verify against the
    v3X documentation.
 

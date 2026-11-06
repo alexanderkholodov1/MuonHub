@@ -91,7 +91,60 @@ recovered.
 **Validation before the PR opens:** a new detector configured from scratch; a backup actually
 restored.
 
-### M5 — Migration + launch · `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** (stages **Proposed**)
+### Seismic channel and muography — before `6.0.0` (placement **Proposed**)
+
+> **Maintainer decision (2026-11-05):** "quisiera que lo probemos integrar EN la v6, antes de sacar
+> el release oficial" — integrate the seismic channel and muography into v6 before the official
+> `6.0.0` release, instead of leaving them for 6.x.
+
+**Proposed placement:** two milestones after M4 and before Migration + launch, which becomes the
+last one:
+
+| Proposed | Milestone | Versions |
+|---|---|---|
+| M5 | Seismic channel | `6.0.0-alpha.5.x` |
+| M6 | Muography | `6.0.0-alpha.6.x` |
+| M7 | Migration + launch (today's M5) | `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** |
+
+Why this placement:
+- **Both come after M4** because they reuse what M2–M4 build. Bring Your Own Detector (M4) defines
+  the two new device types from their output, and their models are still unknown. The coincidence
+  and comparison toolkit (M3) groups the muograph's channels and correlates the seismic series. The
+  dashboards come from M2.
+- **They are two milestones, not one,** because they are different instruments with different
+  validations. One pull request per milestone means that a joint milestone would hold the seismic
+  work back until the larger, less certain muograph is ready.
+- **The muography feasibility study is offline** (simulation with the planned geometry), so it
+  can start early, in parallel with M2–M4, and its result fixes the demonstrator's geometry and
+  target before M6 starts.
+
+Until the maintainer approves this placement, the milestone numbers below stay as they are; the
+renumbering (here, ADR-008, the backlog, and the documents that cite "M5") is done in one pass after
+approval. Items: [`BACKLOG.md`](BACKLOG.md#before-600--seismic-channel-and-muography-placement-proposed).
+
+**Seismic channel (proposed M5):** identify the sensor from its output and define it as a sampled
+device type; raw samples stay on the agent machine and only per-minute features and an event
+catalogue reach the cloud; the seismometer also serves as a systematics channel for the particle
+detectors; an exploratory correlation analysis with a pre-registered protocol and controls — never
+presented as earthquake prediction.
+**Validation (Proposed):** the real sensor beside the CosmicWatch for 72 hours as an acquisition and
+systematics test — the cloud features recomputed independently from the local samples with a
+versioned recipe, complete-minute coverage with every gap explained, and the correlation protocol
+committed and checked on synthetic data before any correlation result is inspected. A positive
+correlation is not a pass condition.
+
+**Muography (proposed M6):** feasibility simulation (EcoMug, PUMAS) → the muograph identified from
+its output as a multichannel device type → event building and tracks in the agent → open-sky angular
+rate maps compared with an acceptance-folded flux model → transmission ratio maps with counting
+uncertainty from both exposures and an exposure-time estimate → a first-order line-of-sight opacity;
+heavy inversion stays in an offline service on free compute.
+**Validation (Proposed):** quantitative criteria fixed by the feasibility study before acquisition;
+the open-sky counts tested against the acceptance-folded prediction, and the transmission of an
+independently characterized target measured to the declared precision. If the hardware is not
+ready, the maintainer may accept a clearly labelled software-only milestone on simulated data, with
+the physical validation left explicitly outstanding.
+
+### M5 — Migration + launch · `6.0.0-beta.x` → `6.0.0-rc.x` → **`6.0.0`** (stages **Proposed**; becomes M7 under the proposal above)
 
 **Goal:** v5 users and data move to v6; MuonHub 6 launches.
 
@@ -103,9 +156,8 @@ the sources; real users signing in to v6 and finding their history.
 
 ## After 6.0.0 (6.x)
 
-- **Seismic channel (exploratory):** connect the seismic sensor and test for correlation with
-  pre-registered, controlled analyses.
-- **Muography:** study → simulation → demonstrator. The multichannel data model is designed in M1
-  so the muograph does not force a rewrite.
+- The seismic channel and muography moved before `6.0.0` (maintainer decision of 2026-11-05; see
+  above). The multichannel and sampled data model was designed in M1 so that neither forces a
+  rewrite.
 - Other candidates (Proposed): LLM assistance, machine learning, station networks, public API — see
   the backlog.

@@ -52,8 +52,11 @@
 | M4 Open platform | 5 | Bring Your Own Detector, operations (backups, alerts, usage monitor), external and open data, offline collection |
 | M5 Migration + launch | 6 | v5 → v6 migration, i18n, manual, DOI → `6.0.0` |
 
-After `6.0.0`, in 6.x releases: the seismic channel, and muography (study → simulation →
-demonstrator).
+~~After `6.0.0`, in 6.x releases: the seismic channel, and muography (study → simulation →
+demonstrator).~~ **Amended by the maintainer on 2026-11-05:** both are integrated into v6 before
+`6.0.0`. The proposed placement is two new milestones after M4 (M5 Seismic channel, M6 Muography),
+which moves Migration + launch to M7. The placement and the renumbering of this table are
+**Proposed** until the maintainer approves them ([`ROADMAP.md`](../../product/ROADMAP.md)).
 
 ### Rules
 1. **One branch and one PR per milestone.** The branch is pushed regularly as a backup. The PR is

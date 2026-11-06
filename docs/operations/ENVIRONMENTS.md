@@ -47,8 +47,10 @@ Extensions require the Blaze plan and are **not** part of the architecture.
 ### `munra-1` — legacy v5 project
 
 - The original v5 database, which filled the free-tier limit **[reported]**.
-- Its cold JSON dump is **not** on the development machine, and its service account is not in
-  `private/` **[verified]**. Both are needed only for the M5 migration.
+- Its cold Realtime Database dump (data and rules, 2026-06-07) and a service-account key are on the
+  maintainer's laptop, in the git-ignored `private/` folder of the first-attempt checkout
+  (`C:\My Files\MunHub\private\`) **[verified 2026-11-06, file names only]**. They are not copied to
+  the agent node Beacon; both are needed only for the M5 migration.
 
 ## Local emulator (tests)
 

@@ -76,7 +76,8 @@
 Web interface, dashboards, public site and live page (M2); comparison, coincidences, calibration UI,
 assembly editor (M3); Bring Your Own Detector terminal and catalogue, backups vault, alerts, external
 data, Raspberry Pi and offline bundles (M4); v5 migration and cutover (M5); seismic and muography
-(after 6.0.0). App Check enforcement (M2).
+(before 6.0.0 since the maintainer's decision of 2026-11-05; placement Proposed in the roadmap). App
+Check enforcement (M2).
 
 ## Needs the maintainer's approval
 
