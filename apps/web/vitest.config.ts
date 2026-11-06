@@ -5,6 +5,6 @@ export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   test: {
     environment: "jsdom",
-    exclude: [...configDefaults.exclude, "**/dist/**", "**/.next/**", "**/out/**"],
+    exclude: [...configDefaults.exclude, "**/dist/**", "**/.next/**", "**/out/**", "e2e/**"],
   },
 });

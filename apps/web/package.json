@@ -9,8 +9,9 @@
     "build": "node scripts/copy-maplibre-worker.mjs && next build",
     "dev": "node scripts/copy-maplibre-worker.mjs && next dev",
     "test": "vitest run",
-    "lint": "eslint src",
-    "typecheck": "tsc --noEmit",
+    "e2e": "XDG_CONFIG_HOME=\"$PWD/e2e/.state/config\" NO_UPDATE_NOTIFIER=1 ../agent/node_modules/.bin/firebase emulators:exec --only auth,firestore,database --project demo-muonhub --config ../../infra/firebase/firebase.json \"bash e2e/run.sh\"",
+    "lint": "eslint src e2e/*.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json",
     "clean": "rm -rf .next out *.tsbuildinfo"
   },
   "engines": {
@@ -30,6 +31,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4.3.4",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",

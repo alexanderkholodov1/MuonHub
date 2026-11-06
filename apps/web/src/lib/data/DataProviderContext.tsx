@@ -5,7 +5,7 @@
  * during the static export — and tests inject the in-memory provider through the same context.
  */
 import React from "react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { v2 as dp } from "@muonhub/data-provider";
 import type { PublicConfig } from "@/lib/config";
 
@@ -36,11 +36,16 @@ export function DataProviderRoot(props: {
   provider?: dp.DataProviderV2;
   config?: PublicConfig;
 }): ReactNode {
-  const [provider] = useState<dp.DataProviderV2 | null>(() => {
-    if (props.provider !== undefined) return props.provider;
-    if (props.config === undefined || typeof window === "undefined") return null;
-    return createBrowserProvider(props.config);
-  });
+  const [provider, setProvider] = useState<dp.DataProviderV2 | null>(props.provider ?? null);
+  const browserProvider = useRef<dp.DataProviderV2 | null>(null);
+  useEffect(() => {
+    if (props.provider !== undefined || props.config === undefined) return;
+    // Match the static export on the first browser render. Creating the provider during hydration
+    // leaves server-rendered disabled attributes in place (notably on the password reset form).
+    // Keep the instance through StrictMode's effect replay: one provider per mounted root.
+    browserProvider.current ??= createBrowserProvider(props.config);
+    setProvider(browserProvider.current);
+  }, [props.provider, props.config]);
   return <Context.Provider value={provider}>{props.children}</Context.Provider>;
 }
 
