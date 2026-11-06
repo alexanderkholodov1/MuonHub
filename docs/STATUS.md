@@ -1,6 +1,6 @@
 # MuonHub — Status
 
-_Last updated: 2026-11-06 · version `6.0.0-alpha.2.2.1` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
+_Last updated: 2026-11-06 · version `6.0.0-alpha.2.3` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
 
 ## Milestones (plan: [`product/ROADMAP.md`](product/ROADMAP.md))
 
@@ -8,7 +8,7 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.2.2.1` · branches `feat/m1-co
 |---|---|---|
 | **M0 Foundation** | Cleanup, rename to MuonHub, documentation structure, decisions (ADR-004…009), roadmap and backlog | ✅ merged (PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57), tag `v6.0.0-alpha.0.4.3`) |
 | **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 🔄 steps 1–7 of 12 done; steps 8, 9 and 11 need the maintainer — plan approved 2026-10-04 ([`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md)) |
-| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5 built (`6.0.0-alpha.2.2`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
+| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5 and the end-to-end part of 7 built (`6.0.0-alpha.2.3`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
 | M5 Seismic channel | Sampled device type, per-minute features, systematics channel, pre-registered exploratory correlation | ⏳ |
@@ -43,13 +43,14 @@ Details of each step: the execution log at the end of the M1 plan.
 | 4 Stream dashboard (spec 0090) | ✅ first version | rate, pressure and temperature charts; Poisson uncertainty; freshness apart from connection |
 | Demo on Beacon | ✅ | emulators + read-only v5 mirror of the running detector; [`operations/DEMO.md`](operations/DEMO.md) |
 | 5 Network map (spec 0091) | ✅ first version | `/network` from public projections; OpenFreeMap tiles (production provider: open question); "active" means an active device until projections carry the latest data time |
-| 6–9 | ⏳ | public site (design session), hardening, deployment, validation |
+| 7 Hardening — end-to-end suite | ✅ | Playwright, desktop and phone, against the emulators with the v2 rules; runs in CI (`web · end-to-end`); found and fixed a hydration bug in the reset form |
+| 6, 7 (App Check, accessibility pass), 8, 9 | ⏳ | public site (design session), App Check (console), deployment (go-ahead), validation with the real detector |
 
 ## Quality gates
 
 | Gate | State |
 |---|---|
-| CI on GitHub (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `68d93bc` (step 7, 2026-10-12) **[verified]** |
+| CI on GitHub (typecheck · lint · build · test, emulator tests, web end-to-end, gitleaks) | ✅ green on `68d93bc` (step 7, 2026-10-12) **[verified]** |
 | Unit and emulator tests | 389 unit + 372 emulator tests at step 7 **[reported]** (M1 execution log) |
 
 ## Open questions for the maintainer
