@@ -14,6 +14,8 @@
 | 4 | "2. Existen, pero no sabremos esos datos a menos de tener acceso directo a la maquina del laboratorio - que crees, deberia conectarla a Tailscale con mi cuenta? Es posible que la conexion sea solo unidireccional, para que nadie obtenga acceso a mi computadora? Que pasa si uso otro correo, podre usar Tailscale PARA UNA RED y simultaneamente PARA LA OTRA?" | Both instruments exist; their details need access to the lab PC. Asks how to connect it to Tailscale safely (§6). |
 | 5 | "3. Si, perfecto, e idealmente los datos deben comprobarse y no tener un error demasiado grande." | Accepts a software-only M6 on simulated data if the muograph is not ready, provided the results are verified within a bounded error. |
 | 6 | "Configura Firebase tu mismo, crea el repo tu mismo." | The agent sets up Firebase (M1 step 8) and creates the test project `muonhub-dev` itself, instead of the maintainer following `FIREBASE-SETUP.md` by hand. |
+| 7 | "Continua, ya estas en tmux y puedes trabajar tranquilo. "El ensayo de 72 horas simuladas dura unos 40 minutos reales" - no creo que es algo urgente que debes hacer, no entiendo tus prioridades, hay muchisimas otras cosas pendientes que constuir, todavia ni tenemos sistemas robustos para verificar la simiilutd con simulaciones. Avanza la construcicon de MuonHub por favor, lo que mas puedes. Dejo un capitan que te puede ayudar en cualquier cosa y mantenerte activo y trabajando lo que mas alcances" | Stop the simulated rehearsal; build MuonHub as far as possible overnight, with the Beacon captain's help. |
+| 8 | "EL DETECTOR YA ESTA CORRIENDO EN https://munhub-lab.web.app/, mira y lee todo lo que necesitas, no tienes que simular nada para eso!!!!!!!! NO ALUCINES!!!!!!!! Y PARA QUE NECESITAS SUS DATOS!?!?!" | Use the detector that is already running (read what munhub-lab publishes) instead of simulating it. |
 
 ## 2. Decisions
 
@@ -136,3 +138,27 @@ maintainer asked on 2026-11-06 what it is for; the answer given:
 - **Cost:** none (another free Spark project; a different purpose, not load splitting).
 - **Alternative:** use `muonhub` for the tests now and delete the synthetic data before launch —
   simpler today, but every later milestone would test against the production project.
+
+## 9. The night's construction (M2 first increment, `6.0.0-alpha.2.1`)
+
+- **What was built** (branch `feat/m2-web-platform`): the M2 plan (Proposed) and specs 0088–0090;
+  `apps/web` with accounts, stations, devices, streams and sharing, and the stream dashboard;
+  `apps/v5-mirror` and `infra/demo` — the demo on Beacon over Tailscale, fed every minute with the
+  real minutes of the detector that is running (public v5 profile `leopard_test`, read-only).
+- **How:** Codex (accounts, until its quota ran out) and Cursor (stations) built bounded pieces on
+  their own worktrees from written briefs; the brigadista wrote the specs, the mirror, the demo and
+  the dashboard, and verified and integrated every piece.
+- **Evidence:** CI green on `1235f2c` (build, tests, lint, typecheck; emulator tests; gitleaks);
+  web 65 tests; a headless-Chromium visit at 1366 px and 390 px — sign-in, home, station, stream —
+  with no console errors; the emulator snapshot survives a restart (4 349 minutes before and after).
+- **Found by using it, not by the tests:** another member's private profile made the members and
+  transfer sections fail for the owner under the real rules (the in-memory provider does not apply
+  them). Fixed in the UI with a regression test; the proper fix (a public profile projection) is an
+  open question in `STATUS.md`.
+- **Lessons:**
+  - the agent corrupted a worker's worktree (`.git` file) while preparing it, so the worker could
+    not commit — logged as an incident in the fleet records;
+  - a script that hid its own error output (`>/dev/null`) delayed the diagnosis of the snapshot
+    failure;
+  - the simulated 72-hour rehearsal was the wrong priority for the night; it remains as opt-in
+    tooling with its known gaps listed.

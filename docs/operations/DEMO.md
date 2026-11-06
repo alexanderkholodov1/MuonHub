@@ -14,6 +14,19 @@ the demo's accounts and data, and the v5 project (`munhub-1`) is only **read**.
 - **Pages:** `/signin` → `/app` (my stations) → the station → its stream (`/app/stream?id=…`).
 - The browser shows Firebase's "running in emulator mode" notice; that is expected.
 
+## A five-minute presentation
+
+1. Open <http://100.120.140.56:8085/app> on the phone: MuonHub asks to sign in (protected pages
+   return to where they were asked for).
+2. Sign in with the demo account. The home lists "LEOPARD Lab — USFQ" (owner).
+3. Open the station: visibility and public location precision chosen by the owner, the device with
+   its geometry, the stream, members and ownership transfer.
+4. Open the stream: the detector that is running now at the lab, minute by minute — the rate with
+   its Poisson uncertainty, pressure and temperature, "Up to date" beside the connection state.
+   Switch 6 h / 24 h / 72 h. Compare the last minute with munhub-lab.web.app.
+5. Point out the honest labels: counts are uncorrected, and a single-SiPM detector measures a
+   charged-particle (MIP-type) rate; muon language applies only in aggregate.
+
 ## What runs
 
 | Service (systemd user unit) | What it does |

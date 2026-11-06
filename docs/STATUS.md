@@ -1,6 +1,6 @@
 # MuonHub — Status
 
-_Last updated: 2026-11-06 · version `6.0.0-alpha.1.8` · branch `feat/m1-core-agent`_
+_Last updated: 2026-11-06 · version `6.0.0-alpha.2.1` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
 
 ## Milestones (plan: [`product/ROADMAP.md`](product/ROADMAP.md))
 
@@ -8,7 +8,7 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.1.8` · branch `feat/m1-core-a
 |---|---|---|
 | **M0 Foundation** | Cleanup, rename to MuonHub, documentation structure, decisions (ADR-004…009), roadmap and backlog | ✅ merged (PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57), tag `v6.0.0-alpha.0.4.3`) |
 | **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 🔄 steps 1–7 of 12 done; steps 8, 9 and 11 need the maintainer — plan approved 2026-10-04 ([`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md)) |
-| M2 Web platform | Accounts, stations and devices, live dashboard, public site and live page | ⏳ |
+| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–4 built (`6.0.0-alpha.2.1`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
 | M5 Seismic channel | Sampled device type, per-minute features, systematics channel, pre-registered exploratory correlation | ⏳ |
@@ -33,6 +33,17 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.1.8` · branch `feat/m1-core-a
 
 Details of each step: the execution log at the end of the M1 plan.
 
+## M2 progress
+
+| Step | State | Note |
+|---|---|---|
+| 1 Web foundation (spec 0088) | ✅ | Next.js 16 static export, React 19, validated configuration, data hooks, translatable strings |
+| 2 Accounts (spec 0088) | ✅ | sign-up with unique username, sign-in, reset, verification, `?next=` |
+| 3 Stations, devices, streams, sharing (spec 0089) | ✅ first version | member names fall back to a neutral label because profiles are private (open question below) |
+| 4 Stream dashboard (spec 0090) | ✅ first version | rate, pressure and temperature charts; Poisson uncertainty; freshness apart from connection |
+| Demo on Beacon | ✅ | emulators + read-only v5 mirror of the running detector; [`operations/DEMO.md`](operations/DEMO.md) |
+| 5–9 | ⏳ | map, public site (design session), hardening, deployment, validation |
+
 ## Quality gates
 
 | Gate | State |
@@ -48,6 +59,11 @@ Details of each step: the execution log at the end of the M1 plan.
    in [`audit/2026-11-06-SESSION-RECORD.md`](audit/2026-11-06-SESSION-RECORD.md) §6.
 2. **The two new instruments exist** (maintainer, 2026-11-06); their models, channels and geometry
    are read once the lab PC is reachable.
+
+3. **Member names:** profiles are private by the rules (`users/{uid}` readable only by its user), so
+   members see each other as "Member ab12cd". Proposed: a public profile projection (display name and
+   username only, no email) readable by signed-in users — a rules change that needs a security review.
+4. **`muonhub-dev`:** create it as the test project (recommended; see the session record §8).
 
 **Decided 2026-11-06:** placement M5 Seismic channel, M6 Muography, M7 Migration + launch; M6 may
 close software-only on simulated data recovered within a declared error if the muograph is not

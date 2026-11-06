@@ -1,6 +1,6 @@
 {
   "name": "@muonhub/v5-mirror",
-  "version": "6.0.0-alpha.1.8",
+  "version": "6.0.0-alpha.2.1",
   "private": true,
   "description": "Read-only mirror of a public v5 profile (munhub-1) into a v6 stream on the Firebase emulators, for the M2 demo; never writes to v5",
   "license": "MIT",

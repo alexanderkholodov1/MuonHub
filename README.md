@@ -5,7 +5,7 @@
 ### Turning cosmic-ray detectors across Latin America into one open, living observatory.
 
 <img src="https://img.shields.io/badge/status-v6%20rebuild-5BD6A0" alt="Status: v6 rebuild">
-<img src="https://img.shields.io/badge/version-6.0.0--alpha.1-4CC9F0" alt="Version">
+<img src="https://img.shields.io/badge/version-6.0.0--alpha.2-4CC9F0" alt="Version">
 <img src="https://img.shields.io/badge/license-MIT-3FB950" alt="License: MIT">
 <img src="https://img.shields.io/badge/data-CC--BY%204.0-3FB950" alt="Data: CC-BY 4.0">
 

@@ -71,3 +71,14 @@ migration from v5 (M7).
 3. **Authentication in the console** (Email/Password now; Google when the web needs it).
 4. **A design session** for the public site before step 6.
 5. **The real contact address** for the site.
+
+## Execution log
+
+| Version | Step | Notes |
+|---|---|---|
+| — | plan proposed (2026-11-06) | steps 1–4 started the same night at the maintainer's instruction |
+| — | 1 — foundation | `apps/web` (Next.js 16.4, React 19.3, Tailwind 4.3); `@muonhub/ui` on React 19 types; release-age policy kept (lucide-react pinned to an older release instead of an exception) |
+| — | 2 — accounts | built by a Codex worker (stopped by its quota) and finished and verified by the brigadista: data-provider 125 unit and 375 emulator tests, web 49 tests |
+| — | 3 — stations | built by a Cursor worker; verified; a real-browser check against the emulator rules found that private profiles broke the members and transfer sections — fixed with a regression test |
+| — | 4 — dashboard | uPlot charts on the real minutes of the running v5 detector (read-only mirror); checked in headless Chromium at 1366 px and 390 px |
+| 6.0.0-alpha.2.1 | first increment | CI green (build, tests, lint, typecheck; emulator tests; gitleaks); demo live on Beacon |
