@@ -117,6 +117,7 @@ describe("mergeHistograms", () => {
 });
 
 describe("fitMpv", () => {
+  // 200 000 sampled events: several seconds on a shared CI runner, so it gets its own deadline.
   it("MPV (consistency): Moyal sample, known MPV, fitted within its uncertainty", () => {
     const mu = 60;
     const scale = 8;
@@ -126,7 +127,7 @@ describe("fitMpv", () => {
     expect(Math.abs((fit.mpv as number) - mu)).toBeLessThan(3 * (fit.sigmaMpv as number));
     expect(fit.sigmaMpv as number).toBeLessThan(0.5);
     expect(fit.width as number).toBeCloseTo(scale, 0);
-  });
+  }, 30_000);
 
   it("MPV (robustness): Landau sample, noise = 0, within 3 % of the Landau MPV", () => {
     // Landau density φ(λ) = (1/π)∫₀^∞ exp(−t ln t − λt) sin(πt) dt, mode ≈ −0.2228.
