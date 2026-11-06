@@ -125,6 +125,9 @@ import {
   type Page,
 } from "./quarantine.js";
 
+/** Device type statuses anyone may read (firestore.rules, deviceTypeReadable). */
+const PUBLISHED_DEVICE_TYPE_STATUSES: v2.DeviceTypeStatus[] = ["builtin", "verified"];
+
 export interface HostPort {
   host: string;
   port: number;
@@ -972,7 +975,22 @@ export function createFirebaseProviderV2(config: FirebaseV2Config): DataProvider
         ),
       ),
     listDeviceTypes: () =>
-      guard(() => listParsed(collection(fs, "deviceTypes"), v2.DeviceTypeSchema)),
+      guard(async () => {
+        // Rules are not filters: an unconstrained list is denied to everyone but an admin. Ask
+        // only for what the rules grant (deviceTypeReadable): published types, plus the signed-in
+        // author's own types in any status.
+        const types = collection(fs, "deviceTypes");
+        const snaps = [
+          await serverDocs(fsQuery(types, where("status", "in", PUBLISHED_DEVICE_TYPE_STATUSES))),
+        ];
+        const uid = auth.currentUser?.uid;
+        if (uid !== undefined) {
+          snaps.push(await serverDocs(fsQuery(types, where("authorUid", "==", uid))));
+        }
+        const byId = new Map<string, unknown>();
+        for (const snap of snaps) for (const d of snap.docs) byId.set(d.id, d.data());
+        return parseEntries(byId.entries(), (_key, value) => v2.DeviceTypeSchema.parse(value));
+      }),
 
     addCalibration: (input) =>
       guard(async () => {

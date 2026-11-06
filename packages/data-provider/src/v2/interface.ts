@@ -166,6 +166,10 @@ export interface DevicesApi {
   /** Publishes a device type version (create-only) and moves the current pointer to it. */
   publishDeviceType(deviceType: v2.DeviceType): Promise<void>;
   getDeviceType(id: string, version?: number): Promise<v2.DeviceType | null>;
+  /**
+   * Published device types (`builtin`, `verified`), plus the signed-in user's own types in any
+   * status — exactly what the rules let a non-admin read.
+   */
   listDeviceTypes(): Promise<ListResult<v2.DeviceType>>;
 
   /** Calibrations are append-only: a new version is a new document. */

@@ -58,6 +58,33 @@ async function seedRtdb(path: string, value: unknown): Promise<void> {
   if (!res.ok) throw new Error(`seed failed: ${res.status}`);
 }
 
+/** Firestore REST value encoding, for admin-bypass seeding of a document. */
+function firestoreValue(value: unknown): unknown {
+  if (value === null) return { nullValue: null };
+  if (typeof value === "boolean") return { booleanValue: value };
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  if (typeof value === "string") return { stringValue: value };
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(firestoreValue) } };
+  const fields = Object.entries(value as Record<string, unknown>)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => [k, firestoreValue(v)]);
+  return { mapValue: { fields: Object.fromEntries(fields) } };
+}
+
+async function seedFirestore(path: string, data: Record<string, unknown>): Promise<void> {
+  const url = `http://${firestoreHost}/v1/projects/${PROJECT}/databases/(default)/documents/${path}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer owner", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fields: (firestoreValue(data) as { mapValue: { fields: unknown } }).mapValue.fields,
+    }),
+  });
+  if (!res.ok) throw new Error(`seed failed: ${res.status}`);
+}
+
 async function waitFor(predicate: () => boolean, label: string): Promise<void> {
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) {
@@ -359,6 +386,32 @@ describeEmu("data layer v2 against the emulators", () => {
     await expect(anonymous.getStatus(streamId)).rejects.toMatchObject({
       code: "permission-denied",
     });
+  });
+
+  it("lists device types as the rules allow: published ones and the caller's own drafts", async () => {
+    const template = v2.BUILTIN_DEVICE_TYPES[0];
+    if (template === undefined) throw new Error("no built-in device type");
+    const suffix = String(Date.now());
+    const builtin = { ...template, id: `emu-builtin-${suffix}`, status: "builtin" as const };
+    await seedFirestore(`deviceTypes/${builtin.id}`, builtin);
+    const draft = (id: string, uid: string): v2.DeviceType => ({
+      ...template,
+      id,
+      status: "draft",
+      authorUid: uid,
+    });
+    await owner.provider.publishDeviceType(draft(`emu-own-${suffix}`, owner.uid));
+    await stranger.provider.publishDeviceType(draft(`emu-other-${suffix}`, stranger.uid));
+
+    // Regression: an unconstrained list was denied to every non-admin, so no member could register
+    // a device from the web app.
+    const mine = (await owner.provider.listDeviceTypes()).items.map((t) => t.id);
+    expect(mine).toContain(builtin.id);
+    expect(mine).toContain(`emu-own-${suffix}`);
+    expect(mine).not.toContain(`emu-other-${suffix}`);
+    const anyone = (await anonymous.listDeviceTypes()).items.map((t) => t.id);
+    expect(anyone).toContain(builtin.id);
+    expect(anyone).not.toContain(`emu-own-${suffix}`);
   });
 
   it("transfers ownership; the new owner claims the mirror and the former owner loses access", async () => {

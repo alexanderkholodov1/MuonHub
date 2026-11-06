@@ -53,6 +53,15 @@ test("stream renders three charts, recorded rate, coverage and freshness", async
   await expect(page.getByText(t("dashboard.uncorrected"), { exact: true })).toBeVisible();
 });
 
+test("owner opens the new-device form with the built-in device types", async ({ page, seed }) => {
+  // Regression: the device-type list was an unconstrained query the rules deny to non-admins.
+  await openAsOwner(page, seed, `/app/device/new?station=${seed.station.id}`);
+  await expect(page.getByLabel(t("devices.field.label"))).toBeVisible();
+  const type = page.getByLabel(t("devices.field.type"));
+  await expect(type.locator("option:not([disabled])")).not.toHaveCount(0);
+  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+});
+
 test("signed-out network lists the public station and renders the map", async ({ page, seed }) => {
   // External tiles are outside this suite. Exercise the real map/worker with a local empty style.
   await page.route("https://tiles.openfreemap.org/styles/*", async (route) => {

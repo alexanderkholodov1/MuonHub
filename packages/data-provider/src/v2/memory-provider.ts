@@ -654,7 +654,12 @@ export function createMemoryProviderV2(options: MemoryProviderOptions = {}): Dat
       );
     },
     async listDeviceTypes() {
-      return listDocs("deviceTypes", v2.DeviceTypeSchema);
+      const all = listDocs("deviceTypes", v2.DeviceTypeSchema);
+      const readable = (type: v2.DeviceType): boolean =>
+        type.status === "builtin" ||
+        type.status === "verified" ||
+        (user !== null && type.authorUid === user.uid);
+      return { ...all, items: all.items.filter(readable) };
     },
     async addCalibration(input) {
       const c = validate(v2.CalibrationSchema, input, "calibration");
