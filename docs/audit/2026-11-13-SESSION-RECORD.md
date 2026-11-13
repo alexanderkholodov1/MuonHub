@@ -127,6 +127,35 @@ Third version:
   three literals, fixed. CI green on `506f1d3`; test URL redeployed from `506f1d3` and checked
   (light theme, 1366 × 650 and 390 px); demo build **2.8** promoted and checked. Lab week at 80 %.
 
+## 3d. His review of the third version, and the fourth (15:00Z)
+
+> "Por dios, antes se veia bien 1 seccion oscura, luego blanca, luego algo mas, ahora lo hiciste todo
+> uno, que se ve mal. La pagina de "the detector right now" NO MUESTRA LAS GRAFICAS REALES, USA TU
+> SIMULACION PERO LITERALMENTE TIENE QUE MOSTRAR UNO O MAS DETECTORES DISPONIBLES, INTEGRADOS AQUI EN
+> UN FORMATO SIMPLIFICADO, PERO NO INVENTADO!! Lo demas esta mejor, pero nuevamente reitero que me
+> gustaria tener secciones de diferente estilo a lo largo de la pagina. No veo opcion de cambiar a
+> espanol tampoco. Network map no cambio, Y NO PUEDES VOLVER A LANDING PAGE DESDE AHI, esta muy mal la
+> coordinacion entre paginas"
+
+The charts of the third version were real (LEOPARD-TEST's minutes from munhub-1), but nothing on the
+page said which detector they were, nor let anyone check them against munhub-lab. Fourth version:
+- **munhub-lab, simplified:** choose any munhub-lab detector with data (LEOPARD-TEST live; HS-500A,
+  HAYEK-IEEE, PLANE, HAYEK-1, COSMIC-3 with their last recorded day). munhub-lab's readout names
+  (events/min, SiPM avg, temp, pressure, dead time, last update, profile) and its four charts (event
+  rate with ±√N, SiPM, temperature and pressure, dead time as munhub-lab plots `dt`), with a link to
+  open munhub-lab. Checked: HS-500A's last minute in the panel (16 May 2026 20:52 Quito: 164 events,
+  32.3 °C, 766.0 hPa) equals its raw v5 record.
+- **Section styles alternate:** night (hero), paper (real detectors), cosmic indigo (the network),
+  light grey (how it works), night (science), the three colours (join); `.surface-paper` and
+  `.surface-cosmic` join `.surface-night` in the tokens.
+- **Spanish:** an ES/EN switch in the header; Spanish for the public pages (`src/i18n/es.ts`), English
+  fallback elsewhere; the browser's language chooses at first.
+- **Navigation:** the header links Home, Live data, Detectors and Network on every page and marks the
+  current one; a shared footer repeats them. The network page now has the planet, the detectors and the
+  stations with the map.
+- axe caught the gold text on white at 4.0:1; the light gold is now `#9a5b06` (5.4:1).
+- Verified: web 99 unit and 35 end-to-end (1 skipped), including Spanish and page-to-page navigation.
+
 ## 4. What waits on the maintainer
 
 1. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.
