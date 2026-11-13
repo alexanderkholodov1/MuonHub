@@ -7,7 +7,7 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "../../apps/web/out",
+    "public": "web-out",
     "cleanUrls": true,
     "trailingSlash": false,
     "headers": [

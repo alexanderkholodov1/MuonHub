@@ -45,6 +45,15 @@ rm -rf apps/web/.next apps/web/out
   pnpm build
 )
 
-"$FB" hosting:channel:deploy "$CHANNEL" --project "$PROJECT" --expires "$EXPIRES" \
-  --config infra/firebase/firebase.json --json |
-  jq -r --arg c "$COMMIT" '.result | to_entries[] | "\(.value.url)  (commit \($c), expires \(.value.expireTime))"'
+# Hosting publishes a folder inside the project directory (infra/firebase): a git-ignored copy.
+rm -rf infra/firebase/web-out
+cp -r apps/web/out infra/firebase/web-out
+
+RESULT="$("$FB" hosting:channel:deploy "$CHANNEL" --project "$PROJECT" --expires "$EXPIRES" \
+  --config infra/firebase/firebase.json --json)" || true
+if [ "$(jq -r '.status' <<<"$RESULT")" != "success" ]; then
+  echo "$RESULT" >&2
+  exit 1
+fi
+jq -r --arg c "$COMMIT" \
+  '.result | to_entries[] | "\(.value.url)  (commit \($c), expires \(.value.expireTime))"' <<<"$RESULT"

@@ -49,6 +49,8 @@ build/
 .tmp/
 .next/
 out/
+# The copy of the web build that Firebase Hosting publishes (infra/firebase/deploy-web-preview.sh)
+infra/firebase/web-out/
 
 # pnpm / Turborepo
 .pnpm-store/
