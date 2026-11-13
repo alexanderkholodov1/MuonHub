@@ -20,7 +20,7 @@ test("the landing shows the planet, the live detector and every munhub-lab detec
   await expect(
     page.getByText(/^particles so far in the minute from \d\d:\d\d \(Quito\)$/),
   ).toBeVisible();
-  await expect(page.getByText(/^1[45]\d ± 1[12]$/)).toBeVisible();
+  await expect(page.getByText(/^1[45]\d ± 1[12]$/).first()).toBeVisible();
   await expect(page.getByText("2.4 mV", { exact: true })).toBeVisible();
   // The last hour.
   await expect(
@@ -33,8 +33,10 @@ test("the landing shows the planet, the live detector and every munhub-lab detec
   ).toBeVisible();
   // Every public munhub-lab detector, duplicates merged, the private one never shown.
   const detectors = page.getByRole("region", { name: t("landing.detectors.title") });
+  const cards = detectors.getByRole("list").first().getByRole("listitem");
+  await expect(cards).toHaveCount(3);
   for (const name of [STUB_DETECTORS.live, STUB_DETECTORS.old, STUB_DETECTORS.duplicate]) {
-    await expect(detectors.getByText(name, { exact: true })).toHaveCount(1);
+    await expect(cards.filter({ hasText: name })).toHaveCount(1);
   }
   await expect(page.getByText(STUB_DETECTORS.hidden)).toHaveCount(0);
   await expect(detectors.getByText(t("landing.detectors.live"), { exact: true })).toBeVisible();

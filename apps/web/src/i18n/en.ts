@@ -240,6 +240,8 @@ export const en = {
   "landing.status.quietNever": "The detector has sent nothing in the last minutes",
   "landing.status.unavailable": "The live data cannot be reached right now",
   "landing.hero.title": "Cosmic rays, counted live.",
+  "landing.hero.titleStart": "Cosmic rays,",
+  "landing.hero.titleEnd": "counted live.",
   "landing.hero.lead":
     "MuonHub is an open network of cosmic-ray detectors. Every particle you see falling on Quito is a real one, counted by the detector at USFQ seconds ago.",
   "landing.hero.cta.detectors": "All detectors",
@@ -256,6 +258,39 @@ export const en = {
   "landing.globe.caption":
     "Drag to turn the planet. Each particle is a real detection, replayed seconds later; its direction is illustrative.",
   "landing.hour.eyebrow": "Live data",
+  "landing.stream.title": "The detector, right now",
+  "landing.stream.intro":
+    "Every bar is one particle, as it crosses the detector. Its height is the size of its light pulse.",
+  "landing.stream.small": "small pulse",
+  "landing.stream.medium": "medium",
+  "landing.stream.large": "large",
+  "landing.stream.label": "The particles of the last minute as bars, the newest at the right.",
+  "landing.stream.ago": "{seconds} s ago",
+  "landing.stream.now": "now",
+  "landing.charts.intro": "munhub-lab's four readings of the detector, minute by minute.",
+  "landing.charts.range": "Time range",
+  "landing.charts.rate": "Charged particles per minute",
+  "landing.charts.perMinute": "per minute",
+  "landing.charts.sipm": "SiPM signal (mean pulse)",
+  "landing.charts.temperature": "Temperature inside the detector",
+  "landing.charts.pressure": "Air pressure",
+  "landing.spectrum.title": "Size of each light pulse",
+  "landing.spectrum.unit": "mV · log scale",
+  "landing.spectrum.label":
+    "Histogram of the SiPM pulse sizes of the latest 1,000 particles, on logarithmic axes.",
+  "landing.spectrum.caption":
+    "The latest 1,000 particles, by the size of their light pulse (the SiPM reading as munhub-lab records it). Most pulses are small, with a long tail of larger ones.",
+  "landing.spectrum.loading": "Loading the latest pulses…",
+  "landing.timeline.title": "When each detector recorded data in {year}",
+  "landing.detectors.liveBadge": "LIVE",
+  "landing.how.diagramLabel":
+    "Diagram: a cosmic ray hits the atmosphere, its shower of particles reaches the detector, the agent sends the count to MuonHub and anyone can see it.",
+  "landing.how.atmosphere": "atmosphere",
+  "landing.how.primary": "cosmic ray from space",
+  "landing.how.you": "you",
+  "landing.equator.maximum": "the highest on Earth (Southeast Asia)",
+  "landing.equator.barsNote":
+    "The longer the bar, the more energetic a cosmic ray must be to get through Earth's magnetic shield there.",
   "landing.hour.lowest": "Lowest minute",
   "landing.hour.highest": "Highest minute",
   "landing.detectors.eyebrow": "The network",
@@ -273,13 +308,9 @@ export const en = {
   "landing.how.eyebrow": "How it works",
   "landing.equator.eyebrow": "The science",
   "landing.network.eyebrow": "Join",
-  "landing.hero.cta.lastHour": "See the last hour",
-  "landing.hour.title": "The last hour in Quito",
-  "landing.hour.intro":
-    "Each dot is one minute of counting, with the uncertainty of its count (±√N). The horizontal line is the hour's average; the shaded band around it is the spread that chance alone produces.",
+  "landing.hero.cta.lastHour": "See the live data",
   "landing.hour.chartLabel":
     "Charged particles per minute over the last hour: {count} minutes recorded, from {min} to {max}, average {mean}.",
-  "landing.hour.axis": "Charged particles per minute",
   "landing.hour.loading": "Loading the last hour…",
   "landing.hour.unavailable": "The last hour cannot be loaded right now.",
   "landing.hour.average": "Average per minute",

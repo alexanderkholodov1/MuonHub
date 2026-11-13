@@ -33,6 +33,19 @@ export const QUIET_AFTER_MS = 3 * 60_000;
 const REPLAY_MARGIN_MS = EVENT_POLL_MS + 5_000;
 const MAX_REPLAY_DELAY_MS = 60_000;
 const MAX_QUEUE = 2_000;
+export const DAY_MINUTES = 1_440;
+
+/** Minutes merged by start (newer records replace older ones), oldest first, at most `keep`. */
+export function mergeMinutes(
+  previous: readonly MinuteRecord[],
+  incoming: readonly MinuteRecord[],
+  keep: number,
+): MinuteRecord[] {
+  const byStart = new Map<number, MinuteRecord>();
+  for (const m of previous) byStart.set(m.start, m);
+  for (const m of incoming) byStart.set(m.start, m);
+  return [...byStart.values()].sort((a, b) => a.start - b.start).slice(-keep);
+}
 const RECENT_MS = 3 * 60_000;
 
 /**
@@ -105,10 +118,15 @@ export function useLiveFeed(): LiveFeed {
       if (!signal.aborted) eventTimer = setTimeout(() => void pollEvents(signal), EVENT_POLL_MS);
     }
 
+    let haveDay = false;
     async function pollMinutes(signal: AbortSignal): Promise<void> {
       try {
-        const recorded = await fetchMinutes(60, signal);
-        if (!signal.aborted) setMinutes(recorded);
+        // A day of minutes once, then only the newest ones, merged by their start.
+        const recorded = await fetchMinutes(haveDay ? 5 : DAY_MINUTES, signal);
+        if (!signal.aborted) {
+          haveDay = true;
+          setMinutes((previous) => mergeMinutes(previous, recorded, DAY_MINUTES));
+        }
       } catch {
         // The events poll reports the source's state; the chart keeps its last minutes.
       }
@@ -122,6 +140,7 @@ export function useLiveFeed(): LiveFeed {
       delaySet = false;
       queue.current.length = 0;
       recent.current.length = 0;
+      haveDay = false;
       void pollEvents(controller.signal);
       void pollMinutes(controller.signal);
     }

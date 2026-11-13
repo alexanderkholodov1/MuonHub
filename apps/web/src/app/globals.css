@@ -7,3 +7,37 @@
   --font-ui: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
+
+/* A chart line that draws itself once (paths set pathLength="1"); reduced motion skips it. */
+.draw-in {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The landing's diagram: dashes that flow along their line, and a detector that flashes. */
+.flow {
+  animation: flow 1.2s linear infinite;
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+.flash {
+  animation: flash 1.6s ease-out infinite;
+}
+@keyframes flash {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  12% {
+    opacity: 0.9;
+  }
+}

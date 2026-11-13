@@ -123,3 +123,11 @@ export async function fetchMinutes(count: number, signal: AbortSignal): Promise<
   );
   return parseMinutes(raw);
 }
+
+/** The detector's recent events (up to `count`), oldest first: for the pulse-height spectrum. */
+export async function fetchRecentEvents(
+  count: number,
+  signal: AbortSignal,
+): Promise<ParticleEvent[]> {
+  return parseEvents(await getJson("realtime", `${byKey}&limitToLast=${String(count)}`, signal));
+}

@@ -17,6 +17,10 @@ export interface V5Detector {
   lastDataTs: number | null;
   /** Recording sessions in v5. */
   sessions: number;
+  /** Time of the first recorded minute (epoch ms), when any. */
+  firstDataTs: number | null;
+  /** Counts of the last recorded minutes (up to an hour), oldest first, for a sparkline. */
+  recentCounts: number[];
 }
 
 async function get(path: string, query: string, signal: AbortSignal): Promise<unknown> {
@@ -43,10 +47,12 @@ export function mergeByName(detectors: readonly V5Detector[]): V5Detector[] {
       continue;
     }
     const newer = (d.lastDataTs ?? 0) > (seen.lastDataTs ?? 0) ? d : seen;
+    const firsts = [d.firstDataTs, seen.firstDataTs].filter((x): x is number => x !== null);
     byName.set(d.name, {
       ...newer,
       live: d.live || seen.live,
       sessions: d.sessions + seen.sessions,
+      firstDataTs: firsts.length > 0 ? Math.min(...firsts) : null,
     });
   }
   return [...byName.values()].sort(
@@ -70,14 +76,37 @@ async function readProfile(
   if (visibility === "private") return null;
   const sessionKeys = keysOf(sessions).sort();
   let lastMinute: number | null = null;
+  let firstMinute: number | null = null;
+  let recentCounts: number[] = [];
   const lastSession = sessionKeys.at(-1);
-  if (lastSession !== undefined) {
-    const minutes = await get(
-      `${k}/sessions/${encodeURIComponent(lastSession)}/minutes`,
-      `orderBy=${encodeURIComponent('"$key"')}&limitToLast=1`,
-      signal,
-    );
-    lastMinute = asMs(Number(keysOf(minutes)[0]));
+  const firstSession = sessionKeys[0];
+  const byKey = `orderBy=${encodeURIComponent('"$key"')}`;
+  if (lastSession !== undefined && firstSession !== undefined) {
+    const [last, first] = await Promise.all([
+      get(
+        `${k}/sessions/${encodeURIComponent(lastSession)}/minutes`,
+        `${byKey}&limitToLast=60`,
+        signal,
+      ),
+      get(
+        `${k}/sessions/${encodeURIComponent(firstSession)}/minutes`,
+        `${byKey}&limitToFirst=1`,
+        signal,
+      ),
+    ]);
+    const lastKeys = keysOf(last).sort((a, b) => Number(a) - Number(b));
+    lastMinute = asMs(Number(lastKeys.at(-1)));
+    // A session key often carries its start (`session_<epoch ms>`); the first one that does is the
+    // detector's first data. Otherwise, the first minute of the first session.
+    const starts = sessionKeys
+      .map((key) => /^session_(\d{13})$/.exec(key)?.[1])
+      .filter((x): x is string => x !== undefined)
+      .map(Number);
+    firstMinute = starts.length > 0 ? Math.min(...starts) : asMs(Number(keysOf(first)[0]));
+    const minutes = last as Record<string, unknown>;
+    recentCounts = lastKeys
+      .map((key) => (minutes[key] as { ec?: unknown } | null)?.ec)
+      .filter((ec): ec is number => typeof ec === "number");
   }
   const latest = asMs(latestTs);
   const lastDataTs = Math.max(latest ?? 0, lastMinute ?? 0) || null;
@@ -87,6 +116,8 @@ async function readProfile(
     live: latest !== null && now - latest <= QUIET_AFTER_MS,
     lastDataTs,
     sessions: sessionKeys.length,
+    firstDataTs: firstMinute,
+    recentCounts,
   };
 }
 

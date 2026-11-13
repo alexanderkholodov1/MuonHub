@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { latestSessionKey, parseEvents, parseMinutes } from "./live-feed";
-import { hourStats, niceTicks, clockTime } from "./hour-stats";
+import { binMinutes, hourStats, logHistogram, niceTicks, clockTime } from "./hour-stats";
+import { runs } from "./LineChart";
+import { pulseHeight } from "./LiveVisuals";
 import {
   arrivalDirection,
   clusterAround,
@@ -10,7 +12,13 @@ import {
   rotate,
   sampleZenith,
 } from "./globe-math";
-import { QUIET_AFTER_MS, replayDelayFor, replayedMinuteCount, statusFor } from "./useLiveFeed";
+import {
+  QUIET_AFTER_MS,
+  mergeMinutes,
+  replayDelayFor,
+  replayedMinuteCount,
+  statusFor,
+} from "./useLiveFeed";
 import { mergeByName, type V5Detector } from "./v5-detectors";
 
 describe("live source parsing", () => {
@@ -125,12 +133,22 @@ describe("munhub-lab detectors", () => {
     live,
     lastDataTs,
     sessions,
+    firstDataTs: lastDataTs === null ? null : lastDataTs - 1_000,
+    recentCounts: [],
   });
 
   it("merges profiles listed twice under one name, keeping the newest data", () => {
     const merged = mergeByName([d("HAYEK-1", "HAYEK-1", null), d("hayek_1", "HAYEK-1", 2_000)]);
     expect(merged).toEqual([
-      { key: "hayek_1", name: "HAYEK-1", live: false, lastDataTs: 2_000, sessions: 2 },
+      {
+        key: "hayek_1",
+        name: "HAYEK-1",
+        live: false,
+        lastDataTs: 2_000,
+        sessions: 2,
+        firstDataTs: 1_000,
+        recentCounts: [],
+      },
     ]);
   });
 
@@ -189,5 +207,47 @@ describe("globe geometry", () => {
     const ring = clusterAround(-0.2, -78.4, 4, 2);
     expect(ring).toHaveLength(4);
     for (const [lat, lon] of ring) expect(Math.hypot(lat + 0.2, lon + 78.4)).toBeCloseTo(2, 2);
+  });
+});
+
+describe("charts", () => {
+  const m = (min: number, count: number, sipm: number | null = null) => ({
+    start: min * 60_000,
+    count,
+    pressureHpa: 766,
+    temperatureC: 30,
+    sipmMeanMv: sipm,
+  });
+
+  it("bins minutes by the clock: mean per minute with √ΣN / minutes, gaps left out", () => {
+    const binned = binMinutes([m(0, 100), m(1, 144), m(4, 120), m(10, 150, 2)], 5);
+    expect(binned.rate.map((p) => p.t)).toEqual([0, 600_000]);
+    const first = binned.rate[0];
+    expect(first?.v).toBeCloseTo(364 / 3, 10);
+    expect((first?.hi ?? 0) - (first?.v ?? 0)).toBeCloseTo(Math.sqrt(364) / 3, 10);
+    expect(binned.sipm).toEqual([{ t: 600_000, v: 2 }]);
+  });
+
+  it("breaks a line where minutes are missing, never drawing a gap as a value", () => {
+    const pts = [0, 1, 2, 6, 7].map((i) => ({ t: i * 60_000, v: 1 }));
+    expect(runs(pts, 150_000).map((r) => r.length)).toEqual([3, 2]);
+  });
+
+  it("merges a day of minutes with the newest ones, by start", () => {
+    const merged = mergeMinutes([m(0, 1), m(1, 2)], [m(1, 5), m(2, 3)], 2);
+    expect(merged.map((x) => [x.start / 60_000, x.count])).toEqual([
+      [1, 5],
+      [2, 3],
+    ]);
+  });
+
+  it("counts pulse sizes in logarithmic bins and maps sizes to bar heights", () => {
+    const bins = logHistogram([0.3, 0.5, 1, 1, 50, 0, -1], 0.25, 100, 4);
+    expect(bins.reduce((a, b) => a + b.count, 0)).toBe(5);
+    // Edges 0.25, 1.12, 5, 22.4, 100 mV: 0.3, 0.5, 1 and 1 fall in the first bin, 50 in the last.
+    expect(bins.map((b) => b.count)).toEqual([4, 0, 0, 1]);
+    expect(pulseHeight(0.3)).toBeCloseTo(0.15, 10);
+    expect(pulseHeight(70)).toBeCloseTo(1, 10);
+    expect(pulseHeight(1000)).toBe(1);
   });
 });
