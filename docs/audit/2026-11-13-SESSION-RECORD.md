@@ -69,12 +69,37 @@ Firebase test URL. The design session of M2 step 6 is delegated to the brigadist
   `firebase.json`, which the Hosting emulator had not checked. Fixed in `a600ab7` (a git-ignored copy
   in `infra/firebase/web-out`).
 
+## 3b. His review of the first version, and the second (14:00Z)
+
+> "Quiero que conectes la salida de datos de munhub-lab a lo que se muestra en el despliegue de
+> prueba. El header blanco arriba es absolutamente horrible, se ve feo, la pagina es desplazada y no
+> sale completa, la distorcion de cuando paso el mouse sobre el detector no tiene sentido, la
+> animacion no se enitende, la paleta de color es pobre porque falta un color caracteristico (ahora
+> solo hay celeste, falta 1 o 2 mas), no sale el planeta tridimencional que yo pedi donde se vean
+> todos los detectores"
+
+The 3-D planet was not written in any document or fleet record that I could find; it is recorded
+here and in `LANDING-CONCEPT.md`. Second version:
+- **munhub-lab's data:** munhub-lab is the v5 app on `munhub-1`; it lists 10 public entries (11
+  profiles, one private; two names listed twice → 8 detectors). The landing now shows munhub-lab's
+  readout for LEOPARD-TEST (running count, last minute ± √N, SiPM average, temperature, pressure) and
+  every detector with its state or last data date. v5 stores no positions: all are shown at USFQ, and
+  the page says so — **his confirmation or the real places are needed**.
+- **The planet:** a three.js globe with the detectors and real particles falling onto Quito.
+- **Header and fit:** the header is dark and part of the sky; the hero fits a 1366 × 650 first screen
+  (tested).
+- **Palette:** MunHub's gold as the signature, violet for the cosmos, cyan for data
+  (`DESIGN-LANGUAGE.md` §1). axe caught white text on dark gold in the light theme; the gold buttons
+  now use a fixed fill with dark text.
+- **Pointer lens removed.**
+
 ## 4. What waits on the maintainer
 
 1. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.
 2. Whether the bridge to the v5 public window may serve the public preview (read-only, a few KB
    every 10 s per open page).
-3. His judgement of the design.
+3. His judgement of the second version.
+4. Where each v5 detector is (they are shown at USFQ until then).
 
 ## 5. Quota
 

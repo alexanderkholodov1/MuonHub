@@ -25,7 +25,7 @@ The tells that make an interface look AI-generated, and the rules that kill them
 | AI tell | Rule |
 |---|---|
 | **Tiny gray text everywhere** | Body text **≥ 16px**. Secondary ≥ 14px. 13px only for micro-labels. Never a wall of 12px. |
-| Rainbow of colors | **Max 2 accent colors** on a screen. Function over decoration. |
+| Rainbow of colors | **Three colour roles at most** on a screen — signature gold, data cyan, cosmic violet (maintainer, 2026-11-13; it was two). Function over decoration. |
 | Harsh gradients / glows | No neon glows, no purple-on-everything. Gradients only subtle, on the landing hero. |
 | Inconsistent spacing | Everything on the **8-pt grid** (4/8/12/16/24/32/48/64). No arbitrary gaps. |
 | Emoji as icons | Use **Lucide** icons. Emoji never substitute UI icons. |
@@ -43,6 +43,11 @@ The tells that make an interface look AI-generated, and the rules that kill them
 
 ## 1. Color tokens
 
+> **Maintainer, 2026-11-13:** "la paleta de color es pobre porque falta un color característico (ahora
+> sólo hay celeste, falta 1 o 2 más)". MunHub's gold becomes the signature colour and violet the
+> colour of the cosmos; cyan stays for data. The public site's header and hero are a night sky in both
+> themes (`.surface-night`).
+
 Dark is the default (24/7 monitoring, data legibility). Light ships too (papers, daytime, print).
 Tokens are semantic — components reference roles, never raw hex.
 
@@ -58,6 +63,8 @@ Tokens are semantic — components reference roles, never raw hex.
 | `text-muted` | `#6B7480` | disabled/hints |
 | `accent` | `#4CC9F0` | primary action / live data (cyan, scientific). **Used sparingly.** |
 | `accent-warm` | `#F5B544` | highlights, "now" markers (amber) |
+| `brand` | `#F5B544` | **signature** — MunHub's gold: primary buttons (`brand-fill` with `on-brand` `#0B0E14` text, the same in both themes), live markers, key figures. Light theme text: `#B86E0A` |
+| `cosmic` | `#9D8CFF` | the cosmos — the globe's atmosphere, section eyebrows. Light theme: `#6A55D8` |
 | `success` | `#3FB950` · `warning` `#D29922` · `danger` `#F85149` | status (proven legible on dark) |
 
 ### Light (mirror)

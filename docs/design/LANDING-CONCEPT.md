@@ -1,6 +1,13 @@
 # MuonHub — Landing concept (parking lot)
 
-> **Status: not started — to be developed in the dedicated design session (with Claude Design).**
+> **Status: built (spec 0092, 2026-11-13).** The maintainer asked for a **3-D planet where every
+> detector is seen** ("no sale el planeta tridimensional que yo pedí donde se vean todos los
+> detectores"). The hero is a three.js globe: land as dots, a violet atmosphere, the detectors at their
+> site, and each real detection drawn as a particle falling onto Quito at its replay time, from a
+> cos²θ direction; drag to turn it. The first version's pointer lens was dropped at his word ("la
+> distorsión de cuando paso el mouse sobre el detector no tiene sentido, la animación no se entiende").
+>
+> **Original status:** not started — to be developed in the dedicated design session (with Claude Design).
 > This file only captures the idea so it isn't lost. It obeys `DESIGN-LANGUAGE.md` ("Observatory
 > Dark") and the landing-vs-app split (§7): the landing may be dramatic; the app stays calm.
 
