@@ -56,10 +56,21 @@ Firebase test URL. The design session of M2 step 6 is delegated to the brigadist
   emulators with `apps/v5-mirror/src/set-demo-precision.ts`. His own choice for the real station is
   still his.
 
+- **Test URL:** <https://muonhub--landing-jhk8q708.web.app> — preview channel `landing` of `muonhub`,
+  commit `a600ab7`, deployed 13:39Z, expires 2026-12-13. Checked at 1366 and 390 px against the real
+  detector (121 ± 11 in the minute to 08:39 Quito time): no console errors, no horizontal scroll;
+  `/network` reads the real (empty) `publicStations` without error and lists the detector. Headers
+  and 404 checked with curl.
+- Sign-in: the first `firebase login --no-localhost` link (CLI 15.20.0, opened ~15 minutes later)
+  answered `invalid_request: Unable to verify client`; a fresh one from CLI 15.34.0, opened at once,
+  worked. The Firebase CLI on Beacon is now signed in with his account (it sees `muonhub` and
+  `munhub-1`); `firebase logout` removes it.
+- The first deploy was refused: Hosting does not publish a folder outside the directory of
+  `firebase.json`, which the Hosting emulator had not checked. Fixed in `a600ab7` (a git-ignored copy
+  in `infra/firebase/web-out`).
+
 ## 4. What waits on the maintainer
 
-1. **Firebase CLI sign-in on Beacon** for the preview deploy (`firebase login --no-localhost`,
-   one browser approval); the deploy itself is one command.
 2. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.
 3. Whether the bridge to the v5 public window may serve the public preview (read-only, a few KB
    every 10 s per open page).

@@ -66,5 +66,6 @@ v6's own public window (ADR-005 §6) is not installed yet (M1 steps 9–11).
   actions lead to the data and the network, not to sign-in; only the two public paths are requested.
 - [x] CA3: the hero keeps the dark palette in the light theme (computed colours checked).
 - [x] CA4: axe finds no violation on `/` and `/network` in both themes and viewports.
-- [ ] CA5: deployed to a Hosting preview channel of `muonhub` and checked in a browser at 1366 and
-  390 px with the real detector.
+- [x] CA5: deployed to a Hosting preview channel of `muonhub` and checked in a browser at 1366 and
+  390 px with the real detector: <https://muonhub--landing-jhk8q708.web.app> (commit `a600ab7`,
+  2026-11-13, expires 2026-12-13); no console errors, no horizontal scroll.

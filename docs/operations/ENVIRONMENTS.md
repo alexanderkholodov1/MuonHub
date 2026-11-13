@@ -22,7 +22,7 @@ the Blaze plan, stop and tell the Adjutant.
 | Resource | State (2026-11-06, M1 step 8) |
 |---|---|
 | Realtime Database | Default instance `muonhub-default-rtdb`, region `us-central1`, URL `https://muonhub-default-rtdb.firebaseio.com/`, empty; **v2 rules deployed** from `25d7a84`; anonymous read of the root denied **[verified by running]** |
-| Hosting | Default site `muonhub` → `https://muonhub.web.app` **[verified 2026-10-02]**; nothing deployed by v6 yet |
+| Hosting | Default site `muonhub` → `https://muonhub.web.app` **[verified 2026-10-02]**; live site: nothing deployed by v6 yet. Preview channel `landing` → <https://muonhub--landing-jhk8q708.web.app> (the web app at `a600ab7`, deployed 2026-11-13 from Beacon with `infra/firebase/deploy-web-preview.sh`, expires 2026-12-13) **[verified by running]** |
 | Cloud Firestore | `(default)`, **Standard** edition, Native mode, location **`nam5`**, created 2026-11-06 01:36Z; **delete protection enabled**; point-in-time recovery off; **v2 rules and indexes deployed** from `25d7a84`; anonymous list denied **[verified by running]** |
 | Authentication | **Not initialised** — the Firebase CLI has no command for it **[verified]**; done in the console (below) |
 | Web app registration | `MuonHub web`, App ID `1:1062287112089:web:2a3b6cdc5f3ca300c84508` (public configuration) **[verified by running]** |
