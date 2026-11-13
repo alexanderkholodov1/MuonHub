@@ -1,6 +1,6 @@
 # MuonHub — Status
 
-_Last updated: 2026-11-06 · version `6.0.0-alpha.2.4` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
+_Last updated: 2026-11-13 · version `6.0.0-alpha.2.5` · branches `feat/m1-core-agent` (M1) and `feat/m2-web-platform` (M2, built on M1)_
 
 ## Milestones (plan: [`product/ROADMAP.md`](product/ROADMAP.md))
 
@@ -8,7 +8,7 @@ _Last updated: 2026-11-06 · version `6.0.0-alpha.2.4` · branches `feat/m1-core
 |---|---|---|
 | **M0 Foundation** | Cleanup, rename to MuonHub, documentation structure, decisions (ADR-004…009), roadmap and backlog | ✅ merged (PR [#57](https://github.com/alexanderkholodov1/MuonHub/pull/57), tag `v6.0.0-alpha.0.4.3`) |
 | **M1 Core + Agent** | Contracts v2, physics fixes, simulator, data layer v2, rules with negative tests, headless agent | 🔄 steps 1–7 of 12 done; steps 8, 9 and 11 need the maintainer — plan approved 2026-10-04 ([`product/plans/M1-core-agent.md`](product/plans/M1-core-agent.md)) |
-| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5 and the end-to-end and accessibility parts of 7 built (`6.0.0-alpha.2.4`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
+| **M2 Web platform** | Accounts, stations and devices, live dashboard, public site and live page | 🔄 steps 1–5, the landing of step 6, and the end-to-end and accessibility parts of 7 built (`6.0.0-alpha.2.5`) ahead of the plan's formal approval, at the maintainer's instruction; plan **Proposed** ([`product/plans/M2-web-platform.md`](product/plans/M2-web-platform.md)) |
 | M3 Science | Comparison, coincidences, geometry and assemblies, calibration, views | ⏳ |
 | M4 Open platform | Bring Your Own Detector, operations (backups, alerts, quotas), external data, offline collection | ⏳ |
 | M5 Seismic channel | Sampled device type, per-minute features, systematics channel, pre-registered exploratory correlation | ⏳ |
@@ -45,7 +45,8 @@ Details of each step: the execution log at the end of the M1 plan.
 | 5 Network map (spec 0091) | ✅ first version | `/network` from public projections; OpenFreeMap tiles (production provider: open question); "active" means an active device until projections carry the latest data time |
 | 7 Hardening — end-to-end suite | ✅ | Playwright, desktop and phone, against the emulators with the v2 rules; runs in CI (`web · end-to-end`); found and fixed a hydration bug in the reset form |
 | 7 Hardening — accessibility pass | ✅ | axe (WCAG 2.2 A/AA + best practices) on every page, both themes and viewports, in the end-to-end suite; keyboard, reduced motion, no theme flash; contrast tokens fixed. Found that the new-device form was denied to every non-admin (device-type list) — fixed with emulator and end-to-end regression tests |
-| 6, 7 (App Check), 8, 9 | ⏳ | public site (design session), App Check (console), deployment (go-ahead), validation with the real detector |
+| 6 Public site — landing (spec 0092) | ✅ first part | `/` shows the LEOPARD lab detector live (each real detection drawn as a track, latest minute ±√N, the last hour against chance), then what MuonHub is; `/network` lists the detector with its live state. Live data read-only from the v5 public window until the v6 agent runs at the lab. Preview deploy script for Firebase Hosting (`infra/firebase/deploy-web-preview.sh`) |
+| 6 (other pages), 7 (App Check), 8, 9 | ⏳ | science, about, join, data pages; App Check (console); deployment (go-ahead); validation with the real detector |
 
 ## Quality gates
 
@@ -53,7 +54,7 @@ Details of each step: the execution log at the end of the M1 plan.
 |---|---|
 | CI on GitHub — M1 branch (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `404fc95` (`6.0.0-alpha.1.8`) **[verified]** |
 | CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `b50a6ad` (`6.0.0-alpha.2.4`, run 42190789928) **[verified]** |
-| Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 77 unit + 27 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
+| Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 89 unit + 31 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
 
 ## Open questions for the maintainer
 
@@ -95,4 +96,4 @@ ready.
 
 See [`operations/ENVIRONMENTS.md`](operations/ENVIRONMENTS.md). Firebase services for `muonhub` are
 set up by the maintainer following [`operations/FIREBASE-SETUP.md`](operations/FIREBASE-SETUP.md)
-(M1 step 8). Latest session: [`audit/2026-11-06-SESSION-RECORD.md`](audit/2026-11-06-SESSION-RECORD.md).
+(M1 step 8). Latest session: [`audit/2026-11-13-SESSION-RECORD.md`](audit/2026-11-13-SESSION-RECORD.md).
