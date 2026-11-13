@@ -107,6 +107,26 @@
   --shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
+/* ─── Night surface ───────────────────────────────────────────────────────────
+ * The landing hero is a night sky in both themes (DESIGN-LANGUAGE §7): its subtree keeps the dark
+ * palette even when the page is light. */
+.surface-night {
+  --color-bg: #0b0e14;
+  --color-surface: #131722;
+  --color-surface-2: #1a2030;
+  --color-border: #252c3b;
+  --color-text: #e6eaf2;
+  --color-text-secondary: #9aa4b2;
+  --color-text-muted: #808996;
+  --color-accent: #4cc9f0;
+  --color-accent-warm: #f5b544;
+  /* The short aliases of the @theme block resolve on :root; restate them here. */
+  --color-secondary: #9aa4b2;
+  --color-muted: #808996;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
 /* ─── Reduced-motion override ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   :root {

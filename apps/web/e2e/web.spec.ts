@@ -1,5 +1,56 @@
 import { t } from "../src/i18n/t";
-import { test, expect, openAsOwner, signIn } from "./fixtures";
+import { LIVE_SOURCE } from "../src/features/landing/live-feed";
+import { test, expect, liveRequestsOf, openAsOwner, signIn } from "./fixtures";
+
+test("the landing shows the live detector to anyone, without an account", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { level: 1, name: t("landing.hero.title"), exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(t("landing.status.live", { place: LIVE_SOURCE.place })),
+  ).toBeVisible();
+  // The latest complete minute, with its chance spread, and the hour's chart.
+  await expect(page.getByText(/^± \d+ by chance alone$/)).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: /^Charged particles per minute over the last hour: 60 minutes recorded/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(t("landing.hour.recordedValue", { count: 60 }), { exact: true }),
+  ).toBeVisible();
+  // The live data comes first: the hero's actions lead to it and to the network, not to a sign-in.
+  const hero = page.getByRole("region", { name: t("landing.hero.title") });
+  await expect(hero.getByRole("link", { name: t("landing.hero.cta.lastHour") })).toBeVisible();
+  await expect(hero.getByRole("link", { name: t("landing.hero.cta.network") })).toBeVisible();
+  await expect(hero.getByRole("link", { name: t("nav.signIn") })).toHaveCount(0);
+  // The replay delay is known once the first events arrive.
+  await expect(page.getByText(/each line crosses the detector \d+ s after/)).toBeVisible();
+  // Only the public window is read: never the profile's root, which carries personal fields.
+  const asked = liveRequestsOf(page);
+  expect(asked.length).toBeGreaterThan(0);
+  for (const path of asked)
+    expect(path).toMatch(/^\/(realtime|sessions)(\/[^/]+\/minutes)?\.json$/);
+});
+
+test.describe("light theme", () => {
+  test.use({ colorScheme: "light" });
+
+  test("the landing's hero stays a night sky, with the dark palette's legible text", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    const lead = page.getByText(t("landing.hero.lead"), { exact: true });
+    // Dark-theme secondary text (#9aa4b2) on the dark background, never the light theme's grey.
+    await expect(lead).toHaveCSS("color", "rgb(154, 164, 178)");
+    await expect(page.getByRole("region", { name: t("landing.hero.title") })).toHaveCSS(
+      "background-color",
+      "rgb(11, 14, 20)",
+    );
+  });
+});
 
 test("signed-out app redirects and sign-in returns to owned stations", async ({ page, seed }) => {
   await page.goto("/app");
@@ -73,6 +124,9 @@ test("signed-out network lists the public station and renders the map", async ({
   await expect(page.getByRole("link", { name: t("nav.signIn"), exact: true })).toBeVisible();
   await expect(page.getByText(seed.station.name, { exact: true })).toBeVisible();
   await expect(page.getByText(seed.privateStation.name, { exact: true })).toHaveCount(0);
+  // The detector read through the landing's bridge is listed too, with its live state.
+  await expect(page.getByText(LIVE_SOURCE.station, { exact: true })).toBeVisible();
+  await expect(page.getByText(t("landing.network.live"), { exact: true })).toBeVisible();
   const map = page.getByRole("region", { name: t("network.mapLabel"), exact: true });
   await expect(map).toBeVisible();
   await expect(map.locator("canvas")).toBeVisible();

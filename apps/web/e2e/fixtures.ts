@@ -1,6 +1,14 @@
 import { test as base, expect, type ConsoleMessage, type Page } from "@playwright/test";
 import { t } from "../src/i18n/t";
 import { readState, type SeedState } from "./state";
+import { stubLiveSource } from "./live-source";
+
+const liveRequests = new WeakMap<Page, string[]>();
+
+/** Paths of the live source the page has asked for (answered by e2e/live-source.ts). */
+export function liveRequestsOf(page: Page): string[] {
+  return liveRequests.get(page) ?? [];
+}
 
 export const test = base.extend<{ seed: SeedState }>({
   // Playwright requires destructuring even when a fixture has no dependencies.
@@ -19,6 +27,7 @@ export const test = base.extend<{ seed: SeedState }>({
     };
     page.on("console", onConsole);
     page.on("pageerror", onPageError);
+    liveRequests.set(page, await stubLiveSource(page));
     try {
       await use(page);
     } finally {

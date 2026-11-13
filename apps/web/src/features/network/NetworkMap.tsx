@@ -44,7 +44,7 @@ export function NetworkMap({ stations }: { stations: StationCollection }): React
       remove = () => map.remove();
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), "top-right");
       map.on("load", () => {
-        const active = token("--color-success", "#3fb950");
+        const active = token("--color-accent-warm", "#f5b544");
         const idle = token("--color-text-muted", "#808996");
         map.addSource("stations", { type: "geojson", data: stations });
         map.addLayer({
@@ -99,7 +99,7 @@ export function NetworkMap({ stations }: { stations: StationCollection }): React
       ref={host}
       role="region"
       aria-label={t("network.mapLabel")}
-      className="h-[420px] w-full overflow-hidden rounded-md border border-border"
+      className="h-[420px] w-full overflow-hidden rounded-lg border border-border lg:h-[600px]"
     />
   );
 }
