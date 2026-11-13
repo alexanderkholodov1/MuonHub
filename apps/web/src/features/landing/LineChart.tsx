@@ -174,7 +174,7 @@ export function LineChart({
                 dominantBaseline="middle"
                 className="fill-muted font-mono text-xs"
               >
-                {v.toFixed(tickDigits)}
+                {Math.abs(v) >= 10_000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(tickDigits)}
               </text>
             </g>
           ))}
