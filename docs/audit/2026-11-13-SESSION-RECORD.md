@@ -124,7 +124,8 @@ Third version:
 - **How it works:** an animated diagram (cosmic ray → atmosphere → shower → detector → agent →
   MuonHub → you). **Equator:** cutoff rigidity as bars on one 0–17 GV scale.
 - Verified: web 97 unit and 33 end-to-end (1 skipped), axe clean in both themes; i18n check caught
-  three literals, fixed.
+  three literals, fixed. CI green on `506f1d3`; test URL redeployed from `506f1d3` and checked
+  (light theme, 1366 × 650 and 390 px); demo build **2.8** promoted and checked. Lab week at 80 %.
 
 ## 4. What waits on the maintainer
 
