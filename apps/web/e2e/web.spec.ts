@@ -21,7 +21,7 @@ test("the landing shows the planet, the live detector and every munhub-lab detec
     page.getByText(/^particles so far in the minute from \d\d:\d\d \(Quito\)$/),
   ).toBeVisible();
   await expect(page.getByText(/^1[45]\d ± 1[12]$/).first()).toBeVisible();
-  await expect(page.getByText("2.4 mV", { exact: true })).toBeVisible();
+  await expect(page.getByText("2.4 mV", { exact: true }).first()).toBeVisible();
   // The last hour.
   await expect(
     page.getByRole("img", {
@@ -89,6 +89,34 @@ test.describe("light theme", () => {
       "rgb(11, 14, 20)",
     );
   });
+});
+
+test("the pages link to each other and switch to Spanish", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /^ES/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Rayos cósmicos, contados en vivo." }),
+  ).toBeVisible();
+  // From the landing to the network page and back, with the header's links, still in Spanish.
+  await page
+    .getByRole("navigation", { name: "Principal" })
+    .getByRole("link", { name: "Red" })
+    .click();
+  await expect(page).toHaveURL("/network");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Todos los detectores, en un planeta" }),
+  ).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Principal" })
+    .getByRole("link", { name: "Inicio" })
+    .click();
+  await expect(page).toHaveURL("/");
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await page.getByRole("button", { name: /^EN/ }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: t("landing.hero.title") }),
+  ).toBeVisible();
 });
 
 test("signed-out app redirects and sign-in returns to owned stations", async ({ page, seed }) => {
@@ -164,8 +192,9 @@ test("signed-out network lists the public station and renders the map", async ({
   await expect(page.getByText(seed.station.name, { exact: true })).toBeVisible();
   await expect(page.getByText(seed.privateStation.name, { exact: true })).toHaveCount(0);
   // The detector read through the landing's bridge is listed too, with its live state.
-  await expect(page.getByText(LIVE_SOURCE.station, { exact: true })).toBeVisible();
-  await expect(page.getByText(t("landing.network.live"), { exact: true })).toBeVisible();
+  const stations = page.getByRole("region", { name: t("network.stations.title") });
+  await expect(stations.getByText(LIVE_SOURCE.station, { exact: true })).toBeVisible();
+  await expect(stations.getByText(t("landing.network.live"), { exact: true })).toBeVisible();
   const map = page.getByRole("region", { name: t("network.mapLabel"), exact: true });
   await expect(map).toBeVisible();
   await expect(map.locator("canvas")).toBeVisible();

@@ -121,7 +121,9 @@ export function LineChart({
       .map((p) => `L${x(p.t).toFixed(1)},${y(p.lo ?? p.v).toFixed(1)}`);
     return `${top.join("")}${bottom.join("")}Z`;
   };
-  const ticks = niceTicks(y0, y1);
+  const ticks = niceTicks(y0, y1, height < 150 ? 2 : 4);
+  const step = ticks.length > 1 ? Math.abs((ticks[1] ?? 0) - (ticks[0] ?? 0)) : 1;
+  const tickDigits = Math.min(Math.max(0, -Math.floor(Math.log10(step) + 1e-9)), 4);
   const times = [first.t, first.t + span / 2, last.t];
   const hovered = hover === null ? null : points[hover];
 
@@ -172,7 +174,7 @@ export function LineChart({
                 dominantBaseline="middle"
                 className="fill-muted font-mono text-xs"
               >
-                {Number.isInteger(v) ? v : v.toFixed(1)}
+                {v.toFixed(tickDigits)}
               </text>
             </g>
           ))}

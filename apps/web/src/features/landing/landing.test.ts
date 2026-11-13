@@ -44,13 +44,25 @@ describe("live source parsing", () => {
       "1794573180": { ec: -1 },
     };
     expect(parseMinutes(raw)).toEqual([
-      { start: 1794573060000, count: 156, pressureHpa: null, temperatureC: null, sipmMeanMv: null },
+      {
+        start: 1794573060000,
+        count: 156,
+        pressureHpa: null,
+        temperatureC: null,
+        sipmMeanMv: null,
+        sipmMinMv: null,
+        sipmMaxMv: null,
+        deadTimePct: null,
+      },
       {
         start: 1794573120000,
         count: 153,
         pressureHpa: 766.61,
         temperatureC: 30.9,
         sipmMeanMv: 2.4,
+        sipmMinMv: null,
+        sipmMaxMv: null,
+        deadTimePct: null,
       },
     ]);
   });
@@ -70,6 +82,9 @@ describe("hour statistics", () => {
     pressureHpa: null,
     temperatureC: null,
     sipmMeanMv: null,
+    sipmMinMv: null,
+    sipmMaxMv: null,
+    deadTimePct: null,
   });
 
   it("gives the mean with its Poisson uncertainty √ΣN / minutes and the chance spread √mean", () => {
@@ -135,6 +150,7 @@ describe("munhub-lab detectors", () => {
     sessions,
     firstDataTs: lastDataTs === null ? null : lastDataTs - 1_000,
     recentCounts: [],
+    lastSession: null,
   });
 
   it("merges profiles listed twice under one name, keeping the newest data", () => {
@@ -148,6 +164,7 @@ describe("munhub-lab detectors", () => {
         sessions: 2,
         firstDataTs: 1_000,
         recentCounts: [],
+        lastSession: null,
       },
     ]);
   });
@@ -217,6 +234,9 @@ describe("charts", () => {
     pressureHpa: 766,
     temperatureC: 30,
     sipmMeanMv: sipm,
+    sipmMinMv: null,
+    sipmMaxMv: null,
+    deadTimePct: null,
   });
 
   it("bins minutes by the clock: mean per minute with √ΣN / minutes, gaps left out", () => {
@@ -249,5 +269,24 @@ describe("charts", () => {
     expect(pulseHeight(0.3)).toBeCloseTo(0.15, 10);
     expect(pulseHeight(70)).toBeCloseTo(1, 10);
     expect(pulseHeight(1000)).toBe(1);
+  });
+});
+
+describe("language", () => {
+  it("follows the visitor's choice, else Spanish for any es-* browser language, else English", async () => {
+    const { preferredLocale } = await import("@/i18n/LocaleProvider");
+    expect(preferredLocale("en", ["es-EC"])).toBe("en");
+    expect(preferredLocale(null, ["es-EC", "en"])).toBe("es");
+    expect(preferredLocale(null, ["en-US", "es"])).toBe("es");
+    expect(preferredLocale(null, ["en-US"])).toBe("en");
+  });
+
+  it("falls back to English for a string not yet translated", async () => {
+    const { setActiveLocale, t } = await import("@/i18n/t");
+    setActiveLocale("es");
+    expect(t("landing.hero.title")).toBe("Rayos cósmicos, contados en vivo.");
+    expect(t("app.name")).toBe("MuonHub");
+    setActiveLocale("en");
+    expect(t("landing.hero.title")).toBe("Cosmic rays, counted live.");
   });
 });

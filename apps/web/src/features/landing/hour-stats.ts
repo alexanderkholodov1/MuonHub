@@ -75,6 +75,7 @@ export interface Binned {
   sipm: Point[];
   temperature: Point[];
   pressure: Point[];
+  deadTime: Point[];
 }
 
 /**
@@ -90,7 +91,7 @@ export function binMinutes(minutes: readonly MinuteRecord[], binMinutes: number)
     if (list === undefined) bins.set(start, [m]);
     else list.push(m);
   }
-  const out: Binned = { rate: [], sipm: [], temperature: [], pressure: [] };
+  const out: Binned = { rate: [], sipm: [], temperature: [], pressure: [], deadTime: [] };
   const mean = (values: number[]): number | null =>
     values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
   for (const [t, list] of [...bins.entries()].sort((a, b) => a[0] - b[0])) {
@@ -104,6 +105,8 @@ export function binMinutes(minutes: readonly MinuteRecord[], binMinutes: number)
     if (c !== null) out.temperature.push({ t, v: c });
     const p = mean(list.flatMap((m) => (m.pressureHpa === null ? [] : [m.pressureHpa])));
     if (p !== null) out.pressure.push({ t, v: p });
+    const d = mean(list.flatMap((m) => (m.deadTimePct === null ? [] : [m.deadTimePct])));
+    if (d !== null) out.deadTime.push({ t, v: d });
   }
   return out;
 }

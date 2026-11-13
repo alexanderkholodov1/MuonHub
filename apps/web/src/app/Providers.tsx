@@ -10,6 +10,7 @@ import { parseConfig, readRawConfig } from "@/lib/config";
 import { DataProviderRoot } from "@/lib/data/DataProviderContext";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ConfigErrorPage } from "@/components/ConfigErrorPage";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
 
 const configResult = parseConfig(readRawConfig());
 
@@ -18,7 +19,9 @@ export function Providers({ children }: { children: ReactNode }): ReactNode {
     <ThemeProvider>
       {configResult.ok ? (
         <DataProviderRoot config={configResult.config}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <LocaleProvider>{children}</LocaleProvider>
+          </AuthProvider>
         </DataProviderRoot>
       ) : (
         <ConfigErrorPage missing={configResult.missing} />

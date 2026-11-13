@@ -1,14 +1,7 @@
 import React, { type ReactNode } from "react";
-import { SiteHeader } from "@/components/SiteHeader";
 import { NetworkPage } from "@/features/network/NetworkPage";
 
+/** The network page (spec 0091), in the public site's style; it renders its own header and footer. */
 export default function Page(): ReactNode {
-  return (
-    <>
-      <SiteHeader />
-      <main id="main" className="mx-auto max-w-6xl px-6 py-10">
-        <NetworkPage />
-      </main>
-    </>
-  );
+  return <NetworkPage />;
 }

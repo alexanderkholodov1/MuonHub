@@ -21,6 +21,8 @@ export interface V5Detector {
   firstDataTs: number | null;
   /** Counts of the last recorded minutes (up to an hour), oldest first, for a sparkline. */
   recentCounts: number[];
+  /** The session holding the latest minutes, when any. */
+  lastSession: string | null;
 }
 
 async function get(path: string, query: string, signal: AbortSignal): Promise<unknown> {
@@ -118,6 +120,7 @@ async function readProfile(
     sessions: sessionKeys.length,
     firstDataTs: firstMinute,
     recentCounts,
+    lastSession: recentCounts.length > 0 ? (lastSession ?? null) : null,
   };
 }
 

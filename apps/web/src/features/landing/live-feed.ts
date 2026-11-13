@@ -38,6 +38,11 @@ export interface MinuteRecord {
   temperatureC: number | null;
   /** Mean SiPM pulse of the minute in mV, as v5 records it (munhub-lab's "SiPM avg"). */
   sipmMeanMv: number | null;
+  /** Smallest and largest SiPM pulse of the minute in mV (munhub-lab's "Min mV", "Max mV"). */
+  sipmMinMv: number | null;
+  sipmMaxMv: number | null;
+  /** Dead time as v5 records it and munhub-lab plots it ("Dead Time %"). */
+  deadTimePct: number | null;
 }
 
 const EventSchema = z.object({ ts: z.number().int().positive(), sipm: z.number().optional() });
@@ -46,6 +51,9 @@ const MinuteSchema = z.object({
   pr: z.number().positive().optional(),
   tp: z.number().optional(),
   sm: z.number().optional(),
+  sn: z.number().optional(),
+  sx: z.number().optional(),
+  dt: z.number().optional(),
 });
 
 function entries(raw: unknown): Array<[string, unknown]> {
@@ -75,6 +83,9 @@ export function parseMinutes(raw: unknown): MinuteRecord[] {
       pressureHpa: parsed.data.pr === undefined ? null : parsed.data.pr / 100,
       temperatureC: parsed.data.tp ?? null,
       sipmMeanMv: parsed.data.sm ?? null,
+      sipmMinMv: parsed.data.sn ?? null,
+      sipmMaxMv: parsed.data.sx ?? null,
+      deadTimePct: parsed.data.dt ?? null,
     });
   }
   return out.sort((a, b) => a.start - b.start);
@@ -130,4 +141,17 @@ export async function fetchRecentEvents(
   signal: AbortSignal,
 ): Promise<ParticleEvent[]> {
   return parseEvents(await getJson("realtime", `${byKey}&limitToLast=${String(count)}`, signal));
+}
+
+/** The last `count` minutes of one session of any public v5 profile, oldest first. */
+export async function fetchSessionMinutes(
+  profileKey: string,
+  sessionKey: string,
+  count: number,
+  signal: AbortSignal,
+): Promise<MinuteRecord[]> {
+  const url = `${V5_PROFILES}/${encodeURIComponent(profileKey)}/sessions/${encodeURIComponent(sessionKey)}/minutes.json?${byKey}&limitToLast=${String(count)}`;
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`v5 answered ${String(res.status)}`);
+  return parseMinutes((await res.json()) as unknown);
 }

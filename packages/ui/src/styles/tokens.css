@@ -105,7 +105,7 @@
 
   --color-accent: #0877a0; /* ≥ 4.5:1 as text on light surfaces and under bg-coloured text */
   --color-accent-warm: #c77a12;
-  --color-brand: #b86e0a; /* ≥ 4.5:1 as text on white */
+  --color-brand: #9a5b06; /* 5.4:1 as text on white (WCAG AA) */
   --color-cosmic: #6a55d8;
 
   --color-success: #1a7f37;
@@ -133,6 +133,44 @@
   /* The short aliases of the @theme block resolve on :root; restate them here. */
   --color-secondary: #9aa4b2;
   --color-muted: #808996;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+/* ─── Paper and cosmic surfaces ──────────────────────────────────────────────
+ * The public pages alternate section styles (maintainer, 2026-11-13: "secciones de diferente estilo a
+ * lo largo de la página"): night, paper (light) and cosmic (deep indigo), whatever the page theme. */
+.surface-paper {
+  --color-bg: #fbfcfd;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef1f6;
+  --color-border: #dfe4eb;
+  --color-text: #0a0c10;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #5f6877;
+  --color-accent: #0877a0;
+  --color-accent-warm: #9a5b06;
+  --color-brand: #9a5b06;
+  --color-cosmic: #6a55d8;
+  --color-secondary: #4b5563;
+  --color-muted: #5f6877;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+.surface-cosmic {
+  --color-bg: #120f2e;
+  --color-surface: #1b1740;
+  --color-surface-2: #262057;
+  --color-border: #362e72;
+  --color-text: #f0edff;
+  --color-text-secondary: #c3bcef;
+  --color-text-muted: #a49cd6;
+  --color-accent: #5fd4f5;
+  --color-accent-warm: #f5b544;
+  --color-brand: #f5b544;
+  --color-cosmic: #b9adff;
+  --color-secondary: #c3bcef;
+  --color-muted: #a49cd6;
   color: var(--color-text);
   background-color: var(--color-bg);
 }

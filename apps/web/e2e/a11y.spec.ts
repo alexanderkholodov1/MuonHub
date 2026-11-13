@@ -42,7 +42,9 @@ for (const colorScheme of ["light", "dark"] as const) {
       }
       await page.goto("/network");
       await expect(page.getByText(seed.station.name, { exact: true })).toBeVisible();
-      await expect(page.locator("canvas")).toBeVisible();
+      await expect(
+        page.getByRole("region", { name: t("network.mapLabel") }).locator("canvas"),
+      ).toBeVisible();
       await expectAccessible(page, "/network");
     });
 
