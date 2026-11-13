@@ -17,3 +17,6 @@ private/
 
 # Generated at build time (apps/web/scripts/copy-maplibre-worker.mjs)
 apps/web/public/maplibre/
+
+# Generated data (apps/web/scripts/make-land-dots.mjs), kept minified
+apps/web/public/globe/
