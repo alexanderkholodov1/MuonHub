@@ -101,6 +101,31 @@ here and in `LANDING-CONCEPT.md`. Second version:
   against a mean near 134) are real, not partial records.
 - Quota: the lab week stood at 79 % after this version; work stops here until he says otherwise.
 
+## 3c. His review of the second version, and the third (14:30Z)
+
+> "Esta muy bien el planeta! Eso si se ve bien. PERO QUITASTE EL COLOR AZUL Y SOLO DEJASTE EL
+> DORADO, NO ENTIENDO QUE TE PASA, CLARISIMO DIJE QUE NECESITAS DOS, NO QUE QUITES UNO, NECESITAS 2-3
+> COLORES CARACTERISTICOS AL MISMO TIEMPO!!!! The last hour in Quito no muestra los datos. Y en
+> general, todo el resto de pagina despues del planeta es MUY pobre, no tiene graficos,
+> visualizaciones, animaciones, diseno, nada; mejoralo."
+
+My error: the second version moved buttons and figures to gold and left cyan only in the particles.
+Third version:
+- **Three colours at once:** cyan for the primary action and the live readings, gold for the
+  signature, the count and the live badge, violet for the cosmos; the title's last words carry the
+  three as a gradient; the whole landing is a night sky.
+- **Live data:** a live strip of the particles as they arrive (bar height = pulse size), munhub-lab's
+  four charts (rate with ±√N, SiPM, temperature, pressure) over 1/6/24 h with a crosshair and a line
+  that draws itself, tiles, and the pulse-height spectrum of the latest 1,000 events. The earlier
+  "last hour" chart did draw in my checks; in the light theme its small dots on white were easy to
+  miss — the new section cannot be.
+- **Detectors:** a sparkline of each detector's last recorded hour and a 2026 timeline of when each
+  recorded (first data from the session keys, `session_<epoch ms>`).
+- **How it works:** an animated diagram (cosmic ray → atmosphere → shower → detector → agent →
+  MuonHub → you). **Equator:** cutoff rigidity as bars on one 0–17 GV scale.
+- Verified: web 97 unit and 33 end-to-end (1 skipped), axe clean in both themes; i18n check caught
+  three literals, fixed.
+
 ## 4. What waits on the maintainer
 
 1. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.

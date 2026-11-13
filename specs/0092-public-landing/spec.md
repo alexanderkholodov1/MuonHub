@@ -34,6 +34,14 @@ v6's own public window (ADR-005 §6) is not installed yet (M1 steps 9–11).
 - **FR2b — Every munhub-lab detector:** the public profiles of v5 (munhub-lab's rule: every profile
   not private), duplicates under one name merged, live first; name, state or last data date, number
   of sessions. v5 records no positions: the globe shows them at USFQ, and the page says so.
+- **FR3a — The detector, right now (third version, 2026-11-13):** the whole landing is a night sky;
+  cyan, gold and violet appear together. A live strip of the last minute's particles as bars (height =
+  SiPM pulse size, log scale; small cyan, medium violet, large gold); munhub-lab's four charts —
+  charged particles per minute with its ±√N band, SiPM mean, temperature, pressure — over 1, 6 or 24
+  hours (bins of 1, 5, 15 minutes; mean per minute with √ΣN / n; gaps break the line); the
+  pulse-height spectrum of the latest 1,000 events; each munhub-lab detector with a sparkline of its
+  last recorded hour and a 2026 timeline of when each recorded; an animated diagram from cosmic ray to
+  screen; cutoff rigidity as bars on one scale.
 - **FR3 — The last hour:** counts per minute with ±√N bars, the hour's mean and the band ±√mean
   that chance alone fills; mean ± √ΣN / minutes, minutes recorded of 60 (gaps are not zeros),
   pressure and detector temperature; a plain explanation of Poisson noise and of why real changes
