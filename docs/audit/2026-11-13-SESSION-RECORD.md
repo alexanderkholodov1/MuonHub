@@ -92,6 +92,14 @@ here and in `LANDING-CONCEPT.md`. Second version:
   (`DESIGN-LANGUAGE.md` §1). axe caught white text on dark gold in the light theme; the gold buttons
   now use a fixed fill with dark text.
 - **Pointer lens removed.**
+- Verified: web 93 unit and 33 end-to-end (1 skipped), axe clean in both themes; CI green on
+  `7c06720` (the first push failed only the format check, on the generated land points, now ignored
+  by Prettier). Test URL redeployed from `2404422` (same channel and address) and checked at 1366 × 650
+  and 390 px, dark and light, against the real detector; demo build **2.7** promoted at 14:17Z and
+  checked at its address.
+- Seen on the way: v5 writes each minute once, when complete; the low minutes around 14:10Z (106–120
+  against a mean near 134) are real, not partial records.
+- Quota: the lab week stood at 79 % after this version; work stops here until he says otherwise.
 
 ## 4. What waits on the maintainer
 
