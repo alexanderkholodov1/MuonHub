@@ -78,11 +78,7 @@ export function NetworkPage(): ReactNode {
               </h1>
               <p className="mt-4 max-w-xl text-lg text-secondary">{t("network.hero.lead")}</p>
               <dl className="mt-8 grid max-w-xl grid-cols-3 gap-3">
-                <Figure
-                  label={t("nav.detectors")}
-                  value={list.length}
-                  tone="text-accent"
-                />
+                <Figure label={t("nav.detectors")} value={list.length} tone="text-accent" />
                 <Figure
                   label={t("network.stats.sending")}
                   value={liveDetectors}
