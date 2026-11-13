@@ -71,10 +71,10 @@ Firebase test URL. The design session of M2 step 6 is delegated to the brigadist
 
 ## 4. What waits on the maintainer
 
-2. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.
-3. Whether the bridge to the v5 public window may serve the public preview (read-only, a few KB
+1. **Authentication** (Email/Password) in the muonhub console, so "Sign in" works on the test URL.
+2. Whether the bridge to the v5 public window may serve the public preview (read-only, a few KB
    every 10 s per open page).
-4. His judgement of the design.
+3. His judgement of the design.
 
 ## 5. Quota
 
