@@ -121,7 +121,7 @@ async function main(): Promise<void> {
       ownerUid: owner.uid,
       name: "LEOPARD Lab — USFQ",
       location: { lat: -0.1965, lon: -78.435, altitudeM: 2400, city: "Quito", countryCode: "EC" },
-      publicPrecision: "city",
+      publicPrecision: "approximate",
       visibility: "public",
       timezone: "America/Guayaquil",
       createdAt: now,

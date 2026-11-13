@@ -16,6 +16,10 @@ the demo's accounts and data, and the v5 project (`munhub-1`) is only **read**.
 
 ## A five-minute presentation
 
+0. Open <http://100.120.140.56:8085/>: the landing, with no account — every line in the sky is a
+   real detection of the lab's detector, replayed about 15 s later; the latest minute with ±√N; the
+   last hour against the band chance alone fills. Move the pointer over the sky (it bends the light
+   like a mass). Then `/network`: the station on the map and its live state.
 1. Open <http://100.120.140.56:8085/app> on the phone: MuonHub asks to sign in (protected pages
    return to where they were asked for).
 2. Sign in with the demo account. The home lists "LEOPARD Lab — USFQ" (owner).
@@ -67,8 +71,8 @@ systemctl --user restart muonhub-demo-emulators muonhub-demo-mirror muonhub-demo
 
 # rebuild the web app after a change (not served yet), check it, then promote it
 bash ~/MuonHub/infra/demo/build-web.sh
-bash ~/MuonHub/infra/demo/promote-web.sh 2.6      # serve this build as "2.6"
-bash ~/MuonHub/infra/demo/promote-web.sh --back 2.4   # put an earlier kept build back
+bash ~/MuonHub/infra/demo/promote-web.sh 2.7      # serve this build as "2.7"
+bash ~/MuonHub/infra/demo/promote-web.sh --back 2.5   # put an earlier kept build back
 
 # first install on a machine
 bash ~/MuonHub/infra/demo/install.sh

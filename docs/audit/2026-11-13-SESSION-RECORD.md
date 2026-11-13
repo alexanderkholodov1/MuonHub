@@ -48,6 +48,14 @@ Firebase test URL. The design session of M2 step 6 is delegated to the brigadist
   night sky (the `@theme` aliases resolve on `:root`); axe did not report it because the canvas
   overlaps the text. A test now checks the computed colours.
 
+- CI green on `db1684d` (run 43429723461: build · test · lint · typecheck, end-to-end, emulator
+  tests, gitleaks). Demo build **2.6** promoted at 13:1xZ and checked at its address at 1366 and
+  390 px (no console errors, no horizontal scroll); 2.5 kept.
+- The demo station's public precision was `city` (my seed of 2026-11-06), so the network map was
+  empty; it is now `approximate` (about 11 km), like the bridge entry, set as its owner on the
+  emulators with `apps/v5-mirror/src/set-demo-precision.ts`. His own choice for the real station is
+  still his.
+
 ## 4. What waits on the maintainer
 
 1. **Firebase CLI sign-in on Beacon** for the preview deploy (`firebase login --no-localhost`,
