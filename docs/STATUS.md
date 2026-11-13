@@ -41,7 +41,7 @@ Details of each step: the execution log at the end of the M1 plan.
 | 2 Accounts (spec 0088) | ✅ | sign-up with unique username, sign-in, reset, verification, `?next=` |
 | 3 Stations, devices, streams, sharing (spec 0089) | ✅ first version | member names fall back to a neutral label because profiles are private (open question below) |
 | 4 Stream dashboard (spec 0090) | ✅ first version | rate, pressure and temperature charts; Poisson uncertainty; freshness apart from connection |
-| Demo on Beacon | ✅ | build 2.8 (`6.0.0-alpha.2.5`, the landing with the planet and live data); emulators + read-only v5 mirror of the running detector; offline recording for the presentation; [`operations/DEMO.md`](operations/DEMO.md) |
+| Demo on Beacon | ✅ | build 2.9 (`6.0.0-alpha.2.5`, landing and network pages, Spanish); emulators + read-only v5 mirror of the running detector; offline recording for the presentation; [`operations/DEMO.md`](operations/DEMO.md) |
 | 5 Network map (spec 0091) | ✅ first version | `/network` from public projections; OpenFreeMap tiles (production provider: open question); "active" means an active device until projections carry the latest data time |
 | 7 Hardening — end-to-end suite | ✅ | Playwright, desktop and phone, against the emulators with the v2 rules; runs in CI (`web · end-to-end`); found and fixed a hydration bug in the reset form |
 | 7 Hardening — accessibility pass | ✅ | axe (WCAG 2.2 A/AA + best practices) on every page, both themes and viewports, in the end-to-end suite; keyboard, reduced motion, no theme flash; contrast tokens fixed. Found that the new-device form was denied to every non-admin (device-type list) — fixed with emulator and end-to-end regression tests |
@@ -53,8 +53,8 @@ Details of each step: the execution log at the end of the M1 plan.
 | Gate | State |
 |---|---|
 | CI on GitHub — M1 branch (typecheck · lint · build · test, emulator tests, gitleaks) | ✅ green on `404fc95` (`6.0.0-alpha.1.8`) **[verified]** |
-| CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `506f1d3` (`6.0.0-alpha.2.5`, the landing’s third version) **[verified]** |
-| Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 97 unit + 33 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
+| CI on GitHub — M2 branch (the same, plus web end-to-end) | ✅ green on `4bb9a41` (`6.0.0-alpha.2.5`, the public pages’ fourth version) **[verified]** |
+| Tests on the M2 branch | data-provider 125 unit + 376 emulator; agent 112; ui 7; web 99 unit + 35 end-to-end (desktop and phone; keyboard test desktop only) **[verified by running]** |
 
 ## Open questions for the maintainer
 

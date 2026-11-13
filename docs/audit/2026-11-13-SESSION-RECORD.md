@@ -155,6 +155,10 @@ page said which detector they were, nor let anyone check them against munhub-lab
   stations with the map.
 - axe caught the gold text on white at 4.0:1; the light gold is now `#9a5b06` (5.4:1).
 - Verified: web 99 unit and 35 end-to-end (1 skipped), including Spanish and page-to-page navigation.
+  CI green on `4bb9a41` (one push failed only the format check of a hand edit); test URL redeployed
+  from `f442c00` (same code) and checked; demo build **2.9** promoted and checked. PLANE's dead time
+  arrives in other units (≈ 45 000, which munhub-lab also labels %); the axis now shortens to "k".
+  Lab week at 83 %.
 
 ## 4. What waits on the maintainer
 
