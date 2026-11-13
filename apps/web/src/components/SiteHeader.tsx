@@ -10,7 +10,11 @@ import { useDataProvider } from "@/lib/data/DataProviderContext";
 import { errorMessage } from "@/lib/errors";
 import { t } from "@/i18n/t";
 
-export function SiteHeader(): ReactNode {
+/**
+ * The site's header, dark in both themes (the public site's night register). `overlay` drops its
+ * background and rule so it sits on the landing's sky.
+ */
+export function SiteHeader({ overlay = false }: { overlay?: boolean } = {}): ReactNode {
   const { user, loading, error: authError } = useAuth();
   const provider = useDataProvider();
   const [busy, setBusy] = useState(false);
@@ -28,7 +32,10 @@ export function SiteHeader(): ReactNode {
     }
   }
   return (
-    <header className="border-b border-border">
+    <header
+      className={`surface-night relative z-10 ${overlay ? "border-b border-transparent" : "border-b border-border"}`}
+      style={overlay ? { backgroundColor: "transparent" } : undefined}
+    >
       <a
         href="#main"
         className="sr-only rounded-md bg-surface px-4 py-2 focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-20"
@@ -36,7 +43,8 @@ export function SiteHeader(): ReactNode {
         {t("nav.skipToContent")}
       </a>
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <Link href="/" className="font-semibold tracking-tight">
+        <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-brand" />
           {t("app.name")}
         </Link>
         <nav aria-label={t("nav.account")} className="flex items-center gap-4 text-base">

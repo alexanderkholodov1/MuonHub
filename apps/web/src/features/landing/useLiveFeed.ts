@@ -19,6 +19,8 @@ export interface LiveFeed {
   newestEventTs: number | null;
   /** Events not yet drawn, oldest first. The hero takes them as their replay time comes. */
   queue: RefObject<ParticleEvent[]>;
+  /** Every event received in the last few minutes, oldest first (for the running count). */
+  recent: RefObject<ParticleEvent[]>;
   /** Fixed delay between a detection and its replay in the hero (ms), once known. */
   replayDelayMs: number | null;
 }
@@ -31,6 +33,24 @@ export const QUIET_AFTER_MS = 3 * 60_000;
 const REPLAY_MARGIN_MS = EVENT_POLL_MS + 5_000;
 const MAX_REPLAY_DELAY_MS = 60_000;
 const MAX_QUEUE = 2_000;
+const RECENT_MS = 3 * 60_000;
+
+/**
+ * Events counted so far in the minute being replayed: those detected since the start of that minute
+ * and already replayed (detection + delay ≤ now). Null until the replay delay is known.
+ */
+export function replayedMinuteCount(
+  events: readonly ParticleEvent[],
+  delayMs: number | null,
+  now: number,
+): { minuteStart: number; count: number } | null {
+  if (delayMs === null) return null;
+  const replayed = now - delayMs;
+  const minuteStart = Math.floor(replayed / 60_000) * 60_000;
+  let count = 0;
+  for (const e of events) if (e.ts >= minuteStart && e.ts <= replayed) count++;
+  return { minuteStart, count };
+}
 
 export function statusFor(newestEventTs: number | null, now: number): FeedStatus {
   return newestEventTs !== null && now - newestEventTs <= QUIET_AFTER_MS ? "live" : "quiet";
@@ -44,6 +64,7 @@ export function replayDelayFor(newestEventTs: number, now: number): number {
 /** Polls the live source while the page is visible; stops when it is hidden or unmounted. */
 export function useLiveFeed(): LiveFeed {
   const queue = useRef<ParticleEvent[]>([]);
+  const recent = useRef<ParticleEvent[]>([]);
   const [status, setStatus] = useState<FeedStatus>("connecting");
   const [minutes, setMinutes] = useState<MinuteRecord[]>([]);
   const [newestEventTs, setNewestEventTs] = useState<number | null>(null);
@@ -65,6 +86,10 @@ export function useLiveFeed(): LiveFeed {
           queue.current.push(...events);
           if (queue.current.length > MAX_QUEUE)
             queue.current.splice(0, queue.current.length - MAX_QUEUE);
+          recent.current.push(...events);
+          const keepFrom = (events.at(-1)?.ts ?? 0) - RECENT_MS;
+          const drop = recent.current.findIndex((e) => e.ts >= keepFrom);
+          if (drop > 0) recent.current.splice(0, drop);
         }
         lastTs = newest;
         const now = Date.now();
@@ -96,6 +121,7 @@ export function useLiveFeed(): LiveFeed {
       lastTs = null;
       delaySet = false;
       queue.current.length = 0;
+      recent.current.length = 0;
       void pollEvents(controller.signal);
       void pollMinutes(controller.signal);
     }
@@ -120,7 +146,7 @@ export function useLiveFeed(): LiveFeed {
     };
   }, []);
 
-  return { status, minutes, newestEventTs, queue, replayDelayMs };
+  return { status, minutes, newestEventTs, queue, recent, replayDelayMs };
 }
 
 /** Whether the detector is sending now, checked once a minute while the page is visible. */

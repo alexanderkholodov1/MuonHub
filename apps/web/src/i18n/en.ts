@@ -241,17 +241,39 @@ export const en = {
   "landing.status.unavailable": "The live data cannot be reached right now",
   "landing.hero.title": "Cosmic rays, counted live.",
   "landing.hero.lead":
-    "Every line that falls across this sky is a real particle that crossed MuonHub's first detector, at USFQ in Quito, moments ago. MuonHub is an open network where universities, schools and anyone curious connect cosmic-ray detectors, watch them live and share what they measure.",
-  "landing.hero.detector": "Detector · LEOPARD Lab, USFQ",
-  "landing.hero.readoutLabel": "charged particles counted in the minute to {time}, Quito time",
-  "landing.hero.readoutWaiting": "Waiting for the latest complete minute…",
-  "landing.hero.readoutChance": "± {sigma} by chance alone",
+    "MuonHub is an open network of cosmic-ray detectors. Every particle you see falling on Quito is a real one, counted by the detector at USFQ seconds ago.",
+  "landing.hero.cta.detectors": "All detectors",
+  "landing.live.count": "particles so far in the minute from {time} (Quito)",
+  "landing.live.countWaiting": "waiting for the first particles…",
+  "landing.live.lastMinute": "Last minute",
+  "landing.live.sipm": "SiPM average",
+  "landing.live.temperature": "Temperature",
+  "landing.live.pressure": "Pressure",
+  "landing.live.source":
+    "From munhub-lab · LEOPARD-TEST · last minute to {time} · uncorrected counts",
+  "landing.globe.label": "USFQ · Quito, Ecuador",
+  "landing.globe.sublabel": "{count} detectors · {live} sending now",
+  "landing.globe.caption":
+    "Drag to turn the planet. Each particle is a real detection, replayed seconds later; its direction is illustrative.",
+  "landing.hour.eyebrow": "Live data",
+  "landing.hour.lowest": "Lowest minute",
+  "landing.hour.highest": "Highest minute",
+  "landing.detectors.eyebrow": "The network",
+  "landing.detectors.title": "Every detector in MunHub",
+  "landing.detectors.intro":
+    "The public detectors of munhub-lab, the platform MuonHub grows from. One is sending data right now; the others recorded sessions earlier.",
+  "landing.detectors.live": "Sending data now",
+  "landing.detectors.lastData": "Last data {date}",
+  "landing.detectors.noData": "No data recorded yet",
+  "landing.detectors.sessions": "Recording sessions: {count}",
+  "landing.detectors.loading": "Loading the detectors…",
+  "landing.detectors.unavailable": "The list of detectors cannot be loaded right now.",
+  "landing.detectors.where":
+    "MunHub v5 does not record where each detector is, so the globe shows them all at USFQ, where MunHub runs, until their owners place them in MuonHub.",
+  "landing.how.eyebrow": "How it works",
+  "landing.equator.eyebrow": "The science",
+  "landing.network.eyebrow": "Join",
   "landing.hero.cta.lastHour": "See the last hour",
-  "landing.hero.cta.network": "Explore the network",
-  "landing.hero.note":
-    "The timing is real: each line crosses the detector {seconds} s after the detection it stands for, and leaves a mark on it for a minute. Its angle is drawn from how cosmic rays usually arrive, because one detector cannot measure direction.",
-  "landing.hero.noteWaiting":
-    "Each line stands for one real detection, replayed a few seconds later, and leaves a mark on the detector for a minute. Its angle is drawn from how cosmic rays usually arrive, because one detector cannot measure direction.",
   "landing.hour.title": "The last hour in Quito",
   "landing.hour.intro":
     "Each dot is one minute of counting, with the uncertainty of its count (±√N). The horizontal line is the hour's average; the shaded band around it is the spread that chance alone produces.",
@@ -263,8 +285,6 @@ export const en = {
   "landing.hour.average": "Average per minute",
   "landing.hour.recorded": "Minutes recorded",
   "landing.hour.recordedValue": "{count} of 60",
-  "landing.hour.pressure": "Air pressure",
-  "landing.hour.temperature": "Temperature inside the detector",
   "landing.hour.whyTitle": "Why the dots wobble",
   "landing.hour.why":
     "Particles arrive at random. A minute that averages {mean} counts usually lands within about ±{spread} of it: that is chance, not the sky changing. Real changes in the cosmic-ray flux are around one percent; they show only after hours of counting, once pressure and temperature are corrected.",
@@ -288,7 +308,7 @@ export const en = {
   "landing.equator.cutoff": "cutoff rigidity in the Ecuadorian Andes",
   "landing.equator.poles": "near the poles",
   "landing.equator.altitude": "altitude of the USFQ detector",
-  "landing.network.title": "One station today. Yours could be next.",
+  "landing.network.title": "Bring your detector to the planet.",
   "landing.network.body":
     "MuonHub is being built so that any university, school or enthusiast can connect a detector: register a station, install the agent and choose what to share.",
   "landing.network.stationKind":
@@ -302,7 +322,7 @@ export const en = {
     "Started at LEOPARD Lab, Universidad San Francisco de Quito (USFQ). Created by Alexander Kholodov.",
   "landing.footer.source": "Source code on GitHub",
   "landing.footer.dataNote":
-    "The live data on this page comes from the detector's public v5 profile, read-only, until the new MuonHub agent runs at the lab.",
+    "The live data on this page is read, read-only, from munhub-lab (MunHub v5) until the new MuonHub agent runs at the lab.",
 } as const;
 
 export type MessageKey = keyof typeof en;

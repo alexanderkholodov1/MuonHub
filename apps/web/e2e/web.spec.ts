@@ -1,8 +1,11 @@
 import { t } from "../src/i18n/t";
 import { LIVE_SOURCE } from "../src/features/landing/live-feed";
 import { test, expect, liveRequestsOf, openAsOwner, signIn } from "./fixtures";
+import { STUB_DETECTORS } from "./live-source";
 
-test("the landing shows the live detector to anyone, without an account", async ({ page }) => {
+test("the landing shows the planet, the live detector and every munhub-lab detector, without an account", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(
     page.getByRole("heading", { level: 1, name: t("landing.hero.title"), exact: true }),
@@ -10,8 +13,16 @@ test("the landing shows the live detector to anyone, without an account", async 
   await expect(
     page.getByText(t("landing.status.live", { place: LIVE_SOURCE.place })),
   ).toBeVisible();
-  // The latest complete minute, with its chance spread, and the hour's chart.
-  await expect(page.getByText(/^± \d+ by chance alone$/)).toBeVisible();
+  // The planet is drawn (WebGL canvas) and labels the site with the detectors it holds.
+  await expect(page.locator("main canvas")).toBeVisible();
+  await expect(page.getByText(t("landing.globe.sublabel", { count: 3, live: 1 }))).toBeAttached();
+  // munhub-lab's readout: a running count that ticks with the particles, and the last minute.
+  await expect(
+    page.getByText(/^particles so far in the minute from \d\d:\d\d \(Quito\)$/),
+  ).toBeVisible();
+  await expect(page.getByText(/^1[45]\d ± 1[12]$/)).toBeVisible();
+  await expect(page.getByText("2.4 mV", { exact: true })).toBeVisible();
+  // The last hour.
   await expect(
     page.getByRole("img", {
       name: /^Charged particles per minute over the last hour: 60 minutes recorded/,
@@ -20,32 +31,58 @@ test("the landing shows the live detector to anyone, without an account", async 
   await expect(
     page.getByText(t("landing.hour.recordedValue", { count: 60 }), { exact: true }),
   ).toBeVisible();
-  // The live data comes first: the hero's actions lead to it and to the network, not to a sign-in.
+  // Every public munhub-lab detector, duplicates merged, the private one never shown.
+  const detectors = page.getByRole("region", { name: t("landing.detectors.title") });
+  for (const name of [STUB_DETECTORS.live, STUB_DETECTORS.old, STUB_DETECTORS.duplicate]) {
+    await expect(detectors.getByText(name, { exact: true })).toHaveCount(1);
+  }
+  await expect(page.getByText(STUB_DETECTORS.hidden)).toHaveCount(0);
+  await expect(detectors.getByText(t("landing.detectors.live"), { exact: true })).toBeVisible();
+  // The live data comes first: the hero's actions lead to it, not to a sign-in.
   const hero = page.getByRole("region", { name: t("landing.hero.title") });
   await expect(hero.getByRole("link", { name: t("landing.hero.cta.lastHour") })).toBeVisible();
-  await expect(hero.getByRole("link", { name: t("landing.hero.cta.network") })).toBeVisible();
   await expect(hero.getByRole("link", { name: t("nav.signIn") })).toHaveCount(0);
-  // The replay delay is known once the first events arrive.
-  await expect(page.getByText(/each line crosses the detector \d+ s after/)).toBeVisible();
-  // Only the public window is read: never the profile's root, which carries personal fields.
+  // Only public parts of v5 are read: never a profile's root, which carries personal fields.
   const asked = liveRequestsOf(page);
   expect(asked.length).toBeGreaterThan(0);
-  for (const path of asked)
-    expect(path).toMatch(/^\/(realtime|sessions)(\/[^/]+\/minutes)?\.json$/);
+  for (const path of asked) {
+    expect(path).toMatch(
+      /^(\.json|\/[^/]+\/(realtime|visibility|name|meta\/name|latest\/ts|sessions(\/[^/]+\/minutes)?)\.json)$/,
+    );
+  }
+});
+
+test("the header is dark and the hero fits the first screen of a 1366 × 768 laptop", async ({
+  page,
+}, testInfo) => {
+  // 768 px of screen leave about 650 px to the page once the browser's own bars are drawn.
+  if (testInfo.project.name === "desktop") await page.setViewportSize({ width: 1366, height: 650 });
+  await page.goto("/");
+  await expect(page.locator("header")).toHaveCSS("color", "rgb(230, 234, 242)");
+  if (testInfo.project.name === "desktop") {
+    const box = await page
+      .getByRole("link", { name: t("landing.hero.cta.lastHour") })
+      .boundingBox();
+    expect(box).not.toBeNull();
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(650);
+  }
 });
 
 test.describe("light theme", () => {
   test.use({ colorScheme: "light" });
 
-  test("the landing's hero stays a night sky, with the dark palette's legible text", async ({
+  test("the header and the hero stay a night sky, with the dark palette's legible text", async ({
     page,
   }) => {
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    const lead = page.getByText(t("landing.hero.lead"), { exact: true });
+    await expect(page.locator("header")).toHaveCSS("color", "rgb(230, 234, 242)");
     // Dark-theme secondary text (#9aa4b2) on the dark background, never the light theme's grey.
-    await expect(lead).toHaveCSS("color", "rgb(154, 164, 178)");
-    await expect(page.getByRole("region", { name: t("landing.hero.title") })).toHaveCSS(
+    await expect(page.getByText(t("landing.hero.lead"), { exact: true })).toHaveCSS(
+      "color",
+      "rgb(154, 164, 178)",
+    );
+    await expect(page.locator("div.surface-night").first()).toHaveCSS(
       "background-color",
       "rgb(11, 14, 20)",
     );

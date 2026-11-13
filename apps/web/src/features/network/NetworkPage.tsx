@@ -114,7 +114,7 @@ export function NetworkPage(): ReactNode {
           <p className="text-secondary">{t("network.join")}</p>
           <Link
             href="/signup"
-            className="mt-4 inline-flex min-h-11 items-center rounded-md bg-accent px-5 py-2 font-medium text-bg"
+            className="mt-4 inline-flex min-h-11 items-center rounded-md bg-brand-fill px-5 py-2 font-medium text-on-brand"
           >
             {t("landing.network.cta.join")}
           </Link>

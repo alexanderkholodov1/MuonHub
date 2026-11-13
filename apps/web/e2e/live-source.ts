@@ -1,15 +1,23 @@
 /**
- * A stand-in for the landing's live source (src/features/landing/live-feed.ts) so the suite never
+ * A stand-in for MunHub v5 (munhub-lab's database), the landing's live source, so the suite never
  * depends on, or reads, the v5 project: every request to it is answered here with data shaped like
- * the detector's, relative to the current time.
+ * v5's, relative to the current time. Profiles: the live detector, an older public one listed under
+ * two keys, and a private one that must never be shown.
  */
 import type { Page } from "@playwright/test";
-import { LIVE_SOURCE } from "../src/features/landing/live-feed";
+import { V5_PROFILES } from "../src/features/landing/live-feed";
 
 const EVENT_SPACING_MS = 400;
 const SESSION = "session_1793377005775";
+const OLD_MINUTE_S = 1772597940; // 2026-03-04
 
 export const STUB_MINUTE_COUNT = (i: number): number => 140 + ((i * 7) % 21);
+export const STUB_DETECTORS = {
+  live: "LEOPARD-TEST",
+  old: "PLANE",
+  duplicate: "HAYEK-1",
+  hidden: "Private-One",
+};
 
 function events(fromTs: number, toTs: number): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -25,37 +33,94 @@ function minutes(count: number): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (let i = 0; i < count; i++) {
     const start = lastStart - (count - 1 - i) * 60_000;
-    out[String(start / 1000)] = { cc: 0, dt: 0.04, ec: STUB_MINUTE_COUNT(i), pr: 76660, tp: 30.9 };
+    out[String(start / 1000)] = {
+      cc: 0,
+      dt: 0.04,
+      ec: STUB_MINUTE_COUNT(i),
+      pr: 76660,
+      tp: 30.9,
+      sm: 2.4,
+    };
   }
   return out;
 }
 
-/** Answers the live source; returns the list of paths the page asked for. */
+type Profile = {
+  name?: string;
+  metaName?: string;
+  visibility?: string;
+  live?: boolean;
+  old?: boolean;
+};
+const PROFILES: Record<string, Profile> = {
+  leopard_test: {
+    name: STUB_DETECTORS.live,
+    metaName: STUB_DETECTORS.live,
+    visibility: "public",
+    live: true,
+  },
+  plane: {
+    name: STUB_DETECTORS.old,
+    metaName: STUB_DETECTORS.old,
+    visibility: "public",
+    old: true,
+  },
+  "HAYEK-1": {},
+  hayek_1: { metaName: STUB_DETECTORS.duplicate, old: true },
+  secret: { name: STUB_DETECTORS.hidden, visibility: "private", old: true },
+};
+
+function answer(path: string, url: URL): unknown {
+  if (path === ".json") return Object.fromEntries(Object.keys(PROFILES).map((k) => [k, true]));
+  const match = /^\/([^/]+)\/(.+)\.json$/.exec(path);
+  if (match === null) return null;
+  const [, key = "", rest = ""] = match;
+  const profile = PROFILES[decodeURIComponent(key)];
+  if (profile === undefined) return null;
+  const now = Date.now();
+  switch (rest) {
+    case "visibility":
+      return profile.visibility ?? null;
+    case "name":
+      return profile.name ?? null;
+    case "meta/name":
+      return profile.metaName ?? null;
+    case "latest/ts":
+      return profile.live === true ? now - 2_000 : null;
+    case "sessions":
+      return profile.live === true || profile.old === true ? { [SESSION]: true } : null;
+    case `sessions/${SESSION}/minutes`:
+      if (profile.live === true)
+        return minutes(Number(url.searchParams.get("limitToLast") ?? "60"));
+      return profile.old === true ? { [String(OLD_MINUTE_S)]: { ec: 120 } } : null;
+    case "realtime": {
+      if (profile.live !== true) return null;
+      const startAt = url.searchParams.get("startAt");
+      const last = Number(url.searchParams.get("limitToLast") ?? "0");
+      return startAt !== null
+        ? events(Number(JSON.parse(startAt)), now - 2_000)
+        : events(now - 2_000 - (last - 1) * EVENT_SPACING_MS, now - 2_000);
+    }
+    default:
+      return null;
+  }
+}
+
+/** Answers v5; returns the list of paths (after `/profiles`) the page asked for. */
 export async function stubLiveSource(page: Page): Promise<string[]> {
   const asked: string[] = [];
-  await page.route(`${LIVE_SOURCE.base}/**`, async (route) => {
-    const url = new URL(route.request().url());
-    const path = url.pathname.slice(new URL(LIVE_SOURCE.base).pathname.length);
-    asked.push(path);
-    const now = Date.now();
-    const quote = (name: string): number | null => {
-      const value = url.searchParams.get(name);
-      return value === null ? null : Number(JSON.parse(value));
-    };
-    let body: unknown = null;
-    if (path === "/realtime.json") {
-      const startAt = quote("startAt");
-      const last = Number(url.searchParams.get("limitToLast") ?? "0");
-      body =
-        startAt !== null
-          ? events(startAt, now - 2_000)
-          : events(now - 2_000 - (last - 1) * EVENT_SPACING_MS, now - 2_000);
-    } else if (path === "/sessions.json") {
-      body = { [SESSION]: true };
-    } else if (path === `/sessions/${SESSION}/minutes.json`) {
-      body = minutes(Number(url.searchParams.get("limitToLast") ?? "60"));
-    }
-    await route.fulfill({ json: body, headers: { "access-control-allow-origin": "*" } });
-  });
+  const base = new URL(V5_PROFILES);
+  await page.route(
+    (url) => url.origin === base.origin && url.pathname.startsWith(base.pathname),
+    async (route) => {
+      const url = new URL(route.request().url());
+      const path = url.pathname.slice(base.pathname.length);
+      asked.push(path);
+      await route.fulfill({
+        json: answer(path, url),
+        headers: { "access-control-allow-origin": "*" },
+      });
+    },
+  );
   return asked;
 }

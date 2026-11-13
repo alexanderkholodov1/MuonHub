@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { latestSessionKey, parseEvents, parseMinutes } from "./live-feed";
 import { hourStats, niceTicks, clockTime } from "./hour-stats";
-import { lensed, sampleZenith, screenDirection, slabFor, trackThrough } from "./field-math";
-import { QUIET_AFTER_MS, replayDelayFor, statusFor } from "./useLiveFeed";
+import {
+  arrivalDirection,
+  clusterAround,
+  facing,
+  latLonToVector,
+  localAxes,
+  rotate,
+  sampleZenith,
+} from "./globe-math";
+import { QUIET_AFTER_MS, replayDelayFor, replayedMinuteCount, statusFor } from "./useLiveFeed";
+import { mergeByName, type V5Detector } from "./v5-detectors";
 
 describe("live source parsing", () => {
   it("keeps valid events, oldest first, and skips malformed ones", () => {
@@ -21,14 +30,20 @@ describe("live source parsing", () => {
 
   it("reads minutes keyed by epoch seconds, converting pressure to hPa", () => {
     const raw = {
-      "1794573120": { ec: 153, pr: 76661, tp: 30.9 },
+      "1794573120": { ec: 153, pr: 76661, tp: 30.9, sm: 2.4 },
       "1794573060": { ec: 156 },
       "not-a-time": { ec: 1 },
       "1794573180": { ec: -1 },
     };
     expect(parseMinutes(raw)).toEqual([
-      { start: 1794573060000, count: 156, pressureHpa: null, temperatureC: null },
-      { start: 1794573120000, count: 153, pressureHpa: 766.61, temperatureC: 30.9 },
+      { start: 1794573060000, count: 156, pressureHpa: null, temperatureC: null, sipmMeanMv: null },
+      {
+        start: 1794573120000,
+        count: 153,
+        pressureHpa: 766.61,
+        temperatureC: 30.9,
+        sipmMeanMv: 2.4,
+      },
     ]);
   });
 
@@ -46,6 +61,7 @@ describe("hour statistics", () => {
     count,
     pressureHpa: null,
     temperatureC: null,
+    sipmMeanMv: null,
   });
 
   it("gives the mean with its Poisson uncertainty √ΣN / minutes and the chance spread √mean", () => {
@@ -85,45 +101,93 @@ describe("feed status", () => {
   });
 });
 
-describe("hero geometry", () => {
-  it("lenses like a point mass: far points stay, near points move out to the Einstein ring", () => {
-    const lens = { x: 0, y: 0 };
-    const far = lensed({ x: 1000, y: 0 }, lens, 10);
-    expect(far.x).toBeCloseTo(1000.1, 1);
-    expect(far.y).toBe(0);
-    const behind = lensed({ x: 0, y: 0 }, lens, 10);
-    expect(Math.hypot(behind.x, behind.y)).toBeCloseTo(10, 10);
-    const near = lensed({ x: 3, y: 4 }, lens, 10);
-    expect(Math.hypot(near.x, near.y)).toBeCloseTo((5 + Math.sqrt(25 + 400)) / 2, 10);
-    expect(lensed({ x: 3, y: 4 }, lens, 0)).toEqual({ x: 3, y: 4 });
+describe("running count of the replayed minute", () => {
+  const events = [59_000, 60_000, 61_000, 75_000, 90_000].map((ts) => ({ ts, amplitude: 1 }));
+
+  it("counts the detections of the minute being replayed that have already been replayed", () => {
+    // Replay delay 15 s: at 95 s the replay shows 80 s, inside the minute that starts at 60 s.
+    expect(replayedMinuteCount(events, 15_000, 95_000)).toEqual({ minuteStart: 60_000, count: 3 });
+    expect(replayedMinuteCount(events, 15_000, 120_000)).toEqual({ minuteStart: 60_000, count: 4 });
+    expect(replayedMinuteCount(events, null, 95_000)).toBeNull();
+  });
+});
+
+describe("munhub-lab detectors", () => {
+  const d = (
+    key: string,
+    name: string,
+    lastDataTs: number | null,
+    live = false,
+    sessions = 1,
+  ): V5Detector => ({
+    key,
+    name,
+    live,
+    lastDataTs,
+    sessions,
   });
 
-  it("draws zenith angles with cos θ = (1 − u)^¼, mostly near the vertical", () => {
+  it("merges profiles listed twice under one name, keeping the newest data", () => {
+    const merged = mergeByName([d("HAYEK-1", "HAYEK-1", null), d("hayek_1", "HAYEK-1", 2_000)]);
+    expect(merged).toEqual([
+      { key: "hayek_1", name: "HAYEK-1", live: false, lastDataTs: 2_000, sessions: 2 },
+    ]);
+  });
+
+  it("lists live detectors first, then by their latest data", () => {
+    const merged = mergeByName([
+      d("a", "A", 1_000),
+      d("b", "B", 3_000),
+      d("c", "C", 500, true),
+      d("z", "Z", null),
+    ]);
+    expect(merged.map((x) => x.name)).toEqual(["C", "B", "A", "Z"]);
+  });
+});
+
+describe("globe geometry", () => {
+  it("places latitude and longitude on the unit sphere, y toward the north pole", () => {
+    expect(latLonToVector(0, 0)).toEqual([0, 0, 1]);
+    const north = latLonToVector(90, 0);
+    expect(north[1]).toBeCloseTo(1, 12);
+    const east = latLonToVector(0, 90);
+    expect(east[0]).toBeCloseTo(1, 12);
+  });
+
+  it("brings a place to the front (toward the camera at +z)", () => {
+    const quito = latLonToVector(-0.2, -78.4);
+    const front = rotate(quito, facing(-0.2, -78.4));
+    expect(front[0]).toBeCloseTo(0, 12);
+    expect(front[1]).toBeCloseTo(0, 12);
+    expect(front[2]).toBeCloseTo(1, 12);
+  });
+
+  it("builds an orthonormal local frame, up being the place's normal", () => {
+    const { east, north, up } = localAxes(-0.2, -78.4);
+    const dot = (a: number[], b: number[]) => a.reduce((sum, v, i) => sum + v * (b[i] ?? 0), 0);
+    expect(dot(east, north)).toBeCloseTo(0, 12);
+    expect(dot(east, up)).toBeCloseTo(0, 12);
+    expect(dot(north, up)).toBeCloseTo(0, 12);
+    expect(dot(north, [0, 1, 0])).toBeGreaterThan(0.99);
+  });
+
+  it("draws zenith angles with cos θ = (1 − u)^¼ and arrivals from above the horizon", () => {
     expect(sampleZenith(0)).toBe(0);
-    expect(Math.cos(sampleZenith(0.5))).toBeCloseTo(Math.pow(0.5, 0.25), 10);
-    expect(sampleZenith(1)).toBeLessThan(Math.PI / 2);
-    // Median zenith angle for cos³θ·sinθ: cos θ = 0.5^¼ → about 33°.
     expect((sampleZenith(0.5) * 180) / Math.PI).toBeCloseTo(32.8, 1);
+    const axes = localAxes(-0.2, -78.4);
+    const vertical = arrivalDirection(axes, 0, 1.3);
+    expect(vertical.map((v, i) => v - (axes.up[i] ?? 0)).every((v) => Math.abs(v) < 1e-12)).toBe(
+      true,
+    );
+    const slanted = arrivalDirection(axes, sampleZenith(0.99), 2.1);
+    const height = slanted.reduce((sum, v, i) => sum + v * (axes.up[i] ?? 0), 0);
+    expect(height).toBeGreaterThan(0);
   });
 
-  it("builds tracks that enter above the top edge and cross the detector", () => {
-    const direction = screenDirection(Math.PI / 6, 0);
-    expect(Math.hypot(direction.x, direction.y)).toBeCloseTo(1, 10);
-    const crossing = { x: 500, y: 300 };
-    const track = trackThrough(crossing, direction);
-    expect(track.start.y).toBe(-24);
-    const at = {
-      x: track.start.x + direction.x * track.toCrossing,
-      y: track.start.y + direction.y * track.toCrossing,
-    };
-    expect(at.x).toBeCloseTo(500, 9);
-    expect(at.y).toBeCloseTo(300, 9);
-  });
-
-  it("places the detector beside the text on wide screens and above it on narrow ones", () => {
-    expect(slabFor(1366, 900).center).toEqual({ x: 1011, y: 540 });
-    const phone = slabFor(390, 1100);
-    expect(phone.center.x).toBe(195);
-    expect(phone.center.y).toBeLessThanOrEqual(260);
+  it("rings a cluster of markers around a place", () => {
+    expect(clusterAround(-0.2, -78.4, 1, 2)).toEqual([[-0.2, -78.4]]);
+    const ring = clusterAround(-0.2, -78.4, 4, 2);
+    expect(ring).toHaveLength(4);
+    for (const [lat, lon] of ring) expect(Math.hypot(lat + 0.2, lon + 78.4)).toBeCloseTo(2, 2);
   });
 });

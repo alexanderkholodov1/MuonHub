@@ -9,8 +9,11 @@
  */
 import { z } from "zod";
 
+/** The public profiles of MunHub v5, the data behind munhub-lab.web.app. */
+export const V5_PROFILES = "https://munhub-1-default-rtdb.firebaseio.com/profiles";
+
 export const LIVE_SOURCE = {
-  base: "https://munhub-1-default-rtdb.firebaseio.com/profiles/leopard_test",
+  base: `${V5_PROFILES}/leopard_test`,
   station: "LEOPARD Lab — USFQ",
   place: "Quito, Ecuador",
   timeZone: "America/Guayaquil",
@@ -33,6 +36,8 @@ export interface MinuteRecord {
   pressureHpa: number | null;
   /** Temperature inside the detector in °C, when recorded. */
   temperatureC: number | null;
+  /** Mean SiPM pulse of the minute in mV, as v5 records it (munhub-lab's "SiPM avg"). */
+  sipmMeanMv: number | null;
 }
 
 const EventSchema = z.object({ ts: z.number().int().positive(), sipm: z.number().optional() });
@@ -40,6 +45,7 @@ const MinuteSchema = z.object({
   ec: z.number().int().nonnegative(),
   pr: z.number().positive().optional(),
   tp: z.number().optional(),
+  sm: z.number().optional(),
 });
 
 function entries(raw: unknown): Array<[string, unknown]> {
@@ -68,6 +74,7 @@ export function parseMinutes(raw: unknown): MinuteRecord[] {
       count: parsed.data.ec,
       pressureHpa: parsed.data.pr === undefined ? null : parsed.data.pr / 100,
       temperatureC: parsed.data.tp ?? null,
+      sipmMeanMv: parsed.data.sm ?? null,
     });
   }
   return out.sort((a, b) => a.start - b.start);
